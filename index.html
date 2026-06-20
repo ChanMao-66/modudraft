@@ -1,0 +1,3044 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MODUDRAFT 廚具系統櫃設計工作台</title>
+  <meta name="theme-color" content="#151a22">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="MODUDRAFT">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icons/modudraft-192-refined.png" sizes="192x192">
+  <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #151a22;
+      --bg-2: #1b222d;
+      --panel: #202733;
+      --panel-2: #2b3442;
+      --panel-3: #161c25;
+      --line: #485462;
+      --line-soft: #364250;
+      --text: #eef2f5;
+      --muted: #aeb8c3;
+      --paper: #f7efe1;
+      --paper-2: #fbf6ec;
+      --paper-line: #dbcbb5;
+      --ink: #17202a;
+      --accent: #d99a32;
+      --accent-2: #f1bb5d;
+      --green: #44c078;
+      --red: #d75b51;
+      --blue: #5aa1df;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 16px),
+        linear-gradient(180deg, var(--bg), #11161d);
+      color: var(--text);
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", Arial, sans-serif;
+    }
+
+    button,
+    input,
+    select {
+      font: inherit;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--text);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:hover {
+      border-color: var(--accent-2);
+    }
+
+    button:active {
+      transform: translateY(1px);
+    }
+
+    button.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #141820;
+      font-weight: 900;
+    }
+
+    button.success {
+      border-color: var(--green);
+      background: var(--green);
+      color: #101820;
+      font-weight: 900;
+    }
+
+    button.danger {
+      border-color: var(--red);
+      background: var(--red);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      height: 100vh;
+      padding: 10px;
+    }
+
+    .toolbar {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: minmax(260px, 1.2fr) minmax(360px, 1.5fr) minmax(360px, 1.5fr);
+      gap: 8px;
+      padding: 12px;
+      border: 1px solid #303a46;
+      border-radius: 8px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+        var(--panel);
+      box-shadow: 0 14px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    .tool-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .tool-group.stack {
+      align-items: stretch;
+      flex-direction: column;
+      gap: 7px;
+    }
+
+    .brand {
+      display: grid;
+      grid-template-columns: 42px minmax(0, 1fr);
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+
+    .brand img {
+      width: 42px;
+      height: 42px;
+      border: 1px solid #485462;
+      border-radius: 7px;
+      background: #121820;
+    }
+
+    .brand-copy {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .brand strong {
+      color: var(--accent-2);
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 19px;
+      font-weight: 700;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .select-style,
+    .field {
+      min-width: 0;
+      height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-3);
+      color: var(--text);
+      outline: none;
+    }
+
+    .select-style {
+      min-width: 170px;
+    }
+
+    .wall-picker {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .wall-picker .select-style {
+      flex: 1 1 180px;
+    }
+
+    .icon-button {
+      width: 38px;
+      min-width: 38px;
+      padding: 0;
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .select-style:focus,
+    .field:focus {
+      border-color: var(--accent);
+    }
+
+    .measure-strip {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(120px, 1fr)) minmax(86px, 0.8fr);
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .measure-field {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      height: 38px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-3);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .measure-field input {
+      width: 100%;
+      min-width: 0;
+      height: 28px;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      outline: none;
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      text-align: right;
+    }
+
+    .segmented {
+      display: inline-grid;
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid #374250;
+      border-radius: 8px;
+      background: var(--panel-3);
+    }
+
+    .segmented button {
+      min-height: 30px;
+      min-width: 56px;
+      padding: 0 10px;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .segmented button.active {
+      background: var(--accent);
+      color: #141820;
+    }
+
+    .toggle-control {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-3);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-control input {
+      width: 17px;
+      height: 17px;
+      margin: 0;
+      accent-color: var(--accent);
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .actions button {
+      padding: 0 8px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .workspace {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-auto-rows: minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .workspace.single-view {
+      grid-template-columns: 1fr;
+    }
+
+    .workspace.triple-view {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .view {
+      position: relative;
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid #3b4552;
+      border-radius: 8px;
+      background:
+        repeating-linear-gradient(0deg, rgba(120, 90, 45, 0.055) 0 1px, transparent 1px 24px),
+        repeating-linear-gradient(90deg, rgba(120, 90, 45, 0.045) 0 1px, transparent 1px 24px),
+        var(--paper);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+    }
+
+    .view.hidden {
+      display: none;
+    }
+
+    .view-label {
+      position: absolute;
+      z-index: 3;
+      top: 8px;
+      left: 8px;
+      max-width: calc(100% - 16px);
+      padding: 5px 9px;
+      border: 1px solid #424c5a;
+      border-radius: 6px;
+      background: rgba(21, 26, 34, 0.95);
+      color: var(--accent-2);
+      font-size: 12px;
+      font-weight: 900;
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    canvas:active {
+      cursor: grabbing;
+    }
+
+    #threeCanvasContainer {
+      width: 100%;
+      height: 100%;
+      background: #121820;
+    }
+
+    .three-message {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 24px;
+      text-align: center;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    .status-bar {
+      flex: 0 0 auto;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 8px 10px;
+      border: 1px solid #303a46;
+      border-radius: 7px;
+      background: #1d242e;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .metric b,
+    .num {
+      color: var(--text);
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-weight: 700;
+    }
+
+    .start-overlay,
+    .modal {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      background: rgba(12, 16, 22, 0.78);
+      backdrop-filter: blur(5px);
+    }
+
+    .start-card,
+    .modal-content {
+      width: min(440px, 100%);
+      border: 1px solid #121820;
+      border-radius: 8px;
+      background:
+        repeating-linear-gradient(0deg, rgba(100, 70, 34, 0.05) 0 1px, transparent 1px 22px),
+        var(--paper-2);
+      color: var(--ink);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.35);
+    }
+
+    .start-card {
+      padding: 24px;
+    }
+
+    .start-card h1 {
+      margin: 0;
+      color: #151a22;
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .start-card p {
+      margin: 6px 0 20px;
+      color: #596270;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .mode-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .mode-btn {
+      display: grid;
+      gap: 4px;
+      width: 100%;
+      min-height: 76px;
+      padding: 13px 14px;
+      border: 2px solid #151a22;
+      background: #fbf6ec;
+      color: #151a22;
+      text-align: left;
+    }
+
+    .mode-btn:hover {
+      background: #151a22;
+      color: #fff;
+    }
+
+    .mode-btn b {
+      font-size: 16px;
+    }
+
+    .mode-btn small {
+      font-size: 12px;
+      line-height: 1.45;
+      opacity: 0.82;
+    }
+
+    .modal {
+      display: none;
+      z-index: 30;
+    }
+
+    .modal.open {
+      display: flex;
+    }
+
+    .modal-content {
+      padding: 18px;
+    }
+
+    .modal-content h2 {
+      margin: 0 0 14px;
+      color: #1c2632;
+      font-size: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .form-grid label {
+      display: grid;
+      gap: 5px;
+      color: #4a5562;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .form-grid input,
+    .form-grid select {
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid #c8d0da;
+      border-radius: 7px;
+      background: #fff;
+      color: #15202b;
+      outline: none;
+    }
+
+    .modal-actions,
+    .order-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .modal-actions button,
+    .order-actions button {
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .order-actions button {
+      border-color: var(--blue);
+      background: var(--blue);
+    }
+
+    .muted-button {
+      border-color: #596270;
+      background: #596270;
+    }
+
+    .install-content {
+      width: min(520px, 100%);
+    }
+
+    .install-mark {
+      display: grid;
+      grid-template-columns: 72px minmax(0, 1fr);
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .install-mark img {
+      width: 72px;
+      height: 72px;
+      border-radius: 8px;
+      background: #151a22;
+      box-shadow: 0 6px 16px rgba(21, 26, 34, 0.22);
+    }
+
+    .install-mark strong {
+      display: block;
+      color: #1c2632;
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+
+    .install-mark span,
+    .install-note,
+    .install-steps {
+      color: #596270;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .install-steps {
+      margin: 12px 0 16px;
+      padding: 12px 14px 12px 32px;
+      border: 1px solid #d7c9b5;
+      border-radius: 7px;
+      background: #fffaf1;
+    }
+
+    .install-steps li + li {
+      margin-top: 5px;
+    }
+
+    .install-status {
+      min-height: 22px;
+      margin: 0 0 12px;
+      color: #33404d;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .dialog-note {
+      margin: 0 0 12px;
+      padding: 10px 12px;
+      border-left: 4px solid var(--accent);
+      background: #fff8e9;
+      color: #4b5663;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .choice-grid label {
+      display: grid;
+      gap: 5px;
+      color: #4a5562;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .choice-grid select {
+      width: 100%;
+      height: 40px;
+      padding: 0 10px;
+      border: 1px solid #c8d0da;
+      border-radius: 7px;
+      background: #fff;
+      color: #15202b;
+    }
+
+    .preview-frame {
+      display: none;
+      width: 100%;
+      max-height: 230px;
+      margin: 0 0 12px;
+      border: 1px solid #c8d0da;
+      border-radius: 7px;
+      object-fit: contain;
+      background: #151a22;
+    }
+
+    .preview-frame.visible {
+      display: block;
+    }
+
+    .provider-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .provider-grid button {
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .provider-grid button:first-child {
+      border-color: #3174d4;
+      background: #3174d4;
+    }
+
+    .provider-grid button:last-child {
+      border-color: #18856f;
+      background: #18856f;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    @media (max-width: 1120px) {
+      body {
+        overflow: auto;
+      }
+
+      .app {
+        height: auto;
+        min-height: 100vh;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .tool-group {
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .tool-group.stack {
+        flex-wrap: nowrap;
+      }
+
+      .actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .workspace,
+      .workspace.triple-view,
+      .workspace.single-view {
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(320px, 1fr);
+        min-height: 1040px;
+      }
+
+      .status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 8px;
+      }
+
+      .measure-strip,
+      .actions,
+      .status-bar {
+        grid-template-columns: 1fr;
+      }
+
+      .segmented,
+      .select-style {
+        width: 100%;
+      }
+
+      .wall-picker {
+        width: 100%;
+      }
+
+      .brand strong {
+        font-size: 18px;
+      }
+
+      .choice-grid,
+      .provider-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Visual refinement: preserve the original drafting-workbench structure. */
+    body {
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.025) 0 1px, transparent 1px 18px),
+        linear-gradient(180deg, #171c24, #11161d);
+    }
+
+    button {
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.045), 0 1px 2px rgba(0,0,0,.12);
+      transition: border-color 220ms ease, background 220ms ease, color 220ms ease,
+        box-shadow 220ms ease, transform 220ms ease;
+    }
+
+    button:hover {
+      background: #343e4c;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 5px 14px rgba(0,0,0,.16);
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid rgba(241,187,93,.55);
+      outline-offset: 2px;
+    }
+
+    button.primary {
+      background: linear-gradient(180deg, #e1a83f, #cf8e24);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.3), 0 5px 14px rgba(217,154,50,.18);
+    }
+
+    button.success {
+      border-color: #5aa47c;
+      background: linear-gradient(180deg, #50bb7d, #3ca96d);
+    }
+
+    button.danger {
+      border-color: #b8645c;
+      background: linear-gradient(180deg, #d8675d, #c4544b);
+    }
+
+    .toolbar {
+      border-color: #394451;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.042), rgba(255,255,255,0)),
+        #202732;
+      box-shadow: 0 12px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.035);
+    }
+
+    .brand img {
+      border-color: #536170;
+      box-shadow: 0 5px 14px rgba(0,0,0,.22);
+    }
+
+    .brand strong {
+      color: #efb451;
+    }
+
+    .select-style,
+    .field,
+    .measure-field,
+    .toggle-control {
+      border-color: #4b5867;
+      background: #171d26;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.18);
+    }
+
+    .segmented {
+      border-color: #414d5b;
+      background: #171d26;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,.2);
+    }
+
+    .segmented button.active {
+      background: linear-gradient(180deg, #e2aa45, #d39228);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.28), 0 3px 9px rgba(217,154,50,.16);
+    }
+
+    .view {
+      border-color: #495462;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 5px 18px rgba(0,0,0,.12);
+    }
+
+    .view-label {
+      background: rgba(25,31,40,.94);
+      box-shadow: 0 4px 12px rgba(0,0,0,.16);
+      backdrop-filter: blur(8px);
+    }
+
+    .metric {
+      border-color: #36414d;
+      background: linear-gradient(180deg, #202833, #1b222c);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+    }
+
+    .start-card,
+    .modal-content {
+      border-color: #d1c3ae;
+      box-shadow: 0 24px 64px rgba(0,0,0,.38);
+    }
+
+    .modal-content {
+      animation: modalEnter 240ms ease both;
+    }
+
+    .mobile-access {
+      display: grid;
+      grid-template-columns: 170px minmax(0, 1fr);
+      align-items: center;
+      gap: 18px;
+      margin: 14px 0;
+      padding: 14px;
+      border: 1px solid #d8c9b4;
+      border-radius: 8px;
+      background: #fffaf1;
+    }
+
+    .mobile-access img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 7px;
+      background: #fbf6ec;
+    }
+
+    .mobile-access-copy strong {
+      display: block;
+      color: #26313c;
+      font-size: 15px;
+    }
+
+    .mobile-access-copy p {
+      margin: 5px 0 9px;
+      color: #64707c;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .mobile-url {
+      display: block;
+      max-width: 100%;
+      margin-bottom: 9px;
+      padding: 8px 9px;
+      overflow: hidden;
+      border: 1px solid #d9d1c5;
+      border-radius: 6px;
+      background: #fff;
+      color: #374451;
+      font-family: "Rajdhani", "Noto Sans TC", sans-serif;
+      font-size: 12px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .mobile-access-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .button-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 0 9px;
+      border: 1px solid #596b7e;
+      border-radius: 7px;
+      background: #596b7e;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    @keyframes modalEnter {
+      from { opacity: 0; transform: translateY(8px) scale(.99); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @media (max-width: 560px) {
+      .toolbar {
+        gap: 10px;
+        padding: 11px;
+      }
+
+      .measure-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      #applyWallSizeBtn {
+        grid-column: 1 / -1;
+      }
+
+      .actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .status-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .mobile-access {
+        grid-template-columns: 132px minmax(0, 1fr);
+        gap: 12px;
+        padding: 10px;
+      }
+
+      .mobile-access-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 390px) {
+      .mobile-access {
+        grid-template-columns: 1fr;
+      }
+
+      .mobile-access img {
+        width: min(190px, 72vw);
+        margin: 0 auto;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="startOverlay" class="start-overlay">
+    <section class="start-card" aria-labelledby="startTitle">
+      <h1 id="startTitle">MODUDRAFT</h1>
+      <p>廚具系統櫃設計工作台。尺寸單位採 mm，預設牆面 2340 × 2300，符合現場丈量到設計、渲染的工作流。</p>
+      <div class="mode-list">
+        <button class="mode-btn" type="button" data-mode="single">
+          <b>直線牆快速開始</b>
+          <small>建立單面牆，適合直線廚具或快速草圖。</small>
+        </button>
+        <button class="mode-btn" type="button" data-mode="multi">
+          <b>多面牆丈量建立</b>
+          <small>建立多面牆，逐面調整牆寬；天花高度全案共用。</small>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <main class="app" aria-label="廚具系統櫃設計工作台">
+    <section class="toolbar" aria-label="工具列">
+      <div class="tool-group">
+        <div class="brand">
+          <img src="./icons/modudraft-logo-refined.png" alt="">
+          <div class="brand-copy">
+            <strong>MODUDRAFT</strong>
+            <span>廚具系統櫃工程圖工作台</span>
+          </div>
+        </div>
+        <div class="wall-picker">
+          <select id="wallSelect" class="select-style" aria-label="選擇牆面"></select>
+          <button id="addWallBtn" class="icon-button" type="button" title="新增牆面" aria-label="新增牆面">+</button>
+        </div>
+      </div>
+
+      <div class="tool-group stack">
+        <div class="measure-strip" aria-label="牆面尺寸">
+          <label class="measure-field">牆寬
+            <input id="wallWidthInput" type="number" min="300" max="12000" step="10" inputmode="numeric">
+          </label>
+          <label class="measure-field">天花高
+            <input id="wallHeightInput" type="number" min="1600" max="4200" step="10" inputmode="numeric">
+          </label>
+          <button id="applyWallSizeBtn" type="button">套用</button>
+        </div>
+        <div class="tool-group">
+          <div class="segmented" aria-label="視圖顯示">
+            <button id="viewFloor" class="active" type="button" data-view="floor">平面</button>
+            <button id="viewElevation" class="active" type="button" data-view="elevation">立面</button>
+            <button id="viewThree" type="button" data-view="three">3D</button>
+          </div>
+          <div class="segmented" aria-label="櫃體層">
+            <button id="layerLower" class="active" type="button" data-layer="lower">下櫃</button>
+            <button id="layerUpper" type="button" data-layer="upper">吊櫃</button>
+          </div>
+          <label class="toggle-control" title="在 3D 視圖顯示或隱藏牆面">
+            <input id="wallVisibilityToggle" type="checkbox" checked>
+            <span>牆面</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="actions" aria-label="操作">
+        <button class="primary" id="addCabinetBtn" type="button">新增櫃體</button>
+        <button class="success" id="autoLayoutBtn" type="button">自動配置</button>
+        <button id="renderViewBtn" type="button">AI 渲染視圖</button>
+        <button id="exportBtn" type="button">匯出</button>
+        <button id="resetViewBtn" type="button">重設視圖</button>
+        <button id="installAppBtn" type="button">安裝手機版</button>
+        <button class="danger" id="clearWallBtn" type="button">清空牆面</button>
+      </div>
+    </section>
+
+    <section class="workspace" id="workspace">
+      <article id="floorView" class="view">
+        <div class="view-label">1. 平面圖 TOP VIEW</div>
+        <canvas id="floorCanvas" aria-label="平面圖畫布"></canvas>
+      </article>
+
+      <article id="elevationView" class="view">
+        <div class="view-label">2. 立面圖 FRONT VIEW（點選櫃體可編輯）</div>
+        <canvas id="elevationCanvas" aria-label="立面圖畫布"></canvas>
+      </article>
+
+      <article id="threeView" class="view hidden">
+        <div class="view-label">3. 真實尺寸 3D 牆面 PERSPECTIVE · 水平鎖定</div>
+        <div id="threeCanvasContainer" aria-label="3D 預覽"></div>
+      </article>
+    </section>
+
+    <section class="status-bar" aria-label="尺寸狀態">
+      <div class="metric" id="metricWallWidth">牆寬：<b>0 mm</b></div>
+      <div class="metric" id="metricWallHeight">天花高：<b>0 mm</b></div>
+      <div class="metric" id="metricLower">下櫃：<b>0 mm</b></div>
+      <div class="metric" id="metricUpper">吊櫃：<b>0 mm</b></div>
+      <div class="metric" id="metricUpperHeight">吊櫃高：<b>0 mm</b></div>
+    </section>
+  </main>
+
+  <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <section class="modal-content">
+      <h2 id="modalTitle">編輯櫃體</h2>
+      <div class="form-grid">
+        <div class="order-actions">
+          <button type="button" id="moveLeftBtn">往左</button>
+          <button type="button" id="moveRightBtn">往右</button>
+        </div>
+        <label>
+          名稱
+          <input id="editName" type="text" autocomplete="off">
+        </label>
+        <label>
+          寬度 mm
+          <input id="editWidth" type="number" min="50" step="10">
+        </label>
+        <label>
+          類型
+          <select id="editType">
+            <option value="lower">下櫃</option>
+            <option value="upper">吊櫃</option>
+          </select>
+        </label>
+        <div class="modal-actions">
+          <button type="button" class="muted-button" id="cancelEditBtn">取消</button>
+          <button type="button" class="primary" id="saveCabinetBtn">儲存</button>
+        </div>
+        <button type="button" class="danger" id="deleteCabinetBtn">刪除櫃體</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
+    <section class="modal-content install-content">
+      <h2 id="installTitle">安裝 MODUDRAFT 手機版</h2>
+      <div class="install-mark">
+        <img src="./icons/modudraft-192-refined.png" alt="">
+        <div>
+          <strong>MODUDRAFT</strong>
+          <span>廚具系統櫃設計工作台</span>
+        </div>
+      </div>
+      <p id="installStatus" class="install-status">檢查目前瀏覽器的安裝方式...</p>
+      <div class="mobile-access">
+        <img src="./icons/mobile-access-qr.png" alt="手機開啟 MODUDRAFT 的 QR Code">
+        <div class="mobile-access-copy">
+          <strong>用手機掃描開啟</strong>
+          <p>使用手機相機掃描後，會從永久 HTTPS 網址直接開啟這套設計軟體。</p>
+          <code id="mobileAccessUrl" class="mobile-url">https://chanmao-66.github.io/modudraft/</code>
+          <div class="mobile-access-actions">
+            <button type="button" id="copyMobileUrlBtn">複製手機網址</button>
+            <a class="button-link" href="./MODUDRAFT-offline.zip" download>下載離線網頁包</a>
+          </div>
+        </div>
+      </div>
+      <ol class="install-steps">
+        <li>Android Chrome：按「立即安裝」，或從瀏覽器選單選擇「安裝應用程式」。</li>
+        <li>iPhone Safari：按分享按鈕，再選擇「加入主畫面」。</li>
+        <li>安裝後可從手機桌面開啟，設計資料仍保留在這台裝置的瀏覽器中。</li>
+      </ol>
+      <p class="install-note">GitHub Pages 使用 HTTPS，可支援瀏覽器原生 PWA 安裝；離線網頁包是備份檔，不是 Android APK。</p>
+      <div class="modal-actions">
+        <button type="button" class="muted-button" id="closeInstallBtn">關閉</button>
+        <button type="button" class="primary" id="installNowBtn">立即安裝</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="exportModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="exportTitle">
+    <section class="modal-content install-content">
+      <h2 id="exportTitle">匯出設計檔</h2>
+      <div class="choice-grid">
+        <label>
+          檔案格式
+          <select id="exportFormat">
+            <option value="jpg">JPG 圖片</option>
+            <option value="dae">SketchUp 相容 3D（.dae）</option>
+          </select>
+        </label>
+        <label>
+          匯出視圖
+          <select id="exportView">
+            <option value="floor">平面圖</option>
+            <option value="elevation">立面圖</option>
+            <option value="three">3D 圖</option>
+          </select>
+        </label>
+      </div>
+      <p id="exportHint" class="dialog-note">JPG 會依照所選視圖輸出目前設計。</p>
+      <div class="modal-actions">
+        <button type="button" class="muted-button" id="closeExportBtn">取消</button>
+        <button type="button" class="primary" id="confirmExportBtn">開始匯出</button>
+      </div>
+    </section>
+  </div>
+
+  <div id="aiRenderModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiRenderTitle">
+    <section class="modal-content install-content">
+      <h2 id="aiRenderTitle">AI 渲染視圖</h2>
+      <p class="dialog-note">請先把設計視圖截圖下載，再開啟 Gemini 或 ChatGPT 上傳圖片進行渲染。</p>
+      <div class="choice-grid">
+        <label>
+          截圖視圖
+          <select id="aiRenderView">
+            <option value="three">3D 圖</option>
+            <option value="floor">平面圖</option>
+            <option value="elevation">立面圖</option>
+          </select>
+        </label>
+        <label>
+          建議用途
+          <select id="aiRenderPurpose">
+            <option value="realistic">真實廚具渲染</option>
+            <option value="material">材質與配色提案</option>
+            <option value="presentation">客戶簡報效果圖</option>
+          </select>
+        </label>
+      </div>
+      <img id="aiScreenshotPreview" class="preview-frame" alt="設計視圖截圖預覽">
+      <p id="aiRenderStatus" class="install-status">第一步：下載目前設計截圖。</p>
+      <button type="button" class="primary" id="captureAiScreenshotBtn">先截圖並下載</button>
+      <div class="provider-grid">
+        <button type="button" id="openGeminiBtn" disabled>開啟 Google Gemini</button>
+        <button type="button" id="openChatGptBtn" disabled>開啟 ChatGPT</button>
+      </div>
+      <div class="modal-actions" style="margin-top: 10px;">
+        <button type="button" class="muted-button" id="closeAiRenderBtn">關閉</button>
+        <button type="button" class="primary" id="recaptureAiBtn">重新截圖</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      walls: [],
+      activeWallIndex: 0,
+      currentLayer: "lower",
+      selectedIndex: null,
+      showWalls: true,
+      view: {
+        floor: true,
+        elevation: true,
+        three: false
+      },
+      zoom: {
+        floor: { scale: 1, panX: 0, panY: 0 },
+        elevation: { scale: 1, panX: 0, panY: 0 }
+      }
+    };
+
+    const sizes = {
+      lowerHeight: 860,
+      middleGap: 700,
+      lowerDepth: 580,
+      upperDepth: 370,
+      wallThickness: 120,
+      counterThickness: 40
+    };
+
+    const el = {
+      startOverlay: document.getElementById("startOverlay"),
+      wallSelect: document.getElementById("wallSelect"),
+      wallWidthInput: document.getElementById("wallWidthInput"),
+      wallHeightInput: document.getElementById("wallHeightInput"),
+      wallVisibilityToggle: document.getElementById("wallVisibilityToggle"),
+      floorView: document.getElementById("floorView"),
+      elevationView: document.getElementById("elevationView"),
+      threeView: document.getElementById("threeView"),
+      floorCanvas: document.getElementById("floorCanvas"),
+      elevationCanvas: document.getElementById("elevationCanvas"),
+      threeContainer: document.getElementById("threeCanvasContainer"),
+      viewButtons: {
+        floor: document.getElementById("viewFloor"),
+        elevation: document.getElementById("viewElevation"),
+        three: document.getElementById("viewThree")
+      },
+      layerButtons: {
+        lower: document.getElementById("layerLower"),
+        upper: document.getElementById("layerUpper")
+      },
+      metricWallWidth: document.getElementById("metricWallWidth"),
+      metricWallHeight: document.getElementById("metricWallHeight"),
+      metricLower: document.getElementById("metricLower"),
+      metricUpper: document.getElementById("metricUpper"),
+      metricUpperHeight: document.getElementById("metricUpperHeight"),
+      editModal: document.getElementById("editModal"),
+      editName: document.getElementById("editName"),
+      editWidth: document.getElementById("editWidth"),
+      editType: document.getElementById("editType"),
+      installModal: document.getElementById("installModal"),
+      installStatus: document.getElementById("installStatus"),
+      installNowBtn: document.getElementById("installNowBtn"),
+      mobileAccessUrl: document.getElementById("mobileAccessUrl"),
+      copyMobileUrlBtn: document.getElementById("copyMobileUrlBtn"),
+      exportModal: document.getElementById("exportModal"),
+      exportFormat: document.getElementById("exportFormat"),
+      exportView: document.getElementById("exportView"),
+      exportHint: document.getElementById("exportHint"),
+      aiRenderModal: document.getElementById("aiRenderModal"),
+      aiRenderView: document.getElementById("aiRenderView"),
+      aiScreenshotPreview: document.getElementById("aiScreenshotPreview"),
+      aiRenderStatus: document.getElementById("aiRenderStatus"),
+      openGeminiBtn: document.getElementById("openGeminiBtn"),
+      openChatGptBtn: document.getElementById("openChatGptBtn")
+    };
+
+    const ctx = {
+      floor: el.floorCanvas.getContext("2d"),
+      elevation: el.elevationCanvas.getContext("2d")
+    };
+
+    let drag = {
+      active: false,
+      target: null,
+      startX: 0,
+      startY: 0,
+      moved: false
+    };
+
+    let three = {
+      scene: null,
+      camera: null,
+      renderer: null,
+      group: null,
+      target: null,
+      animationId: null,
+      isDragging: false,
+      dragMode: null,
+      previous: { x: 0, y: 0 },
+      pointers: new Map(),
+      touchDistance: 0,
+      touchCenter: null,
+      orbitAzimuth: Math.PI / 4,
+      orbitElevation: 0.52,
+      unavailable: false
+    };
+
+    let threeLoadPromise = null;
+    let deferredInstallPrompt = null;
+    let aiScreenshotDataUrl = null;
+    const defaultMobileAccessUrl = "https://chanmao-66.github.io/modudraft/";
+
+    function currentMobileAccessUrl() {
+      const localHosts = new Set(["", "localhost", "127.0.0.1", "::1"]);
+      if ((location.protocol === "http:" || location.protocol === "https:") && !localHosts.has(location.hostname)) {
+        return `${location.origin}${location.pathname}`;
+      }
+      return defaultMobileAccessUrl;
+    }
+
+    function uid(prefix) {
+      return `${prefix}-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+    }
+
+    function activeWall() {
+      return state.walls[state.activeWallIndex] || null;
+    }
+
+    function formatNumber(value) {
+      return new Intl.NumberFormat("zh-Hant").format(Math.round(value));
+    }
+
+    function clampNumber(value, min, max, fallback) {
+      const numeric = Math.round(Number(value));
+      if (!Number.isFinite(numeric)) return fallback;
+      return Math.max(min, Math.min(max, numeric));
+    }
+
+    function askPositiveInteger(message, fallback, min = 1, max = 999999) {
+      const raw = window.prompt(message, String(fallback));
+      if (raw === null) return null;
+      const normalized = raw.trim().replace(/[^\d.]/g, "");
+      return clampNumber(normalized, min, max, fallback);
+    }
+
+    function createWall(width, height = 2300, id = state.walls.length) {
+      return {
+        id,
+        width,
+        height,
+        cabinets: []
+      };
+    }
+
+    function wallUpperHeight(wall) {
+      return Math.max(260, wall.height - sizes.lowerHeight - sizes.middleGap);
+    }
+
+    function cabinetHeight(cabinet, wall) {
+      return cabinet.type === "lower" ? sizes.lowerHeight : wallUpperHeight(wall);
+    }
+
+    function upperBottom() {
+      return sizes.lowerHeight + sizes.middleGap;
+    }
+
+    function initialize(mode) {
+      const sharedHeight = 2300;
+      const walls = mode === "multi"
+        ? [
+          createWall(2340, sharedHeight, 0),
+          createWall(1500, sharedHeight, 1)
+        ]
+        : [createWall(2340, sharedHeight, 0)];
+
+      state.walls = walls;
+      state.activeWallIndex = 0;
+      state.selectedIndex = null;
+      el.startOverlay.style.display = "none";
+      rebuildWallSelect();
+      autoGenerateKitchen();
+      resetViews();
+    }
+
+    function rebuildWallSelect() {
+      el.wallSelect.innerHTML = "";
+      state.walls.forEach((wall, index) => {
+        const option = document.createElement("option");
+        option.value = String(index);
+        option.textContent = `牆 ${index + 1} - 寬 ${formatNumber(wall.width)} mm`;
+        el.wallSelect.appendChild(option);
+      });
+      el.wallSelect.value = String(state.activeWallIndex);
+      syncWallInputs();
+    }
+
+    function syncWallInputs() {
+      const wall = activeWall();
+      if (!wall) return;
+      el.wallWidthInput.value = String(wall.width);
+      el.wallHeightInput.value = String(sharedWallHeight());
+    }
+
+    function applyWallSize() {
+      const wall = activeWall();
+      if (!wall) return;
+      wall.width = clampNumber(el.wallWidthInput.value, 300, 12000, wall.width);
+      const sharedHeight = clampNumber(el.wallHeightInput.value, 1600, 4200, sharedWallHeight());
+      state.walls.forEach((item) => {
+        item.height = sharedHeight;
+      });
+      rebuildWallSelect();
+      renderAll();
+    }
+
+    function sharedWallHeight() {
+      return state.walls[0]?.height || 2300;
+    }
+
+    function addWall() {
+      const sharedHeight = sharedWallHeight();
+      const nextIndex = state.walls.length;
+      state.walls.push(createWall(1500, sharedHeight, nextIndex));
+      state.activeWallIndex = nextIndex;
+      state.selectedIndex = null;
+      rebuildWallSelect();
+      autoGenerateKitchen();
+    }
+
+    function calculatePositions() {
+      state.walls.forEach((wall) => {
+        wall.width = clampNumber(wall.width, 300, 12000, 2340);
+        wall.height = clampNumber(wall.height, 1600, 4200, 2300);
+
+        const cursor = { lower: 0, upper: 0 };
+        wall.cabinets.forEach((cabinet) => {
+          const type = cabinet.type === "upper" ? "upper" : "lower";
+          cabinet.type = type;
+          const minWidth = cabinet.name.includes("補邊") || cabinet.name.includes("封板") ? 10 : 50;
+          cabinet.width = Math.max(minWidth, Number(cabinet.width) || minWidth);
+          cabinet.x = cursor[type];
+          cursor[type] += cabinet.width;
+        });
+      });
+    }
+
+    function layerTotal(wall, type) {
+      return wall.cabinets
+        .filter((cabinet) => cabinet.type === type)
+        .reduce((sum, cabinet) => sum + cabinet.width, 0);
+    }
+
+    function updateMetrics() {
+      const wall = activeWall();
+      if (!wall) return;
+      const lower = layerTotal(wall, "lower");
+      const upper = layerTotal(wall, "upper");
+      const remain = wall.width - Math.max(lower, upper);
+
+      el.metricWallWidth.innerHTML = `牆寬：<b>${formatNumber(wall.width)} mm</b>`;
+      el.metricWallHeight.innerHTML = `天花高：<b>${formatNumber(sharedWallHeight())} mm</b>`;
+      el.metricLower.innerHTML = `下櫃：<b>${formatNumber(lower)} mm</b>`;
+      el.metricUpper.innerHTML = `吊櫃：<b>${formatNumber(upper)} mm</b>`;
+      el.metricUpperHeight.innerHTML = `吊櫃高：<b>${formatNumber(wallUpperHeight(wall))} mm</b>`;
+      el.metricUpperHeight.style.borderColor = wallUpperHeight(wall) < 350 ? "#d75b51" : "#303a46";
+      el.metricLower.style.borderColor = remain < 0 ? "#d75b51" : "#303a46";
+    }
+
+    function updateViewLayout() {
+      const workspace = document.getElementById("workspace");
+      const visibleCount = Number(state.view.floor) + Number(state.view.elevation) + Number(state.view.three);
+      workspace.classList.toggle("single-view", visibleCount === 1);
+      workspace.classList.toggle("triple-view", visibleCount === 3);
+    }
+
+    function autoGenerateKitchen() {
+      const wall = activeWall();
+      if (!wall) return;
+
+      const width = wall.width;
+      const lower = [];
+      const upper = [];
+
+      if (width < 1200) {
+        lower.push({ id: uid("lower"), name: "下櫃", width, type: "lower" });
+        upper.push({ id: uid("upper"), name: "吊櫃", width, type: "upper" });
+      } else {
+        const filler = width >= 1500 ? 20 : 0;
+        const usable = Math.max(0, width - filler * 2);
+        const stove = usable >= 1800 ? 800 : Math.max(600, Math.round(usable * 0.38 / 10) * 10);
+        const sink = usable >= 1800 ? 800 : Math.max(500, Math.round(usable * 0.34 / 10) * 10);
+        const worktop = Math.max(0, usable - stove - sink);
+
+        if (filler > 0) lower.push({ id: uid("lower"), name: "左補邊", width: filler, type: "lower" });
+        lower.push({ id: uid("lower"), name: "爐台下櫃", width: stove, type: "lower" });
+        if (worktop > 0) lower.push({ id: uid("lower"), name: "備餐下櫃", width: worktop, type: "lower" });
+        lower.push({ id: uid("lower"), name: "水槽下櫃", width: sink, type: "lower" });
+        if (filler > 0) lower.push({ id: uid("lower"), name: "右補邊", width: filler, type: "lower" });
+
+        if (filler > 0) upper.push({ id: uid("upper"), name: "左補邊", width: filler, type: "upper" });
+        upper.push({ id: uid("upper"), name: "排油煙機吊櫃", width: stove, type: "upper" });
+        if (worktop > 0) upper.push({ id: uid("upper"), name: "收納吊櫃", width: worktop, type: "upper" });
+        upper.push({ id: uid("upper"), name: "水槽吊櫃", width: sink, type: "upper" });
+        if (filler > 0) upper.push({ id: uid("upper"), name: "右補邊", width: filler, type: "upper" });
+      }
+
+      wall.cabinets = [...lower, ...upper];
+      fitAutoLayerToWall(wall, "lower");
+      fitAutoLayerToWall(wall, "upper");
+      renderAll();
+    }
+
+    function fitAutoLayerToWall(wall, type) {
+      const cabinets = wall.cabinets.filter((cabinet) => cabinet.type === type);
+      const total = cabinets.reduce((sum, cabinet) => sum + cabinet.width, 0);
+      const diff = wall.width - total;
+      if (diff === 0 || cabinets.length === 0) return;
+
+      const flexible = cabinets.find((cabinet) => cabinet.name.includes("備餐") || cabinet.name.includes("收納"))
+        || cabinets.find((cabinet) => cabinet.width > 300)
+        || cabinets[cabinets.length - 1];
+
+      flexible.width = Math.max(50, flexible.width + diff);
+    }
+
+    function addCabinet() {
+      const wall = activeWall();
+      if (!wall) return;
+      const defaultName = state.currentLayer === "lower" ? "新增下櫃" : "新增吊櫃";
+      const name = window.prompt("請輸入櫃體名稱", defaultName);
+      if (!name) return;
+      const width = askPositiveInteger("請輸入櫃體寬度（mm）", 600, 50, 6000);
+      if (width === null) return;
+
+      wall.cabinets.push({
+        id: uid(state.currentLayer),
+        name: name.trim(),
+        width,
+        type: state.currentLayer
+      });
+      renderAll();
+    }
+
+    function clearWall() {
+      const wall = activeWall();
+      if (!wall) return;
+      const ok = window.confirm("確定要清空目前牆面的所有櫃體？");
+      if (!ok) return;
+      wall.cabinets = [];
+      renderAll();
+    }
+
+    function resetViews() {
+      state.zoom.floor = { scale: 1, panX: 0, panY: 0 };
+      state.zoom.elevation = { scale: 1, panX: 0, panY: 0 };
+      if (three.group) {
+        three.group.rotation.set(0, 0, 0);
+        fit3DCamera();
+      }
+      renderAll();
+    }
+
+    function showRenderView() {
+      aiScreenshotDataUrl = null;
+      el.aiScreenshotPreview.removeAttribute("src");
+      el.aiScreenshotPreview.classList.remove("visible");
+      el.aiRenderStatus.textContent = "第一步：下載目前設計截圖。";
+      el.openGeminiBtn.disabled = true;
+      el.openChatGptBtn.disabled = true;
+      el.aiRenderModal.classList.add("open");
+    }
+
+    function closeAiRenderModal() {
+      el.aiRenderModal.classList.remove("open");
+    }
+
+    function applyViewState(nextView) {
+      state.view = {
+        floor: Boolean(nextView.floor),
+        elevation: Boolean(nextView.elevation),
+        three: Boolean(nextView.three)
+      };
+
+      Object.entries(el.viewButtons).forEach(([name, button]) => {
+        button.classList.toggle("active", state.view[name]);
+      });
+      el.floorView.classList.toggle("hidden", !state.view.floor);
+      el.elevationView.classList.toggle("hidden", !state.view.elevation);
+      el.threeView.classList.toggle("hidden", !state.view.three);
+      updateViewLayout();
+    }
+
+    function viewCanvas(viewName) {
+      if (viewName === "floor") return el.floorCanvas;
+      if (viewName === "elevation") return el.elevationCanvas;
+      return el.threeContainer.querySelector("canvas");
+    }
+
+    function nextPaint() {
+      return new Promise((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(resolve));
+      });
+    }
+
+    function downloadDataUrl(dataUrl, filename) {
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    function downloadBlob(content, type, filename) {
+      const url = URL.createObjectURL(new Blob([content], { type }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function exportDateToken() {
+      const now = new Date();
+      const pad = (value) => String(value).padStart(2, "0");
+      return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
+    }
+
+    async function captureViewImage(viewName, shouldDownload = false) {
+      const originalView = { ...state.view };
+      applyViewState({
+        floor: viewName === "floor",
+        elevation: viewName === "elevation",
+        three: viewName === "three"
+      });
+
+      await nextPaint();
+      calculatePositions();
+      resizeCanvases();
+      render2D();
+      if (viewName === "three") {
+        await render3D();
+        await new Promise((resolve) => window.setTimeout(resolve, 120));
+      }
+
+      const source = viewCanvas(viewName);
+      if (!source || !source.width || !source.height) {
+        applyViewState(originalView);
+        renderAll();
+        throw new Error("所選視圖尚未完成繪製");
+      }
+
+      const exportCanvas = document.createElement("canvas");
+      exportCanvas.width = source.width;
+      exportCanvas.height = source.height;
+      const exportContext = exportCanvas.getContext("2d");
+      exportContext.fillStyle = viewName === "three" ? "#121820" : "#f7efe1";
+      exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+      exportContext.drawImage(source, 0, 0);
+      const dataUrl = exportCanvas.toDataURL("image/jpeg", 0.94);
+
+      applyViewState(originalView);
+      window.setTimeout(renderAll, 80);
+
+      if (shouldDownload) {
+        downloadDataUrl(dataUrl, `modudraft-${viewName}-${exportDateToken()}.jpg`);
+      }
+      return dataUrl;
+    }
+
+    function boxDaeNode(id, x, y, z, width, height, depth, material) {
+      return `
+        <node id="${id}" name="${id}">
+          <translate>${x} ${y} ${z}</translate>
+          <scale>${width} ${height} ${depth}</scale>
+          <instance_geometry url="#unit-box">
+            <bind_material>
+              <technique_common>
+                <instance_material symbol="boxMaterial" target="#${material}"/>
+              </technique_common>
+            </bind_material>
+          </instance_geometry>
+        </node>`;
+    }
+
+    function buildSketchUpDae() {
+      calculatePositions();
+      const wallNodes = [];
+      let originX = 0;
+      let originZ = 0;
+      let directionX = 1;
+      let directionZ = 0;
+
+      state.walls.forEach((wall, wallIndex) => {
+        const angle = Math.atan2(-directionZ, directionX) * 180 / Math.PI;
+        const children = [
+          boxDaeNode(
+            `wall-${wallIndex + 1}`,
+            wall.width / 2,
+            wall.height / 2,
+            -sizes.wallThickness / 2,
+            wall.width,
+            wall.height,
+            sizes.wallThickness,
+            "wall-material"
+          )
+        ];
+
+        if (wallIndex < state.walls.length - 1) {
+          const cornerHeight = Math.max(wall.height, state.walls[wallIndex + 1].height);
+          children.push(boxDaeNode(
+            `corner-${wallIndex + 1}`,
+            wall.width + sizes.wallThickness / 2,
+            cornerHeight / 2,
+            -sizes.wallThickness / 2,
+            sizes.wallThickness,
+            cornerHeight,
+            sizes.wallThickness,
+            "wall-material"
+          ));
+        }
+
+        wall.cabinets.forEach((cabinet, cabinetIndex) => {
+          const height = cabinetHeight(cabinet, wall);
+          const depth = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+          const y = cabinet.type === "lower" ? height / 2 : upperBottom() + height / 2;
+          children.push(boxDaeNode(
+            `wall-${wallIndex + 1}-cabinet-${cabinetIndex + 1}`,
+            cabinet.x + cabinet.width / 2,
+            y,
+            depth / 2,
+            cabinet.width,
+            height,
+            depth,
+            cabinet.type === "lower" ? "lower-material" : "upper-material"
+          ));
+        });
+
+        wallNodes.push(`
+          <node id="wall-set-${wallIndex + 1}" name="牆面 ${wallIndex + 1}">
+            <translate>${originX} 0 ${originZ}</translate>
+            <rotate>0 1 0 ${angle}</rotate>
+            ${children.join("")}
+          </node>`);
+
+        originX += directionX * wall.width;
+        originZ += directionZ * wall.width;
+        const nextDirectionX = -directionZ;
+        directionZ = directionX;
+        directionX = nextDirectionX;
+      });
+
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <contributor><authoring_tool>MODUDRAFT</authoring_tool></contributor>
+    <unit name="millimeter" meter="0.001"/>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="wall-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.86 0.83 0.77 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+    <effect id="lower-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.98 0.97 0.94 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+    <effect id="upper-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.84 0.88 0.92 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+  </library_effects>
+  <library_materials>
+    <material id="wall-material" name="牆面"><instance_effect url="#wall-effect"/></material>
+    <material id="lower-material" name="下櫃"><instance_effect url="#lower-effect"/></material>
+    <material id="upper-material" name="吊櫃"><instance_effect url="#upper-effect"/></material>
+  </library_materials>
+  <library_geometries>
+    <geometry id="unit-box" name="Unit Box">
+      <mesh>
+        <source id="unit-box-positions">
+          <float_array id="unit-box-positions-array" count="24">-0.5 -0.5 -0.5 0.5 -0.5 -0.5 0.5 0.5 -0.5 -0.5 0.5 -0.5 -0.5 -0.5 0.5 0.5 -0.5 0.5 0.5 0.5 0.5 -0.5 0.5 0.5</float_array>
+          <technique_common><accessor source="#unit-box-positions-array" count="8" stride="3"><param name="X" type="float"/><param name="Y" type="float"/><param name="Z" type="float"/></accessor></technique_common>
+        </source>
+        <vertices id="unit-box-vertices"><input semantic="POSITION" source="#unit-box-positions"/></vertices>
+        <triangles material="boxMaterial" count="12">
+          <input semantic="VERTEX" source="#unit-box-vertices" offset="0"/>
+          <p>0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 3 7 6 3 6 2 0 4 7 0 7 3 1 2 6 1 6 5</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_visual_scenes>
+    <visual_scene id="Scene" name="MODUDRAFT Scene">${wallNodes.join("")}</visual_scene>
+  </library_visual_scenes>
+  <scene><instance_visual_scene url="#Scene"/></scene>
+</COLLADA>`;
+    }
+
+    function openExportModal() {
+      el.exportModal.classList.add("open");
+      updateExportOptions();
+    }
+
+    function closeExportModal() {
+      el.exportModal.classList.remove("open");
+    }
+
+    function updateExportOptions() {
+      const isDae = el.exportFormat.value === "dae";
+      el.exportView.disabled = isDae;
+      if (isDae) {
+        el.exportView.value = "three";
+        el.exportHint.textContent = "輸出保留真實毫米尺寸的 COLLADA 3D 檔，可在 SketchUp 使用「匯入」開啟。";
+      } else {
+        el.exportHint.textContent = "JPG 會依照所選視圖輸出目前設計。";
+      }
+    }
+
+    async function exportSelected() {
+      const button = document.getElementById("confirmExportBtn");
+      button.disabled = true;
+      button.textContent = "匯出中...";
+      try {
+        if (el.exportFormat.value === "dae") {
+          downloadBlob(
+            buildSketchUpDae(),
+            "model/vnd.collada+xml;charset=utf-8",
+            `modudraft-sketchup-${exportDateToken()}.dae`
+          );
+        } else {
+          await captureViewImage(el.exportView.value, true);
+        }
+        el.exportHint.textContent = "匯出完成，檔案已送到瀏覽器下載資料夾。";
+      } catch (error) {
+        el.exportHint.textContent = `匯出失敗：${error.message}`;
+      } finally {
+        button.disabled = false;
+        button.textContent = "開始匯出";
+      }
+    }
+
+    async function captureAiScreenshot() {
+      const button = document.getElementById("captureAiScreenshotBtn");
+      button.disabled = true;
+      el.openGeminiBtn.disabled = true;
+      el.openChatGptBtn.disabled = true;
+      el.aiRenderStatus.textContent = "正在產生設計截圖...";
+
+      try {
+        aiScreenshotDataUrl = await captureViewImage(el.aiRenderView.value, true);
+        el.aiScreenshotPreview.src = aiScreenshotDataUrl;
+        el.aiScreenshotPreview.classList.add("visible");
+        el.openGeminiBtn.disabled = false;
+        el.openChatGptBtn.disabled = false;
+        el.aiRenderStatus.textContent = "截圖已下載。第二步：選擇 Gemini 或 ChatGPT，上傳剛下載的 JPG。";
+      } catch (error) {
+        el.aiRenderStatus.textContent = `截圖失敗：${error.message}`;
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    function openAiProvider(provider) {
+      if (!aiScreenshotDataUrl) {
+        el.aiRenderStatus.textContent = "請先按「先截圖並下載」。";
+        return;
+      }
+      const target = provider === "gemini"
+        ? "https://gemini.google.com/app"
+        : "https://chatgpt.com/";
+      window.open(target, "_blank", "noopener,noreferrer");
+    }
+
+    function renderAll() {
+      calculatePositions();
+      syncWallInputs();
+      updateMetrics();
+      resizeCanvases();
+      render2D();
+      if (state.view.three) {
+        void render3D();
+      }
+    }
+
+    function fitCanvas(canvas, context) {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, Math.floor(rect.width * dpr));
+      const height = Math.max(1, Math.floor(rect.height * dpr));
+
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      return { width: rect.width, height: rect.height };
+    }
+
+    function resizeCanvases() {
+      if (state.view.floor) fitCanvas(el.floorCanvas, ctx.floor);
+      if (state.view.elevation) fitCanvas(el.elevationCanvas, ctx.elevation);
+    }
+
+    function scaleFor(width, viewWidth) {
+      return Math.max(0.05, (viewWidth - 92) / Math.max(1, width));
+    }
+
+    function clearDraftCanvas(canvas, context) {
+      const rect = canvas.getBoundingClientRect();
+      context.save();
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.restore();
+      context.fillStyle = "#f7efe1";
+      context.fillRect(0, 0, rect.width, rect.height);
+      drawPaperGrid(context, rect);
+      return rect;
+    }
+
+    function drawPaperGrid(context, rect) {
+      context.save();
+      context.strokeStyle = "rgba(137, 109, 74, 0.13)";
+      context.lineWidth = 1;
+      for (let x = 0; x <= rect.width; x += 24) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, rect.height);
+        context.stroke();
+      }
+      for (let y = 0; y <= rect.height; y += 24) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(rect.width, y);
+        context.stroke();
+      }
+      context.strokeStyle = "rgba(137, 109, 74, 0.22)";
+      for (let x = 0; x <= rect.width; x += 120) {
+        context.beginPath();
+        context.moveTo(x, 0);
+        context.lineTo(x, rect.height);
+        context.stroke();
+      }
+      for (let y = 0; y <= rect.height; y += 120) {
+        context.beginPath();
+        context.moveTo(0, y);
+        context.lineTo(rect.width, y);
+        context.stroke();
+      }
+      context.restore();
+    }
+
+    function drawDimension(context, x1, x2, y, text, color = "#29323d") {
+      if (Math.abs(x2 - x1) < 3) return;
+      context.save();
+      context.strokeStyle = color;
+      context.fillStyle = color;
+      context.lineWidth = 1;
+      context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+
+      context.beginPath();
+      context.moveTo(x1, y);
+      context.lineTo(x2, y);
+      context.moveTo(x1, y - 6);
+      context.lineTo(x1, y + 6);
+      context.moveTo(x2, y - 6);
+      context.lineTo(x2, y + 6);
+      context.stroke();
+
+      const labelWidth = context.measureText(text).width + 10;
+      const labelX = (x1 + x2) / 2;
+      context.fillStyle = "#f7efe1";
+      context.fillRect(labelX - labelWidth / 2, y - 9, labelWidth, 18);
+      context.fillStyle = color;
+      context.fillText(text, labelX, y + 0.5);
+      context.restore();
+    }
+
+    function drawVerticalDimension(context, x, y1, y2, text, color = "#29323d") {
+      if (Math.abs(y2 - y1) < 3) return;
+      context.save();
+      context.strokeStyle = color;
+      context.fillStyle = color;
+      context.lineWidth = 1;
+      context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+
+      context.beginPath();
+      context.moveTo(x, y1);
+      context.lineTo(x, y2);
+      context.moveTo(x - 6, y1);
+      context.lineTo(x + 6, y1);
+      context.moveTo(x - 6, y2);
+      context.lineTo(x + 6, y2);
+      context.stroke();
+
+      const midY = (y1 + y2) / 2;
+      context.translate(x - 12, midY);
+      context.rotate(-Math.PI / 2);
+      const labelWidth = context.measureText(text).width + 10;
+      context.fillStyle = "#f7efe1";
+      context.fillRect(-labelWidth / 2, -9, labelWidth, 18);
+      context.fillStyle = color;
+      context.fillText(text, 0, 0.5);
+      context.restore();
+    }
+
+    function drawCabinetLabel(context, text, x, y, width, height) {
+      context.save();
+      context.fillStyle = "#17202a";
+      context.font = "800 12px Noto Sans TC, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+
+      const maxWidth = Math.max(12, width - 8);
+      if (context.measureText(text).width <= maxWidth) {
+        context.fillText(text, x + width / 2, y + height / 2, maxWidth);
+      } else {
+        const chars = [...text];
+        let line = "";
+        const lines = [];
+        chars.forEach((char) => {
+          const next = line + char;
+          if (context.measureText(next).width > maxWidth && line) {
+            lines.push(line);
+            line = char;
+          } else {
+            line = next;
+          }
+        });
+        if (line) lines.push(line);
+        const visible = lines.slice(0, 2);
+        visible.forEach((item, index) => {
+          context.fillText(item, x + width / 2, y + height / 2 + (index - (visible.length - 1) / 2) * 15, maxWidth);
+        });
+      }
+      context.restore();
+    }
+
+    function render2D() {
+      const wall = activeWall();
+      if (!wall) return;
+      if (state.view.floor) drawFloorplan(wall);
+      if (state.view.elevation) drawElevation(wall);
+    }
+
+    function drawFloorplan(wall) {
+      const rect = clearDraftCanvas(el.floorCanvas, ctx.floor);
+      const z = state.zoom.floor;
+
+      ctx.floor.save();
+      ctx.floor.translate(z.panX, z.panY);
+      ctx.floor.scale(z.scale, z.scale);
+
+      const baseScale = scaleFor(wall.width, rect.width);
+      const offsetX = 46;
+      const wallY = rect.height - 54;
+      const wallWidth = wall.width * baseScale;
+      const wallThickness = sizes.wallThickness * baseScale;
+
+      ctx.floor.fillStyle = "#d5d0c5";
+      ctx.floor.fillRect(offsetX, wallY, wallWidth, Math.max(8, wallThickness));
+      ctx.floor.strokeStyle = "#151a22";
+      ctx.floor.lineWidth = 1.5;
+      ctx.floor.strokeRect(offsetX, wallY, wallWidth, Math.max(8, wallThickness));
+
+      wall.cabinets.forEach((cabinet) => {
+        const x = offsetX + cabinet.x * baseScale;
+        const width = cabinet.width * baseScale;
+        const depthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+        const depth = Math.max(28, depthMm * baseScale * 0.78);
+        const y = wallY - depth;
+
+        ctx.floor.fillStyle = cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)";
+        ctx.floor.fillRect(x, y, width, depth);
+        ctx.floor.strokeStyle = cabinet.type === "lower" ? "#151a22" : "#6d7c8f";
+        ctx.floor.lineWidth = cabinet.type === "lower" ? 1.5 : 1;
+        ctx.floor.strokeRect(x, y, width, depth);
+
+        if (width > 36) drawCabinetLabel(ctx.floor, cabinet.name, x, y, width, depth);
+        drawDimension(ctx.floor, x, x + width, y - 13, `${cabinet.width}`, "#354151");
+      });
+
+      drawDimension(ctx.floor, offsetX, offsetX + wallWidth, 28, `牆寬 ${wall.width}`, "#151a22");
+      drawDimension(ctx.floor, offsetX, offsetX + sizes.lowerDepth * baseScale, wallY + 34, `深 ${sizes.lowerDepth}`, "#6d4a20");
+      drawLayerRemainder(ctx.floor, wall, "lower", offsetX, baseScale, wallY + 58);
+      ctx.floor.restore();
+    }
+
+    function drawLayerRemainder(context, wall, type, offsetX, baseScale, y) {
+      const used = layerTotal(wall, type);
+      const remain = wall.width - used;
+      if (remain === 0) return;
+      const x1 = offsetX + Math.min(used, wall.width) * baseScale;
+      const x2 = offsetX + wall.width * baseScale;
+      if (remain > 0) {
+        drawDimension(context, x1, x2, y, `剩餘 ${remain}`, "#d75b51");
+      } else {
+        drawDimension(context, offsetX + wall.width * baseScale, offsetX + used * baseScale, y, `超出 ${Math.abs(remain)}`, "#d75b51");
+      }
+    }
+
+    function drawElevation(wall) {
+      const rect = clearDraftCanvas(el.elevationCanvas, ctx.elevation);
+      const z = state.zoom.elevation;
+
+      ctx.elevation.save();
+      ctx.elevation.translate(z.panX, z.panY);
+      ctx.elevation.scale(z.scale, z.scale);
+
+      const baseScaleX = scaleFor(wall.width, rect.width);
+      const scaleY = Math.max(0.05, (rect.height - 128) / wall.height);
+      const offsetX = 54;
+      const baseY = rect.height - 58;
+      const wallWidth = wall.width * baseScaleX;
+      const wallHeight = wall.height * scaleY;
+      const upperH = wallUpperHeight(wall);
+      const upperTopY = baseY - wallHeight;
+      const upperBottomY = baseY - upperBottom() * scaleY;
+      const lowerTopY = baseY - sizes.lowerHeight * scaleY;
+
+      ctx.elevation.fillStyle = "rgba(246, 238, 226, 0.88)";
+      ctx.elevation.fillRect(offsetX, upperTopY, wallWidth, wallHeight);
+      ctx.elevation.strokeStyle = "#b7a991";
+      ctx.elevation.lineWidth = 1.2;
+      ctx.elevation.strokeRect(offsetX, upperTopY, wallWidth, wallHeight);
+
+      ctx.elevation.strokeStyle = "rgba(92, 69, 42, 0.35)";
+      ctx.elevation.setLineDash([6, 5]);
+      ctx.elevation.beginPath();
+      ctx.elevation.moveTo(offsetX, lowerTopY);
+      ctx.elevation.lineTo(offsetX + wallWidth, lowerTopY);
+      ctx.elevation.moveTo(offsetX, upperBottomY);
+      ctx.elevation.lineTo(offsetX + wallWidth, upperBottomY);
+      ctx.elevation.stroke();
+      ctx.elevation.setLineDash([]);
+
+      wall.cabinets.forEach((cabinet, index) => {
+        const box = cabinetBox(cabinet, index, wall, rect);
+        drawCabinet(ctx.elevation, cabinet, box, index === state.selectedIndex);
+        drawDimension(ctx.elevation, box.x, box.x + box.width, box.y + box.height + 16, `${cabinet.width}`, "#354151");
+      });
+
+      drawDimension(ctx.elevation, offsetX, offsetX + wallWidth, upperTopY - 22, `牆寬 ${wall.width}`, "#151a22");
+      drawVerticalDimension(ctx.elevation, offsetX - 24, upperTopY, baseY, `牆高 ${wall.height}`, "#151a22");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 22, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 66, upperTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
+      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 38);
+      ctx.elevation.restore();
+    }
+
+    function cabinetBox(cabinet, index, wall, rect) {
+      const baseScaleX = scaleFor(wall.width, rect.width);
+      const scaleY = Math.max(0.05, (rect.height - 128) / wall.height);
+      const offsetX = 54;
+      const baseY = rect.height - 58;
+      const width = cabinet.width * baseScaleX;
+      const height = cabinetHeight(cabinet, wall) * scaleY;
+      const y = cabinet.type === "lower"
+        ? baseY - height
+        : baseY - (upperBottom() + wallUpperHeight(wall)) * scaleY;
+
+      return {
+        x: offsetX + cabinet.x * baseScaleX,
+        y,
+        width,
+        height,
+        index
+      };
+    }
+
+    function drawCabinet(context, cabinet, box, selected) {
+      context.save();
+      context.fillStyle = cabinet.type === "lower" ? "#fffdf9" : "#eef2f6";
+      context.strokeStyle = selected ? "#d99a32" : "#151a22";
+      context.lineWidth = selected ? 3 : 1.5;
+      context.fillRect(box.x, box.y, box.width, box.height);
+      context.strokeRect(box.x, box.y, box.width, box.height);
+
+      if (cabinet.type === "lower" && box.width > 38 && box.height > 52) {
+        const drawerH = box.height * 0.42;
+        context.strokeStyle = "#718092";
+        context.lineWidth = 1;
+        context.strokeRect(box.x + 6, box.y + 7, box.width - 12, drawerH - 10);
+        context.strokeRect(box.x + 6, box.y + drawerH + 2, box.width - 12, box.height - drawerH - 9);
+      }
+
+      if (cabinet.name.includes("爐台") && box.width > 44) {
+        context.strokeStyle = "#d99a32";
+        context.lineWidth = 1.2;
+        context.beginPath();
+        context.arc(box.x + box.width / 2, box.y + 18, Math.min(22, box.width / 5), 0, Math.PI * 2);
+        context.stroke();
+      }
+
+      drawCabinetLabel(context, cabinet.name, box.x, box.y, box.width, box.height);
+      context.restore();
+    }
+
+    function loadThree() {
+      if (window.THREE) return Promise.resolve(window.THREE);
+      if (threeLoadPromise) return threeLoadPromise;
+
+      threeLoadPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        const timer = window.setTimeout(() => {
+          script.remove();
+          threeLoadPromise = null;
+          reject(new Error("Three.js 載入逾時"));
+        }, 8000);
+
+        script.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+        script.async = true;
+        script.onload = () => {
+          window.clearTimeout(timer);
+          if (window.THREE) {
+            resolve(window.THREE);
+          } else {
+            threeLoadPromise = null;
+            reject(new Error("Three.js 載入後未建立全域物件"));
+          }
+        };
+        script.onerror = () => {
+          window.clearTimeout(timer);
+          threeLoadPromise = null;
+          reject(new Error("Three.js 載入失敗"));
+        };
+        document.head.appendChild(script);
+      });
+
+      return threeLoadPromise;
+    }
+
+    async function render3D() {
+      const container = el.threeContainer;
+      if (!state.view.three || !container.offsetWidth || !container.offsetHeight) return;
+
+      if (three.unavailable) {
+        drawFallback3D();
+        return;
+      }
+
+      if (!window.THREE) {
+        container.innerHTML = '<div class="three-message">正在載入 3D 引擎...</div>';
+        try {
+          await loadThree();
+        } catch (error) {
+          three.unavailable = true;
+          drawFallback3D();
+          return;
+        }
+      }
+
+      if (!state.view.three) return;
+      dispose3D();
+      container.innerHTML = "";
+
+      three.scene = new THREE.Scene();
+      three.scene.background = new THREE.Color(0x121820);
+      three.camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 1, 90000);
+      three.camera.position.set(2600, 2600, 3800);
+
+      three.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      three.renderer.setPixelRatio(window.devicePixelRatio || 1);
+      three.renderer.setSize(container.offsetWidth, container.offsetHeight);
+      container.appendChild(three.renderer.domElement);
+
+      three.scene.add(new THREE.AmbientLight(0xffffff, 0.72));
+      const hemi = new THREE.HemisphereLight(0xffffff, 0x253040, 0.42);
+      three.scene.add(hemi);
+      const light = new THREE.DirectionalLight(0xffe0a3, 0.65);
+      light.position.set(1800, 4200, 2600);
+      three.scene.add(light);
+
+      three.group = new THREE.Group();
+      three.scene.add(three.group);
+
+      build3DWalls();
+      fit3DCamera();
+      update3DWallVisibility();
+      bind3DControls(three.renderer.domElement);
+      animate3D();
+    }
+
+    function drawFallback3D() {
+      const container = el.threeContainer;
+      dispose3D();
+      container.innerHTML = "";
+
+      const canvas = document.createElement("canvas");
+      canvas.setAttribute("aria-label", "離線 3D 預覽");
+      container.appendChild(canvas);
+
+      const dpr = window.devicePixelRatio || 1;
+      const width = Math.max(1, container.offsetWidth);
+      const height = Math.max(1, container.offsetHeight);
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      canvas.style.width = "100%";
+      canvas.style.height = "100%";
+
+      const context = canvas.getContext("2d");
+      context.setTransform(dpr, 0, 0, dpr, 0, 0);
+      context.fillStyle = "#121820";
+      context.fillRect(0, 0, width, height);
+
+      if (!state.walls.length) return;
+
+      const panelGap = 180;
+      const totalWidth = state.walls.reduce((sum, wall) => sum + wall.width, 0)
+        + panelGap * Math.max(0, state.walls.length - 1);
+      const maxHeight = Math.max(...state.walls.map((wall) => wall.height), 2300);
+      const scale = Math.max(0.025, Math.min((width - 116) / totalWidth, (height - 120) / maxHeight));
+      const offsetX = 58;
+      const baseY = height - 58;
+      const depth = Math.max(12, sizes.wallThickness * scale * 0.55);
+
+      context.fillStyle = "#1a2230";
+      context.beginPath();
+      context.moveTo(offsetX, baseY);
+      context.lineTo(offsetX + totalWidth * scale, baseY);
+      context.lineTo(offsetX + totalWidth * scale + depth * 2.4, baseY - depth);
+      context.lineTo(offsetX + depth * 2.4, baseY - depth);
+      context.closePath();
+      context.fill();
+
+      let panelX = offsetX;
+      state.walls.forEach((wall, wallIndex) => {
+        const wallWidth = wall.width * scale;
+        const wallHeight = wall.height * scale;
+
+        if (state.showWalls) {
+          context.fillStyle = wallIndex === state.activeWallIndex ? "#efe4d4" : "#d8d2c7";
+          context.strokeStyle = wallIndex === state.activeWallIndex ? "#d99a32" : "#6c7480";
+          context.lineWidth = 1.4;
+          context.fillRect(panelX, baseY - wallHeight, wallWidth, wallHeight);
+          context.strokeRect(panelX, baseY - wallHeight, wallWidth, wallHeight);
+        }
+
+        wall.cabinets.forEach((cabinet) => {
+          const h = cabinetHeight(cabinet, wall) * scale;
+          const d = Math.max(10, (cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth) * scale * 0.2);
+          const x = panelX + cabinet.x * scale;
+          const y = cabinet.type === "lower"
+            ? baseY - h
+            : baseY - (upperBottom() + wallUpperHeight(wall)) * scale;
+          const w = cabinet.width * scale;
+
+          context.fillStyle = cabinet.type === "lower" ? "#fffdf9" : "#eef2f6";
+          context.strokeStyle = "#101820";
+          context.lineWidth = 1.1;
+          context.fillRect(x, y, w, h);
+          context.strokeRect(x, y, w, h);
+
+          context.fillStyle = cabinet.type === "lower" ? "#d7dee8" : "#cbd5e2";
+          context.beginPath();
+          context.moveTo(x, y);
+          context.lineTo(x + d, y - d * 0.5);
+          context.lineTo(x + w + d, y - d * 0.5);
+          context.lineTo(x + w, y);
+          context.closePath();
+          context.fill();
+          context.stroke();
+        });
+
+        context.fillStyle = "rgba(238, 242, 246, 0.86)";
+        context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
+        context.fillText(`牆 ${wallIndex + 1}  W ${wall.width}  H ${wall.height}`, panelX, 28);
+        panelX += wallWidth + panelGap * scale;
+      });
+
+      context.fillStyle = "rgba(238, 242, 246, 0.68)";
+      context.font = "500 11px Noto Sans TC, sans-serif";
+      context.fillText("離線多牆預覽", width - 104, height - 18);
+    }
+
+    function dispose3D() {
+      if (three.animationId) {
+        cancelAnimationFrame(three.animationId);
+        three.animationId = null;
+      }
+      if (three.renderer) {
+        three.renderer.dispose();
+        three.renderer.forceContextLoss();
+        three.renderer.domElement.remove();
+      }
+      three.scene = null;
+      three.camera = null;
+      three.renderer = null;
+      three.group = null;
+      three.target = null;
+      three.pointers.clear();
+      three.touchDistance = 0;
+      three.touchCenter = null;
+      three.orbitAzimuth = Math.PI / 4;
+      three.orbitElevation = 0.52;
+    }
+
+    function build3DWalls() {
+      let origin = new THREE.Vector3(0, 0, 0);
+      let direction = new THREE.Vector3(1, 0, 0);
+      const totalWidth = state.walls.reduce((sum, wall) => sum + wall.width, 0);
+      const maxHeight = Math.max(...state.walls.map((wall) => wall.height), 2300);
+
+      state.walls.forEach((wall, wallIndex) => {
+        const wallGroup = new THREE.Group();
+        const isActive = wallIndex === state.activeWallIndex;
+        const wallGeometry = new THREE.BoxGeometry(wall.width, wall.height, sizes.wallThickness);
+        const wallMaterial = new THREE.MeshStandardMaterial({
+          color: isActive ? 0xefe4d4 : 0xd8d2c7,
+          roughness: 0.88,
+          metalness: 0
+        });
+        const wallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
+        wallMesh.position.set(wall.width / 2, wall.height / 2, -sizes.wallThickness / 2);
+        wallMesh.userData.wallVisual = true;
+        wallGroup.add(wallMesh);
+        addEdges(wallGroup, wallGeometry, wallMesh.position, isActive ? 0xd99a32 : 0x6c7480, true);
+        addDimensionBars(wallGroup, wall);
+
+        if (wallIndex < state.walls.length - 1) {
+          const nextWall = state.walls[wallIndex + 1];
+          const cornerHeight = Math.max(wall.height, nextWall.height);
+          const cornerGeometry = new THREE.BoxGeometry(
+            sizes.wallThickness,
+            cornerHeight,
+            sizes.wallThickness
+          );
+          const cornerMesh = new THREE.Mesh(cornerGeometry, wallMaterial);
+          cornerMesh.position.set(
+            wall.width + sizes.wallThickness / 2,
+            cornerHeight / 2,
+            -sizes.wallThickness / 2
+          );
+          cornerMesh.userData.wallVisual = true;
+          wallGroup.add(cornerMesh);
+          addEdges(
+            wallGroup,
+            cornerGeometry,
+            cornerMesh.position,
+            isActive ? 0xd99a32 : 0x6c7480,
+            true
+          );
+        }
+
+        wall.cabinets.forEach((cabinet) => {
+          const height = cabinetHeight(cabinet, wall);
+          const depth = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+          const y = cabinet.type === "lower" ? height / 2 : upperBottom() + height / 2;
+          const z = depth / 2;
+          const geometry = new THREE.BoxGeometry(cabinet.width, height, depth);
+          const material = new THREE.MeshStandardMaterial({
+            color: cabinet.type === "lower" ? 0xfffdf9 : 0xeef2f6,
+            roughness: 0.36,
+            metalness: 0.02
+          });
+          const mesh = new THREE.Mesh(geometry, material);
+          mesh.position.set(cabinet.x + cabinet.width / 2, y, z);
+          wallGroup.add(mesh);
+          addEdges(wallGroup, geometry, mesh.position, 0x111820);
+        });
+
+        const angle = Math.atan2(-direction.z, direction.x);
+        wallGroup.rotation.y = angle;
+        wallGroup.position.copy(origin);
+        three.group.add(wallGroup);
+
+        origin = origin.clone().add(direction.clone().multiplyScalar(wall.width));
+        direction = new THREE.Vector3(-direction.z, 0, direction.x);
+      });
+
+      const floorSize = Math.max(1800, totalWidth + 900, maxHeight);
+      const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.96 });
+      const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.set(totalWidth / 4, -2, floorSize / 4);
+      three.group.add(floor);
+    }
+
+    function addDimensionBars(parent, wall) {
+      const widthBarGeo = new THREE.BoxGeometry(wall.width, 10, 10);
+      const widthBar = new THREE.Mesh(widthBarGeo, new THREE.MeshBasicMaterial({ color: 0xd99a32 }));
+      widthBar.position.set(wall.width / 2, wall.height + 70, 24);
+      widthBar.userData.wallVisual = true;
+      parent.add(widthBar);
+
+      const heightBarGeo = new THREE.BoxGeometry(10, wall.height, 10);
+      const heightBar = new THREE.Mesh(heightBarGeo, new THREE.MeshBasicMaterial({ color: 0xd99a32 }));
+      heightBar.position.set(-70, wall.height / 2, 24);
+      heightBar.userData.wallVisual = true;
+      parent.add(heightBar);
+    }
+
+    function addEdges(parent, geometry, position, color, wallVisual = false) {
+      const edges = new THREE.EdgesGeometry(geometry);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color }));
+      line.position.copy(position);
+      line.userData.wallVisual = wallVisual;
+      parent.add(line);
+    }
+
+    function update3DWallVisibility() {
+      el.wallVisibilityToggle.checked = state.showWalls;
+      if (!three.group) return;
+      three.group.traverse((object) => {
+        if (object.userData.wallVisual) {
+          object.visible = state.showWalls;
+        }
+      });
+    }
+
+    function fit3DCamera() {
+      const box = new THREE.Box3().setFromObject(three.group);
+      const center = box.getCenter(new THREE.Vector3());
+      const size = box.getSize(new THREE.Vector3());
+      const maxSize = Math.max(size.x, size.y, size.z, 1000);
+      const distance = maxSize * 1.7;
+
+      three.target = center.clone();
+      three.orbitAzimuth = Math.PI / 4;
+      three.orbitElevation = 0.52;
+      applyOrbit3D(distance);
+    }
+
+    function applyOrbit3D(distance = null) {
+      if (!three.camera || !three.target) return;
+      const radius = distance ?? three.camera.position.distanceTo(three.target);
+      const horizontal = Math.cos(three.orbitElevation) * radius;
+      three.camera.position.set(
+        three.target.x + Math.sin(three.orbitAzimuth) * horizontal,
+        three.target.y + Math.sin(three.orbitElevation) * radius,
+        three.target.z + Math.cos(three.orbitAzimuth) * horizontal
+      );
+      three.camera.up.set(0, 1, 0);
+      three.camera.lookAt(three.target);
+    }
+
+    function bind3DControls(canvas) {
+      canvas.addEventListener("pointerdown", (event) => {
+        event.preventDefault();
+        three.isDragging = true;
+        if (event.pointerType === "touch") {
+          three.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (three.pointers.size >= 2) {
+            const gesture = touchGesture();
+            three.dragMode = "touch-pan-zoom";
+            three.touchCenter = gesture.center;
+            three.touchDistance = gesture.distance;
+          } else {
+            three.dragMode = "orbit";
+          }
+        } else if ((event.button === 1 && !event.shiftKey) || event.button === 2 || event.shiftKey) {
+          three.dragMode = "pan";
+        } else {
+          three.dragMode = "orbit";
+        }
+        three.previous = { x: event.clientX, y: event.clientY };
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!three.isDragging || !three.group || !three.camera) return;
+
+        if (event.pointerType === "touch") {
+          if (!three.pointers.has(event.pointerId)) return;
+          three.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+          if (three.pointers.size >= 2) {
+            const gesture = touchGesture();
+            if (three.touchCenter) {
+              pan3D(
+                gesture.center.x - three.touchCenter.x,
+                gesture.center.y - three.touchCenter.y
+              );
+            }
+            if (three.touchDistance > 0 && gesture.distance > 0) {
+              zoom3D(three.touchDistance / gesture.distance);
+            }
+            three.touchCenter = gesture.center;
+            three.touchDistance = gesture.distance;
+            three.dragMode = "touch-pan-zoom";
+            return;
+          }
+        }
+
+        const dx = event.clientX - three.previous.x;
+        const dy = event.clientY - three.previous.y;
+
+        if (three.dragMode === "pan") {
+          pan3D(dx, dy);
+        } else {
+          three.orbitAzimuth -= dx * 0.007;
+          three.orbitElevation = Math.max(
+            0.14,
+            Math.min(1.26, three.orbitElevation - dy * 0.004)
+          );
+          applyOrbit3D();
+        }
+
+        three.previous = { x: event.clientX, y: event.clientY };
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        three.pointers.delete(event.pointerId);
+        three.isDragging = three.pointers.size > 0;
+        three.dragMode = three.pointers.size === 1 ? "orbit" : null;
+        if (three.pointers.size === 1) {
+          const remaining = [...three.pointers.values()][0];
+          three.previous = { x: remaining.x, y: remaining.y };
+        }
+        three.touchDistance = 0;
+        three.touchCenter = null;
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+      });
+
+      canvas.addEventListener("pointercancel", (event) => {
+        three.pointers.delete(event.pointerId);
+        three.isDragging = false;
+        three.dragMode = null;
+      });
+
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        zoom3D(event.deltaY > 0 ? 1.1 : 0.9);
+      }, { passive: false });
+
+      canvas.addEventListener("auxclick", (event) => {
+        if (event.button === 1) event.preventDefault();
+      });
+
+      canvas.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+      });
+
+      canvas.addEventListener("dblclick", () => {
+        if (three.group && three.camera) {
+          fit3DCamera();
+        }
+      });
+    }
+
+    function touchGesture() {
+      const points = [...three.pointers.values()].slice(0, 2);
+      if (points.length < 2) {
+        return {
+          center: points[0] || { x: 0, y: 0 },
+          distance: 0
+        };
+      }
+      return {
+        center: {
+          x: (points[0].x + points[1].x) / 2,
+          y: (points[0].y + points[1].y) / 2
+        },
+        distance: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y)
+      };
+    }
+
+    function zoom3D(factor) {
+      if (!three.camera || !three.target) return;
+      const direction = three.camera.position.clone().sub(three.target);
+      const nextLength = Math.max(450, Math.min(60000, direction.length() * factor));
+      direction.setLength(nextLength);
+      three.camera.position.copy(three.target).add(direction);
+      three.camera.lookAt(three.target);
+    }
+
+    function pan3D(dx, dy) {
+      if (!three.camera || !three.target) return;
+      const distance = three.camera.position.distanceTo(three.target);
+      const speed = distance * 0.0012;
+      const forward = three.target.clone().sub(three.camera.position).normalize();
+      const right = new THREE.Vector3().crossVectors(forward, three.camera.up).normalize();
+      const up = three.camera.up.clone().normalize();
+      const move = right.multiplyScalar(-dx * speed).add(up.multiplyScalar(dy * speed));
+      three.camera.position.add(move);
+      three.target.add(move);
+      three.camera.lookAt(three.target);
+    }
+
+    function animate3D() {
+      if (!three.renderer || !three.scene || !three.camera) return;
+      three.animationId = requestAnimationFrame(animate3D);
+      three.renderer.render(three.scene, three.camera);
+    }
+
+    function canvasPoint(event, canvas, zoom) {
+      const rect = canvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left - zoom.panX) / zoom.scale,
+        y: (event.clientY - rect.top - zoom.panY) / zoom.scale
+      };
+    }
+
+    function bindPanZoom(canvas, name) {
+      canvas.addEventListener("wheel", (event) => {
+        event.preventDefault();
+        const z = state.zoom[name];
+        const before = canvasPoint(event, canvas, z);
+        z.scale *= event.deltaY < 0 ? 1.1 : 0.9;
+        z.scale = Math.max(0.45, Math.min(5, z.scale));
+        const after = canvasPoint(event, canvas, z);
+        z.panX += (after.x - before.x) * z.scale;
+        z.panY += (after.y - before.y) * z.scale;
+        render2D();
+      }, { passive: false });
+
+      canvas.addEventListener("pointerdown", (event) => {
+        const z = state.zoom[name];
+        drag = {
+          active: true,
+          target: name,
+          startX: event.clientX - z.panX,
+          startY: event.clientY - z.panY,
+          moved: false
+        };
+        canvas.setPointerCapture(event.pointerId);
+      });
+
+      canvas.addEventListener("pointermove", (event) => {
+        if (!drag.active || drag.target !== name) return;
+        const z = state.zoom[name];
+        const nextPanX = event.clientX - drag.startX;
+        const nextPanY = event.clientY - drag.startY;
+        if (Math.abs(nextPanX - z.panX) + Math.abs(nextPanY - z.panY) > 3) {
+          drag.moved = true;
+        }
+        z.panX = nextPanX;
+        z.panY = nextPanY;
+        render2D();
+      });
+
+      canvas.addEventListener("pointerup", (event) => {
+        if (canvas.hasPointerCapture(event.pointerId)) {
+          canvas.releasePointerCapture(event.pointerId);
+        }
+        window.setTimeout(() => {
+          drag.active = false;
+          drag.target = null;
+        }, 0);
+      });
+    }
+
+    function openEditModal(index) {
+      const wall = activeWall();
+      if (!wall || !wall.cabinets[index]) return;
+      const cabinet = wall.cabinets[index];
+      state.selectedIndex = index;
+      el.editName.value = cabinet.name;
+      el.editWidth.value = String(cabinet.width);
+      el.editType.value = cabinet.type;
+      el.editModal.classList.add("open");
+      render2D();
+    }
+
+    function closeModal() {
+      el.editModal.classList.remove("open");
+      state.selectedIndex = null;
+      render2D();
+    }
+
+    function openInstallModal() {
+      el.installModal.classList.add("open");
+      el.mobileAccessUrl.textContent = currentMobileAccessUrl();
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+        || window.navigator.standalone === true;
+      const isFile = location.protocol === "file:";
+
+      if (isStandalone) {
+        el.installStatus.textContent = "MODUDRAFT 已經以手機 APP 模式開啟。";
+        el.installNowBtn.disabled = true;
+      } else if (deferredInstallPrompt) {
+        el.installStatus.textContent = "此瀏覽器已準備好安裝，按下「立即安裝」即可。";
+        el.installNowBtn.disabled = false;
+      } else if (isFile) {
+        el.installStatus.textContent = "目前是本機檔案模式；請改用 HTTPS 網址開啟後再安裝。";
+        el.installNowBtn.disabled = true;
+      } else {
+        el.installStatus.textContent = "若未出現安裝視窗，請依下方步驟從瀏覽器選單加入主畫面。";
+        el.installNowBtn.disabled = false;
+      }
+    }
+
+    function closeInstallModal() {
+      el.installModal.classList.remove("open");
+    }
+
+    async function copyMobileAccessUrl() {
+      const url = currentMobileAccessUrl();
+      try {
+        await navigator.clipboard.writeText(url);
+      } catch {
+        const input = document.createElement("textarea");
+        input.value = url;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
+      el.copyMobileUrlBtn.textContent = "已複製";
+      window.setTimeout(() => {
+        el.copyMobileUrlBtn.textContent = "複製手機網址";
+      }, 1600);
+    }
+
+    async function installApp() {
+      if (!deferredInstallPrompt) {
+        el.installStatus.textContent = "請使用瀏覽器選單的「安裝應用程式」或「加入主畫面」。";
+        return;
+      }
+
+      deferredInstallPrompt.prompt();
+      const choice = await deferredInstallPrompt.userChoice;
+      deferredInstallPrompt = null;
+      el.installNowBtn.disabled = true;
+      el.installStatus.textContent = choice.outcome === "accepted"
+        ? "安裝已開始，完成後可從手機桌面開啟。"
+        : "已取消安裝，稍後仍可再次開啟此頁安裝。";
+    }
+
+    function saveCabinet() {
+      const wall = activeWall();
+      const index = state.selectedIndex;
+      if (!wall || index === null || !wall.cabinets[index]) return;
+
+      const width = Math.max(50, Number(el.editWidth.value) || 50);
+      wall.cabinets[index].name = el.editName.value.trim() || "未命名櫃體";
+      wall.cabinets[index].width = Math.round(width);
+      wall.cabinets[index].type = el.editType.value === "upper" ? "upper" : "lower";
+      closeModal();
+      renderAll();
+    }
+
+    function deleteCabinet() {
+      const wall = activeWall();
+      const index = state.selectedIndex;
+      if (!wall || index === null) return;
+      wall.cabinets.splice(index, 1);
+      closeModal();
+      renderAll();
+    }
+
+    function moveCabinet(direction) {
+      const wall = activeWall();
+      const index = state.selectedIndex;
+      if (!wall || index === null) return;
+
+      const target = index + direction;
+      if (target < 0 || target >= wall.cabinets.length) return;
+      const currentType = wall.cabinets[index].type;
+      if (wall.cabinets[target].type !== currentType) return;
+
+      const temp = wall.cabinets[index];
+      wall.cabinets[index] = wall.cabinets[target];
+      wall.cabinets[target] = temp;
+      state.selectedIndex = target;
+      renderAll();
+    }
+
+    function bindEvents() {
+      document.querySelectorAll(".mode-btn").forEach((button) => {
+        button.addEventListener("click", () => initialize(button.dataset.mode));
+      });
+
+      el.wallSelect.addEventListener("change", () => {
+        state.activeWallIndex = Number(el.wallSelect.value) || 0;
+        state.selectedIndex = null;
+        syncWallInputs();
+        resetViews();
+      });
+
+      document.getElementById("applyWallSizeBtn").addEventListener("click", applyWallSize);
+      el.wallWidthInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") applyWallSize();
+      });
+      el.wallHeightInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") applyWallSize();
+      });
+
+      Object.entries(el.viewButtons).forEach(([name, button]) => {
+        button.addEventListener("click", () => {
+          state.view[name] = !state.view[name];
+          button.classList.toggle("active", state.view[name]);
+          el.floorView.classList.toggle("hidden", !state.view.floor);
+          el.elevationView.classList.toggle("hidden", !state.view.elevation);
+          el.threeView.classList.toggle("hidden", !state.view.three);
+          updateViewLayout();
+          window.setTimeout(renderAll, 80);
+        });
+      });
+
+      Object.entries(el.layerButtons).forEach(([name, button]) => {
+        button.addEventListener("click", () => {
+          state.currentLayer = name;
+          el.layerButtons.lower.classList.toggle("active", name === "lower");
+          el.layerButtons.upper.classList.toggle("active", name === "upper");
+        });
+      });
+
+      document.getElementById("addCabinetBtn").addEventListener("click", addCabinet);
+      document.getElementById("autoLayoutBtn").addEventListener("click", autoGenerateKitchen);
+      document.getElementById("addWallBtn").addEventListener("click", addWall);
+      document.getElementById("renderViewBtn").addEventListener("click", showRenderView);
+      document.getElementById("exportBtn").addEventListener("click", openExportModal);
+      document.getElementById("resetViewBtn").addEventListener("click", resetViews);
+      document.getElementById("installAppBtn").addEventListener("click", openInstallModal);
+      document.getElementById("clearWallBtn").addEventListener("click", clearWall);
+      document.getElementById("cancelEditBtn").addEventListener("click", closeModal);
+      document.getElementById("saveCabinetBtn").addEventListener("click", saveCabinet);
+      document.getElementById("deleteCabinetBtn").addEventListener("click", deleteCabinet);
+      document.getElementById("moveLeftBtn").addEventListener("click", () => moveCabinet(-1));
+      document.getElementById("moveRightBtn").addEventListener("click", () => moveCabinet(1));
+      document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
+      el.installNowBtn.addEventListener("click", installApp);
+      el.copyMobileUrlBtn.addEventListener("click", copyMobileAccessUrl);
+      document.getElementById("closeExportBtn").addEventListener("click", closeExportModal);
+      document.getElementById("confirmExportBtn").addEventListener("click", exportSelected);
+      el.exportFormat.addEventListener("change", updateExportOptions);
+      document.getElementById("closeAiRenderBtn").addEventListener("click", closeAiRenderModal);
+      document.getElementById("captureAiScreenshotBtn").addEventListener("click", captureAiScreenshot);
+      document.getElementById("recaptureAiBtn").addEventListener("click", captureAiScreenshot);
+      el.openGeminiBtn.addEventListener("click", () => openAiProvider("gemini"));
+      el.openChatGptBtn.addEventListener("click", () => openAiProvider("chatgpt"));
+
+      el.wallVisibilityToggle.addEventListener("change", () => {
+        state.showWalls = el.wallVisibilityToggle.checked;
+        update3DWallVisibility();
+        if (state.view.three && three.unavailable) {
+          drawFallback3D();
+        }
+      });
+
+      el.editModal.addEventListener("click", (event) => {
+        if (event.target === el.editModal) closeModal();
+      });
+      el.installModal.addEventListener("click", (event) => {
+        if (event.target === el.installModal) closeInstallModal();
+      });
+      el.exportModal.addEventListener("click", (event) => {
+        if (event.target === el.exportModal) closeExportModal();
+      });
+      el.aiRenderModal.addEventListener("click", (event) => {
+        if (event.target === el.aiRenderModal) closeAiRenderModal();
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          if (el.editModal.classList.contains("open")) closeModal();
+          if (el.installModal.classList.contains("open")) closeInstallModal();
+          if (el.exportModal.classList.contains("open")) closeExportModal();
+          if (el.aiRenderModal.classList.contains("open")) closeAiRenderModal();
+        }
+      });
+
+      bindPanZoom(el.floorCanvas, "floor");
+      bindPanZoom(el.elevationCanvas, "elevation");
+
+      el.elevationCanvas.addEventListener("click", (event) => {
+        if (drag.moved) return;
+        const wall = activeWall();
+        if (!wall) return;
+        const rect = el.elevationCanvas.getBoundingClientRect();
+        const point = canvasPoint(event, el.elevationCanvas, state.zoom.elevation);
+        let found = null;
+
+        wall.cabinets.forEach((cabinet, index) => {
+          const box = cabinetBox(cabinet, index, wall, rect);
+          if (
+            point.x >= box.x &&
+            point.x <= box.x + box.width &&
+            point.y >= box.y &&
+            point.y <= box.y + box.height
+          ) {
+            found = index;
+          }
+        });
+
+        if (found !== null) openEditModal(found);
+      });
+
+      window.addEventListener("resize", () => {
+        renderAll();
+      });
+
+      if (document.fonts) {
+        document.fonts.ready.then(() => renderAll());
+      }
+
+      if ("serviceWorker" in navigator && location.protocol !== "file:") {
+        navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+      }
+
+      window.addEventListener("beforeinstallprompt", (event) => {
+        event.preventDefault();
+        deferredInstallPrompt = event;
+        if (el.installModal.classList.contains("open")) {
+          el.installStatus.textContent = "此瀏覽器已準備好安裝，按下「立即安裝」即可。";
+          el.installNowBtn.disabled = false;
+        }
+      });
+
+      window.addEventListener("appinstalled", () => {
+        deferredInstallPrompt = null;
+        el.installStatus.textContent = "安裝完成，可從手機桌面開啟 MODUDRAFT。";
+        el.installNowBtn.disabled = true;
+      });
+    }
+
+    bindEvents();
+  </script>
+</body>
+</html>
