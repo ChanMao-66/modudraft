@@ -1,0 +1,26 @@
+{
+  "name": "MODUDRAFT 廚具系統櫃設計工作台",
+  "short_name": "MODUDRAFT",
+  "description": "以真實毫米尺寸建立廚具系統櫃平面圖、立面圖與多牆 3D 預覽。",
+  "lang": "zh-Hant",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#343a40",
+  "theme_color": "#343a40",
+  "icons": [
+    {
+      "src": "./icons/modudraft-192-refined.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/modudraft-512-refined.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
