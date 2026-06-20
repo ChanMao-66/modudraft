@@ -997,6 +997,79 @@
         transition-duration: .01ms !important;
       }
     }
+
+    .mobile-scroll-rail {
+      display: none;
+    }
+
+    @media (max-width: 760px) {
+      .mobile-scroll-rail {
+        position: fixed;
+        z-index: 18;
+        top: 50%;
+        right: max(6px, env(safe-area-inset-right));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 5px;
+        padding: 5px;
+        border: 1px solid rgba(87, 99, 113, .72);
+        border-radius: 8px;
+        background: rgba(25, 31, 40, .9);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, .26);
+        backdrop-filter: blur(10px);
+        transform: translateY(-50%);
+      }
+
+      .mobile-scroll-rail.hidden {
+        display: none;
+      }
+
+      .mobile-scroll-rail button {
+        width: 34px;
+        min-width: 34px;
+        min-height: 34px;
+        padding: 0;
+        border-color: #596675;
+        background: #293340;
+        color: #f1bb5d;
+        font-family: Arial, sans-serif;
+        font-size: 19px;
+        line-height: 1;
+      }
+
+      .mobile-scroll-track {
+        position: relative;
+        width: 34px;
+        height: 90px;
+        cursor: ns-resize;
+        touch-action: none;
+      }
+
+      .mobile-scroll-track::before {
+        content: "";
+        position: absolute;
+        top: 5px;
+        bottom: 5px;
+        left: 15px;
+        width: 4px;
+        border-radius: 4px;
+        background: #4b5867;
+      }
+
+      .mobile-scroll-thumb {
+        position: absolute;
+        top: 5px;
+        left: 12px;
+        width: 10px;
+        height: 22px;
+        border: 1px solid #efc77f;
+        border-radius: 5px;
+        background: #d99a32;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, .24);
+        pointer-events: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1095,6 +1168,14 @@
       <div class="metric" id="metricUpper">吊櫃：<b>0 mm</b></div>
       <div class="metric" id="metricUpperHeight">吊櫃高：<b>0 mm</b></div>
     </section>
+
+    <nav id="mobileScrollRail" class="mobile-scroll-rail" aria-label="手機頁面捲動">
+      <button id="mobileScrollUp" type="button" title="向上捲動" aria-label="向上捲動">↑</button>
+      <div id="mobileScrollTrack" class="mobile-scroll-track" role="scrollbar" aria-label="頁面位置" aria-orientation="vertical" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="mobileScrollThumb" class="mobile-scroll-thumb"></span>
+      </div>
+      <button id="mobileScrollDown" type="button" title="向下捲動" aria-label="向下捲動">↓</button>
+    </nav>
   </main>
 
   <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
@@ -1282,6 +1363,11 @@
       metricLower: document.getElementById("metricLower"),
       metricUpper: document.getElementById("metricUpper"),
       metricUpperHeight: document.getElementById("metricUpperHeight"),
+      mobileScrollRail: document.getElementById("mobileScrollRail"),
+      mobileScrollTrack: document.getElementById("mobileScrollTrack"),
+      mobileScrollThumb: document.getElementById("mobileScrollThumb"),
+      mobileScrollUp: document.getElementById("mobileScrollUp"),
+      mobileScrollDown: document.getElementById("mobileScrollDown"),
       editModal: document.getElementById("editModal"),
       editName: document.getElementById("editName"),
       editWidth: document.getElementById("editWidth"),
@@ -1904,6 +1990,7 @@
       if (state.view.three) {
         void render3D();
       }
+      window.requestAnimationFrame(updateMobileScrollRail);
     }
 
     function fitCanvas(canvas, context) {
@@ -2723,6 +2810,22 @@
     }
 
     function bindPanZoom(canvas, name) {
+      const pointers = new Map();
+      let pinchDistance = 0;
+      let pinchCenter = null;
+
+      function gesture() {
+        const points = [...pointers.values()].slice(0, 2);
+        if (points.length < 2) return { center: points[0] || { x: 0, y: 0 }, distance: 0 };
+        return {
+          center: {
+            x: (points[0].x + points[1].x) / 2,
+            y: (points[0].y + points[1].y) / 2
+          },
+          distance: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y)
+        };
+      }
+
       canvas.addEventListener("wheel", (event) => {
         event.preventDefault();
         const z = state.zoom[name];
@@ -2737,19 +2840,51 @@
 
       canvas.addEventListener("pointerdown", (event) => {
         const z = state.zoom[name];
+        if (event.pointerType === "touch") {
+          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+        }
         drag = {
           active: true,
           target: name,
           startX: event.clientX - z.panX,
           startY: event.clientY - z.panY,
-          moved: false
+          moved: pointers.size >= 2
         };
+        if (pointers.size >= 2) {
+          const current = gesture();
+          pinchDistance = current.distance;
+          pinchCenter = current.center;
+        }
         canvas.setPointerCapture(event.pointerId);
       });
 
       canvas.addEventListener("pointermove", (event) => {
         if (!drag.active || drag.target !== name) return;
         const z = state.zoom[name];
+
+        if (event.pointerType === "touch" && pointers.has(event.pointerId)) {
+          pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+          if (pointers.size >= 2) {
+            const current = gesture();
+            if (pinchCenter) {
+              z.panX += current.center.x - pinchCenter.x;
+              z.panY += current.center.y - pinchCenter.y;
+            }
+            if (pinchDistance > 0 && current.distance > 0) {
+              const before = canvasPoint(current.center, canvas, z);
+              z.scale = Math.max(0.45, Math.min(5, z.scale * (current.distance / pinchDistance)));
+              const after = canvasPoint(current.center, canvas, z);
+              z.panX += (after.x - before.x) * z.scale;
+              z.panY += (after.y - before.y) * z.scale;
+            }
+            pinchDistance = current.distance;
+            pinchCenter = current.center;
+            drag.moved = true;
+            render2D();
+            return;
+          }
+        }
+
         const nextPanX = event.clientX - drag.startX;
         const nextPanY = event.clientY - drag.startY;
         if (Math.abs(nextPanX - z.panX) + Math.abs(nextPanY - z.panY) > 3) {
@@ -2761,14 +2896,83 @@
       });
 
       canvas.addEventListener("pointerup", (event) => {
+        pointers.delete(event.pointerId);
         if (canvas.hasPointerCapture(event.pointerId)) {
           canvas.releasePointerCapture(event.pointerId);
+        }
+        pinchDistance = 0;
+        pinchCenter = null;
+        if (pointers.size === 1) {
+          const remaining = [...pointers.values()][0];
+          const z = state.zoom[name];
+          drag.active = true;
+          drag.target = name;
+          drag.startX = remaining.x - z.panX;
+          drag.startY = remaining.y - z.panY;
+          drag.moved = true;
+          return;
         }
         window.setTimeout(() => {
           drag.active = false;
           drag.target = null;
         }, 0);
       });
+
+      canvas.addEventListener("pointercancel", (event) => {
+        pointers.delete(event.pointerId);
+        pinchDistance = 0;
+        pinchCenter = null;
+        drag.active = false;
+        drag.target = null;
+      });
+    }
+
+    function updateMobileScrollRail() {
+      if (!el.mobileScrollRail) return;
+      const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      el.mobileScrollRail.classList.toggle("hidden", limit < 4);
+      const ratio = limit > 0 ? Math.max(0, Math.min(1, window.scrollY / limit)) : 0;
+      const travel = Math.max(0, el.mobileScrollTrack.clientHeight - el.mobileScrollThumb.offsetHeight - 10);
+      el.mobileScrollThumb.style.transform = `translateY(${ratio * travel}px)`;
+      el.mobileScrollTrack.setAttribute("aria-valuenow", String(Math.round(ratio * 100)));
+    }
+
+    function bindMobileScrollRail() {
+      if (!el.mobileScrollRail) return;
+      let dragging = false;
+
+      const scrollFromPointer = (event, smooth = false) => {
+        const rect = el.mobileScrollTrack.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height));
+        const limit = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        window.scrollTo({ top: ratio * limit, behavior: smooth ? "smooth" : "auto" });
+      };
+
+      el.mobileScrollUp.addEventListener("click", () => {
+        window.scrollBy({ top: -window.innerHeight * 0.72, behavior: "smooth" });
+      });
+      el.mobileScrollDown.addEventListener("click", () => {
+        window.scrollBy({ top: window.innerHeight * 0.72, behavior: "smooth" });
+      });
+      el.mobileScrollTrack.addEventListener("pointerdown", (event) => {
+        dragging = true;
+        el.mobileScrollTrack.setPointerCapture(event.pointerId);
+        scrollFromPointer(event, true);
+      });
+      el.mobileScrollTrack.addEventListener("pointermove", (event) => {
+        if (dragging) scrollFromPointer(event);
+      });
+      el.mobileScrollTrack.addEventListener("pointerup", (event) => {
+        dragging = false;
+        if (el.mobileScrollTrack.hasPointerCapture(event.pointerId)) {
+          el.mobileScrollTrack.releasePointerCapture(event.pointerId);
+        }
+      });
+      el.mobileScrollTrack.addEventListener("pointercancel", () => {
+        dragging = false;
+      });
+      window.addEventListener("scroll", updateMobileScrollRail, { passive: true });
+      updateMobileScrollRail();
     }
 
     function openEditModal(index) {
@@ -2986,6 +3190,7 @@
 
       bindPanZoom(el.floorCanvas, "floor");
       bindPanZoom(el.elevationCanvas, "elevation");
+      bindMobileScrollRail();
 
       el.elevationCanvas.addEventListener("click", (event) => {
         if (drag.moved) return;
