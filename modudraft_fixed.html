@@ -132,6 +132,10 @@
       gap: 7px;
     }
 
+    .tool-group.stack > .tool-group {
+      flex-wrap: wrap;
+    }
+
     .brand {
       display: grid;
       grid-template-columns: 42px minmax(0, 1fr);
@@ -298,6 +302,33 @@
       accent-color: var(--accent);
     }
 
+    .global-style-control {
+      display: inline-grid;
+      grid-template-columns: auto minmax(92px, 1fr);
+      align-items: center;
+      gap: 7px;
+      min-height: 38px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-3);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      flex: 1 1 180px;
+      min-width: 180px;
+    }
+
+    .global-style-control select {
+      min-width: 0;
+      height: 28px;
+      padding: 0 24px 0 7px;
+      border-color: #465363;
+      background-color: #202a36;
+      color: var(--text);
+      font-size: 12px;
+    }
+
     .actions {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -317,21 +348,37 @@
       flex: 1 1 auto;
       min-height: 0;
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-auto-rows: minmax(0, 1fr);
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+      grid-auto-rows: 720px;
+      align-content: start;
       gap: 8px;
+      overflow-y: auto;
+      scrollbar-gutter: stable;
     }
 
     .workspace.single-view {
       grid-template-columns: 1fr;
+      grid-template-rows: none;
+      grid-auto-rows: min(720px, calc(100vh - 220px));
     }
 
     .workspace.triple-view {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: 1fr;
+      grid-template-rows: none;
+    }
+
+    .workspace.three-only {
+      grid-template-rows: none;
+      grid-auto-rows: min(720px, calc(100vh - 220px));
+      align-content: start;
     }
 
     .view {
       position: relative;
+      width: min(100%, 960px);
+      aspect-ratio: 4 / 3;
+      justify-self: center;
       min-height: 0;
       overflow: hidden;
       border: 1px solid #3b4552;
@@ -341,6 +388,11 @@
         repeating-linear-gradient(90deg, rgba(120, 90, 45, 0.045) 0 1px, transparent 1px 24px),
         var(--paper);
       box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+    }
+
+    .workspace.single-view .view,
+    .workspace.three-only .view {
+      width: min(100%, 960px, calc((100vh - 220px) * 4 / 3));
     }
 
     .view.hidden {
@@ -729,8 +781,9 @@
       .workspace.triple-view,
       .workspace.single-view {
         grid-template-columns: 1fr;
-        grid-auto-rows: minmax(320px, 1fr);
-        min-height: 1040px;
+        grid-template-rows: none;
+        grid-auto-rows: calc((100vw - 16px) * 0.75);
+        min-height: 0;
       }
 
       .status-bar {
@@ -1002,6 +1055,11 @@
       display: none;
     }
 
+    .modal-content {
+      max-height: calc(100dvh - 36px);
+      overflow-y: auto;
+    }
+
     @media (max-width: 760px) {
       .mobile-scroll-rail {
         position: fixed;
@@ -1130,6 +1188,19 @@
             <input id="wallVisibilityToggle" type="checkbox" checked>
             <span>牆面</span>
           </label>
+          <label class="toggle-control" title="顯示或隱藏吊櫃上方補到天花板的補板">
+            <input id="topFillerVisibilityToggle" type="checkbox" checked>
+            <span>頂部補板</span>
+          </label>
+          <label class="global-style-control" title="一次調整全案櫃體的把手形式">
+            <span>全案把手</span>
+            <select id="globalHandleStyle">
+              <option value="none">無把手</option>
+              <option value="bevel">斜把手</option>
+              <option value="c-channel">內嵌 C 型</option>
+              <option value="bar">G 型／明把手</option>
+            </select>
+          </label>
         </div>
       </div>
 
@@ -1192,7 +1263,7 @@
         </label>
         <label>
           寬度 mm
-          <input id="editWidth" type="number" min="50" step="10">
+          <input id="editWidth" type="number" min="10" step="10">
         </label>
         <label>
           類型
@@ -1201,6 +1272,57 @@
             <option value="upper">吊櫃</option>
           </select>
         </label>
+        <label>
+          櫃體用途
+          <select id="editPurpose">
+            <option value="general">一般收納櫃</option>
+            <option value="stove">爐台櫃</option>
+            <option value="sink">水槽櫃</option>
+            <option value="drawer">抽屜櫃</option>
+            <option value="appliance">嵌入電器櫃</option>
+            <option value="hood">排油煙機吊櫃</option>
+            <option value="open">開放櫃</option>
+            <option value="filler">補板／補邊</option>
+          </select>
+        </label>
+        <label>
+          門片形式
+          <select id="editFrontStyle">
+            <option value="double-door">對開門</option>
+            <option value="single-door">單門</option>
+            <option value="two-drawer">雙抽屜</option>
+            <option value="three-drawer">三抽屜</option>
+            <option value="two-small-one-large">兩小一大抽屜</option>
+            <option value="appliance">電器面板</option>
+            <option value="open">開放式</option>
+            <option value="panel">素面補板</option>
+          </select>
+        </label>
+        <label>
+          把手形式
+          <select id="editHandleStyle">
+            <option value="none">無把手</option>
+            <option value="bevel">斜把手</option>
+            <option value="c-channel">內嵌 C 型把手</option>
+            <option value="bar">G 型／明把手</option>
+          </select>
+        </label>
+        <label id="editSideTreatmentField" class="hidden">
+          側邊處理
+          <select id="editSideTreatment">
+            <option value="wall-filler">靠牆補邊（90° 約 20 mm，斜牆可加寬）</option>
+            <option value="finished-end">見光側封板（下櫃落地）</option>
+          </select>
+        </label>
+        <label id="editSinkMountField" class="hidden">
+          水槽安裝方式
+          <select id="editSinkMount">
+            <option value="undermount">下嵌式（推薦）</option>
+            <option value="flush">平接式</option>
+            <option value="topmount">上裝式</option>
+          </select>
+        </label>
+        <button type="button" id="copyCabinetBtn">複製此櫃體</button>
         <div class="modal-actions">
           <button type="button" class="muted-button" id="cancelEditBtn">取消</button>
           <button type="button" class="primary" id="saveCabinetBtn">儲存</button>
@@ -1260,13 +1382,25 @@
         <label>
           匯出視圖
           <select id="exportView">
-            <option value="floor">平面圖</option>
-            <option value="elevation">立面圖</option>
-            <option value="three">3D 圖</option>
+            <option value="visible" selected>已點亮視圖合併</option>
+            <option value="all">全部視圖合併</option>
+            <optgroup label="單張視圖">
+              <option value="floor">平面圖</option>
+              <option value="elevation">立面圖</option>
+              <option value="three">3D 圖</option>
+            </optgroup>
+          </select>
+        </label>
+        <label>
+          圖片解析度
+          <select id="exportResolution">
+            <option value="1280">標準 1280 × 960</option>
+            <option value="1920" selected>高畫質 1920 × 1440（推薦）</option>
+            <option value="2560">2K 2560 × 1920（最高）</option>
           </select>
         </label>
       </div>
-      <p id="exportHint" class="dialog-note">JPG 會依照所選視圖輸出目前設計。</p>
+      <p id="exportHint" class="dialog-note">所有 JPG 固定輸出為橫向 4:3；推薦使用 1920 × 1440。</p>
       <div class="modal-actions">
         <button type="button" class="muted-button" id="closeExportBtn">取消</button>
         <button type="button" class="primary" id="confirmExportBtn">開始匯出</button>
@@ -1317,6 +1451,8 @@
       currentLayer: "lower",
       selectedIndex: null,
       showWalls: true,
+      showTopFiller: true,
+      globalHandleStyle: "none",
       view: {
         floor: true,
         elevation: true,
@@ -1330,11 +1466,19 @@
 
     const sizes = {
       lowerHeight: 860,
+      toeKickHeight: 120,
+      lowerBodyHeight: 700,
       middleGap: 700,
       lowerDepth: 580,
+      counterDepth: 600,
       upperDepth: 370,
+      upperHeight: 700,
       wallThickness: 120,
-      counterThickness: 40
+      counterThickness: 40,
+      backsplashHeight: 80,
+      backsplashThickness: 20,
+      sidePanelThickness: 20,
+      doorThickness: 20
     };
 
     const el = {
@@ -1343,6 +1487,8 @@
       wallWidthInput: document.getElementById("wallWidthInput"),
       wallHeightInput: document.getElementById("wallHeightInput"),
       wallVisibilityToggle: document.getElementById("wallVisibilityToggle"),
+      topFillerVisibilityToggle: document.getElementById("topFillerVisibilityToggle"),
+      globalHandleStyle: document.getElementById("globalHandleStyle"),
       floorView: document.getElementById("floorView"),
       elevationView: document.getElementById("elevationView"),
       threeView: document.getElementById("threeView"),
@@ -1372,6 +1518,13 @@
       editName: document.getElementById("editName"),
       editWidth: document.getElementById("editWidth"),
       editType: document.getElementById("editType"),
+      editPurpose: document.getElementById("editPurpose"),
+      editFrontStyle: document.getElementById("editFrontStyle"),
+      editHandleStyle: document.getElementById("editHandleStyle"),
+      editSideTreatmentField: document.getElementById("editSideTreatmentField"),
+      editSideTreatment: document.getElementById("editSideTreatment"),
+      editSinkMountField: document.getElementById("editSinkMountField"),
+      editSinkMount: document.getElementById("editSinkMount"),
       installModal: document.getElementById("installModal"),
       installStatus: document.getElementById("installStatus"),
       installNowBtn: document.getElementById("installNowBtn"),
@@ -1380,6 +1533,7 @@
       exportModal: document.getElementById("exportModal"),
       exportFormat: document.getElementById("exportFormat"),
       exportView: document.getElementById("exportView"),
+      exportResolution: document.getElementById("exportResolution"),
       exportHint: document.getElementById("exportHint"),
       aiRenderModal: document.getElementById("aiRenderModal"),
       aiRenderView: document.getElementById("aiRenderView"),
@@ -1468,7 +1622,75 @@
     }
 
     function wallUpperHeight(wall) {
-      return Math.max(260, wall.height - sizes.lowerHeight - sizes.middleGap);
+      return Math.max(0, Math.min(sizes.upperHeight, wall.height - upperBottom()));
+    }
+
+    function topFillerHeight(wall) {
+      return Math.max(0, wall.height - upperBottom() - wallUpperHeight(wall));
+    }
+
+    function inferCabinetPurpose(cabinet) {
+      const name = cabinet.name || "";
+      if (name.includes("補邊") || name.includes("補板") || name.includes("封板")) return "filler";
+      if (name.includes("排油煙機")) return "hood";
+      if (name.includes("爐台") || name.includes("瓦斯爐")) return "stove";
+      if (name.includes("水槽")) return "sink";
+      if (name.includes("抽屜") || name.includes("抽櫃")) return "drawer";
+      if (name.includes("電器") || name.includes("洗碗機") || name.includes("烘碗機")) return "appliance";
+      if (name.includes("開放")) return "open";
+      return "general";
+    }
+
+    function defaultFrontStyle(purpose, type) {
+      if (purpose === "filler") return "panel";
+      if (purpose === "open") return "open";
+      if (purpose === "appliance") return "appliance";
+      if (purpose === "drawer") return "two-small-one-large";
+      if (purpose === "stove" || purpose === "sink" || purpose === "hood") return "double-door";
+      return type === "upper" ? "double-door" : "two-small-one-large";
+    }
+
+    function normalizeCabinet(cabinet) {
+      cabinet.type = cabinet.type === "upper" ? "upper" : "lower";
+      cabinet.purpose = cabinet.purpose || inferCabinetPurpose(cabinet);
+      cabinet.frontStyle = cabinet.frontStyle || defaultFrontStyle(cabinet.purpose, cabinet.type);
+      cabinet.sideTreatment = cabinet.sideTreatment === "finished-end" ? "finished-end" : "wall-filler";
+      cabinet.sinkMount = ["flush", "topmount", "undermount"].includes(cabinet.sinkMount)
+        ? cabinet.sinkMount
+        : "undermount";
+      if (cabinet.purpose === "hood" || cabinet.purpose === "filler" || cabinet.purpose === "open") {
+        cabinet.handleStyle = "none";
+      } else {
+        cabinet.handleStyle = cabinet.handleStyle || state.globalHandleStyle || "none";
+      }
+      return cabinet;
+    }
+
+    function makeCabinet(name, width, type, purpose, frontStyle = null, handleStyle = null) {
+      return normalizeCabinet({
+        id: uid(type),
+        name,
+        width,
+        type,
+        purpose,
+        frontStyle,
+        handleStyle
+      });
+    }
+
+    function applyGlobalHandleStyle() {
+      state.globalHandleStyle = el.globalHandleStyle.value;
+      state.walls.forEach((wall) => {
+        wall.cabinets.forEach((cabinet) => {
+          normalizeCabinet(cabinet);
+          cabinet.handleStyle = cabinet.purpose === "hood"
+            || cabinet.purpose === "filler"
+            || cabinet.purpose === "open"
+            ? "none"
+            : state.globalHandleStyle;
+        });
+      });
+      renderAll();
     }
 
     function cabinetHeight(cabinet, wall) {
@@ -1549,6 +1771,7 @@
 
         const cursor = { lower: 0, upper: 0 };
         wall.cabinets.forEach((cabinet) => {
+          normalizeCabinet(cabinet);
           const type = cabinet.type === "upper" ? "upper" : "lower";
           cabinet.type = type;
           const minWidth = cabinet.name.includes("補邊") || cabinet.name.includes("封板") ? 10 : 50;
@@ -1563,6 +1786,25 @@
       return wall.cabinets
         .filter((cabinet) => cabinet.type === type)
         .reduce((sum, cabinet) => sum + cabinet.width, 0);
+    }
+
+    function lowerToeKickSpan(wall) {
+      const lowerCabinets = wall.cabinets.filter((cabinet) => cabinet.type === "lower");
+      const total = lowerCabinets.reduce((sum, cabinet) => sum + cabinet.width, 0);
+      if (!lowerCabinets.length) return { start: 0, width: 0 };
+
+      const first = normalizeCabinet(lowerCabinets[0]);
+      const last = normalizeCabinet(lowerCabinets[lowerCabinets.length - 1]);
+      const leftInset = first.purpose === "filler" && first.sideTreatment === "finished-end"
+        ? first.width
+        : 0;
+      const rightInset = last !== first && last.purpose === "filler" && last.sideTreatment === "finished-end"
+        ? last.width
+        : 0;
+      return {
+        start: leftInset,
+        width: Math.max(0, total - leftInset - rightInset)
+      };
     }
 
     function updateMetrics() {
@@ -1586,6 +1828,7 @@
       const visibleCount = Number(state.view.floor) + Number(state.view.elevation) + Number(state.view.three);
       workspace.classList.toggle("single-view", visibleCount === 1);
       workspace.classList.toggle("triple-view", visibleCount === 3);
+      workspace.classList.toggle("three-only", visibleCount === 1 && state.view.three);
     }
 
     function autoGenerateKitchen() {
@@ -1597,26 +1840,43 @@
       const upper = [];
 
       if (width < 1200) {
-        lower.push({ id: uid("lower"), name: "下櫃", width, type: "lower" });
-        upper.push({ id: uid("upper"), name: "吊櫃", width, type: "upper" });
+        lower.push(makeCabinet("一般下櫃", width, "lower", "general"));
+        upper.push(makeCabinet("一般吊櫃", width, "upper", "general", "double-door"));
       } else {
         const filler = width >= 1500 ? 20 : 0;
         const usable = Math.max(0, width - filler * 2);
-        const stove = usable >= 1800 ? 800 : Math.max(600, Math.round(usable * 0.38 / 10) * 10);
-        const sink = usable >= 1800 ? 800 : Math.max(500, Math.round(usable * 0.34 / 10) * 10);
+        const stove = usable >= 1600 ? 800 : Math.floor(usable / 20) * 10;
+        const sink = usable >= 1600 ? 800 : usable - stove;
         const worktop = Math.max(0, usable - stove - sink);
+        const worktopCount = worktop > 0 ? Math.max(1, Math.ceil(worktop / 900)) : 0;
+        const worktopWidths = [];
+        let worktopRemain = worktop;
+        for (let index = 0; index < worktopCount; index += 1) {
+          const slots = worktopCount - index;
+          const cabinetWidth = index === worktopCount - 1
+            ? worktopRemain
+            : Math.round((worktopRemain / slots) / 10) * 10;
+          worktopWidths.push(cabinetWidth);
+          worktopRemain -= cabinetWidth;
+        }
 
-        if (filler > 0) lower.push({ id: uid("lower"), name: "左補邊", width: filler, type: "lower" });
-        lower.push({ id: uid("lower"), name: "爐台下櫃", width: stove, type: "lower" });
-        if (worktop > 0) lower.push({ id: uid("lower"), name: "備餐下櫃", width: worktop, type: "lower" });
-        lower.push({ id: uid("lower"), name: "水槽下櫃", width: sink, type: "lower" });
-        if (filler > 0) lower.push({ id: uid("lower"), name: "右補邊", width: filler, type: "lower" });
+        if (filler > 0) lower.push(makeCabinet("左補邊", filler, "lower", "filler", "panel", "none"));
+        lower.push(makeCabinet("爐台下櫃", stove, "lower", "stove", "double-door"));
+        worktopWidths.forEach((cabinetWidth, index) => {
+          const suffix = worktopCount > 1 ? ` ${index + 1}` : "";
+          lower.push(makeCabinet(`備餐抽屜櫃${suffix}`, cabinetWidth, "lower", "drawer", "two-small-one-large"));
+        });
+        lower.push(makeCabinet("水槽下櫃", sink, "lower", "sink", "double-door"));
+        if (filler > 0) lower.push(makeCabinet("右補邊", filler, "lower", "filler", "panel", "none"));
 
-        if (filler > 0) upper.push({ id: uid("upper"), name: "左補邊", width: filler, type: "upper" });
-        upper.push({ id: uid("upper"), name: "排油煙機吊櫃", width: stove, type: "upper" });
-        if (worktop > 0) upper.push({ id: uid("upper"), name: "收納吊櫃", width: worktop, type: "upper" });
-        upper.push({ id: uid("upper"), name: "水槽吊櫃", width: sink, type: "upper" });
-        if (filler > 0) upper.push({ id: uid("upper"), name: "右補邊", width: filler, type: "upper" });
+        if (filler > 0) upper.push(makeCabinet("左補邊", filler, "upper", "filler", "panel", "none"));
+        upper.push(makeCabinet("排油煙機吊櫃", stove, "upper", "hood", "double-door"));
+        worktopWidths.forEach((cabinetWidth, index) => {
+          const suffix = worktopCount > 1 ? ` ${index + 1}` : "";
+          upper.push(makeCabinet(`收納吊櫃${suffix}`, cabinetWidth, "upper", "general", "double-door"));
+        });
+        upper.push(makeCabinet("水槽上方吊櫃", sink, "upper", "general", "double-door"));
+        if (filler > 0) upper.push(makeCabinet("右補邊", filler, "upper", "filler", "panel", "none"));
       }
 
       wall.cabinets = [...lower, ...upper];
@@ -1641,18 +1901,23 @@
     function addCabinet() {
       const wall = activeWall();
       if (!wall) return;
+      const remaining = wall.width - layerTotal(wall, state.currentLayer);
+      if (remaining < 50) {
+        window.alert("目前牆面已沒有足夠空間新增櫃體。");
+        return;
+      }
       const defaultName = state.currentLayer === "lower" ? "新增下櫃" : "新增吊櫃";
       const name = window.prompt("請輸入櫃體名稱", defaultName);
       if (!name) return;
       const width = askPositiveInteger("請輸入櫃體寬度（mm）", 600, 50, 6000);
       if (width === null) return;
 
-      wall.cabinets.push({
-        id: uid(state.currentLayer),
-        name: name.trim(),
-        width,
-        type: state.currentLayer
-      });
+      wall.cabinets.push(makeCabinet(
+        name.trim(),
+        Math.min(width, remaining),
+        state.currentLayer,
+        "general"
+      ));
       renderAll();
     }
 
@@ -1743,8 +2008,49 @@
       return `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}-${pad(now.getHours())}${pad(now.getMinutes())}`;
     }
 
-    async function captureViewImage(viewName, shouldDownload = false) {
+    function exportPixelSize(source, requestedLongEdge) {
+      const rect = source.getBoundingClientRect();
+      const logicalWidth = Math.max(1, rect.width || source.width);
+      const logicalHeight = Math.max(1, rect.height || source.height);
+      const longEdge = Math.max(1280, Math.min(2560, Number(requestedLongEdge) || 1920));
+      const width = longEdge;
+      const height = Math.round(longEdge * 3 / 4);
+      const factor = Math.min(width / logicalWidth, height / logicalHeight);
+      return {
+        width,
+        height,
+        factor,
+        offsetX: (width - logicalWidth * factor) / 2,
+        offsetY: (height - logicalHeight * factor) / 2,
+        longEdge
+      };
+    }
+
+    function render2DForExport(viewName, pixelSize) {
+      const canvas = viewCanvas(viewName);
+      const context = viewName === "floor" ? ctx.floor : ctx.elevation;
+      canvas.width = pixelSize.width;
+      canvas.height = pixelSize.height;
+      context.setTransform(
+        pixelSize.factor,
+        0,
+        0,
+        pixelSize.factor,
+        pixelSize.offsetX,
+        pixelSize.offsetY
+      );
+      if (viewName === "floor") drawFloorplan(activeWall());
+      else drawElevation(activeWall());
+    }
+
+    async function captureViewImage(viewName, shouldDownload = false, requestedLongEdge = 1920) {
       const originalView = { ...state.view };
+      let originalRendererPixelRatio = null;
+      const canReuseCurrent3D = viewName === "three"
+        && state.view.three
+        && three.renderer
+        && three.scene
+        && three.camera;
       applyViewState({
         floor: viewName === "floor",
         elevation: viewName === "elevation",
@@ -1756,7 +2062,12 @@
       resizeCanvases();
       render2D();
       if (viewName === "three") {
-        await render3D();
+        if (canReuseCurrent3D) {
+          resize3DRenderer();
+          three.renderer.render(three.scene, three.camera);
+        } else {
+          await render3D();
+        }
         await new Promise((resolve) => window.setTimeout(resolve, 120));
       }
 
@@ -1767,20 +2078,85 @@
         throw new Error("所選視圖尚未完成繪製");
       }
 
+      const pixelSize = exportPixelSize(source, requestedLongEdge);
+      if (viewName === "floor" || viewName === "elevation") {
+        render2DForExport(viewName, pixelSize);
+      } else if (three.renderer && three.camera && three.scene) {
+        originalRendererPixelRatio = three.renderer.getPixelRatio();
+        three.renderer.setPixelRatio(1);
+        three.renderer.setSize(pixelSize.width, pixelSize.height, false);
+        three.camera.aspect = pixelSize.width / pixelSize.height;
+        three.camera.updateProjectionMatrix();
+        three.renderer.render(three.scene, three.camera);
+      }
+
       const exportCanvas = document.createElement("canvas");
-      exportCanvas.width = source.width;
-      exportCanvas.height = source.height;
+      exportCanvas.width = pixelSize.width;
+      exportCanvas.height = pixelSize.height;
       const exportContext = exportCanvas.getContext("2d");
       exportContext.fillStyle = viewName === "three" ? "#121820" : "#f7efe1";
       exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-      exportContext.drawImage(source, 0, 0);
-      const dataUrl = exportCanvas.toDataURL("image/jpeg", 0.94);
+      exportContext.drawImage(source, 0, 0, exportCanvas.width, exportCanvas.height);
+      const dataUrl = exportCanvas.toDataURL("image/jpeg", 0.96);
 
       applyViewState(originalView);
-      window.setTimeout(renderAll, 80);
+      await nextPaint();
+      calculatePositions();
+      syncWallInputs();
+      updateMetrics();
+      resizeCanvases();
+      render2D();
+      if (originalRendererPixelRatio !== null && three.renderer) {
+        three.renderer.setPixelRatio(originalRendererPixelRatio);
+      }
+      if (originalView.three && three.renderer && three.scene && three.camera) {
+        resize3DRenderer();
+        three.renderer.render(three.scene, three.camera);
+      }
+      window.requestAnimationFrame(updateMobileScrollRail);
 
       if (shouldDownload) {
-        downloadDataUrl(dataUrl, `modudraft-${viewName}-${exportDateToken()}.jpg`);
+        downloadDataUrl(dataUrl, `modudraft-${viewName}-${pixelSize.longEdge}px-${exportDateToken()}.jpg`);
+      }
+      return dataUrl;
+    }
+
+    function loadExportImage(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("合併圖載入失敗"));
+        image.src = dataUrl;
+      });
+    }
+
+    async function captureCombinedViews(viewNames, shouldDownload = false, requestedLongEdge = 1920) {
+      const order = ["floor", "elevation", "three"];
+      const selectedViews = order.filter((name) => viewNames.includes(name));
+      if (!selectedViews.length) throw new Error("請至少點亮一個視圖再匯出");
+
+      const longEdge = Math.max(1280, Math.min(2560, Number(requestedLongEdge) || 1920));
+      const panelHeight = Math.round(longEdge * 3 / 4);
+      const dataUrls = [];
+      for (const viewName of selectedViews) {
+        dataUrls.push(await captureViewImage(viewName, false, longEdge));
+      }
+      const images = await Promise.all(dataUrls.map(loadExportImage));
+      const combinedCanvas = document.createElement("canvas");
+      combinedCanvas.width = longEdge;
+      combinedCanvas.height = panelHeight * images.length;
+      const context = combinedCanvas.getContext("2d");
+      context.fillStyle = "#f7efe1";
+      context.fillRect(0, 0, combinedCanvas.width, combinedCanvas.height);
+      images.forEach((image, index) => {
+        context.drawImage(image, 0, index * panelHeight, longEdge, panelHeight);
+      });
+      const dataUrl = combinedCanvas.toDataURL("image/jpeg", 0.96);
+      if (shouldDownload) {
+        downloadDataUrl(
+          dataUrl,
+          `modudraft-sheet-${selectedViews.join("-")}-${longEdge}px-${exportDateToken()}.jpg`
+        );
       }
       return dataUrl;
     }
@@ -1838,20 +2214,80 @@
         }
 
         wall.cabinets.forEach((cabinet, cabinetIndex) => {
-          const height = cabinetHeight(cabinet, wall);
-          const depth = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
-          const y = cabinet.type === "lower" ? height / 2 : upperBottom() + height / 2;
+          const isLower = cabinet.type === "lower";
+          const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
+          const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
+          const height = isLower
+            ? sizes.lowerBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
+            : wallUpperHeight(wall);
+          const fullDepth = isLower ? sizes.lowerDepth : sizes.upperDepth;
+          const externalDepth = fullDepth + sizes.doorThickness;
+          const depth = isWallFiller ? sizes.sidePanelThickness : externalDepth;
+          const z = isWallFiller ? externalDepth - depth / 2 : depth / 2;
+          const y = isLower
+            ? (isFinishedEnd ? height / 2 : sizes.toeKickHeight + height / 2)
+            : upperBottom() + height / 2;
           children.push(boxDaeNode(
             `wall-${wallIndex + 1}-cabinet-${cabinetIndex + 1}`,
             cabinet.x + cabinet.width / 2,
             y,
-            depth / 2,
+            z,
             cabinet.width,
             height,
             depth,
             cabinet.type === "lower" ? "lower-material" : "upper-material"
           ));
         });
+
+        const lowerUsed = Math.min(wall.width, layerTotal(wall, "lower"));
+        if (lowerUsed > 0) {
+          const toeSpan = lowerToeKickSpan(wall);
+          children.push(boxDaeNode(
+            `wall-${wallIndex + 1}-continuous-toe-kick`,
+            toeSpan.start + toeSpan.width / 2,
+            sizes.toeKickHeight / 2,
+            Math.max(120, sizes.lowerDepth - 60) / 2,
+            toeSpan.width,
+            sizes.toeKickHeight,
+            Math.max(120, sizes.lowerDepth - 60),
+            "toe-material"
+          ));
+          children.push(boxDaeNode(
+            `wall-${wallIndex + 1}-continuous-countertop`,
+            lowerUsed / 2,
+            sizes.toeKickHeight + sizes.lowerBodyHeight + sizes.counterThickness / 2,
+            sizes.counterDepth / 2,
+            lowerUsed,
+            sizes.counterThickness,
+            sizes.counterDepth,
+            "counter-material"
+          ));
+          children.push(boxDaeNode(
+            `wall-${wallIndex + 1}-continuous-backsplash`,
+            lowerUsed / 2,
+            sizes.lowerHeight + sizes.backsplashHeight / 2,
+            sizes.backsplashThickness / 2,
+            lowerUsed,
+            sizes.backsplashHeight,
+            sizes.backsplashThickness,
+            "counter-material"
+          ));
+        }
+
+        const upperUsed = Math.min(wall.width, layerTotal(wall, "upper"));
+        const fillerHeight = topFillerHeight(wall);
+        if (state.showTopFiller && upperUsed > 0 && fillerHeight > 0) {
+          children.push(boxDaeNode(
+            `wall-${wallIndex + 1}-top-filler`,
+            upperUsed / 2,
+            upperBottom() + wallUpperHeight(wall) + fillerHeight / 2,
+            sizes.upperDepth / 2,
+            upperUsed,
+            fillerHeight,
+            sizes.upperDepth,
+            "upper-material"
+          ));
+        }
 
         wallNodes.push(`
           <node id="wall-set-${wallIndex + 1}" name="牆面 ${wallIndex + 1}">
@@ -1878,11 +2314,15 @@
     <effect id="wall-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.86 0.83 0.77 1</color></diffuse></lambert></technique></profile_COMMON></effect>
     <effect id="lower-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.98 0.97 0.94 1</color></diffuse></lambert></technique></profile_COMMON></effect>
     <effect id="upper-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.84 0.88 0.92 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+    <effect id="toe-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.58 0.56 0.52 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+    <effect id="counter-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.90 0.88 0.84 1</color></diffuse></lambert></technique></profile_COMMON></effect>
   </library_effects>
   <library_materials>
     <material id="wall-material" name="牆面"><instance_effect url="#wall-effect"/></material>
     <material id="lower-material" name="下櫃"><instance_effect url="#lower-effect"/></material>
     <material id="upper-material" name="吊櫃"><instance_effect url="#upper-effect"/></material>
+    <material id="toe-material" name="踢腳板"><instance_effect url="#toe-effect"/></material>
+    <material id="counter-material" name="連續人造石檯面"><instance_effect url="#counter-effect"/></material>
   </library_materials>
   <library_geometries>
     <geometry id="unit-box" name="Unit Box">
@@ -1917,12 +2357,32 @@
 
     function updateExportOptions() {
       const isDae = el.exportFormat.value === "dae";
+      const wasDisabled = el.exportView.disabled;
+      if (isDae && !wasDisabled) {
+        el.exportView.dataset.jpgSelection = el.exportView.value;
+      }
       el.exportView.disabled = isDae;
+      el.exportResolution.disabled = isDae;
       if (isDae) {
         el.exportView.value = "three";
         el.exportHint.textContent = "輸出保留真實毫米尺寸的 COLLADA 3D 檔，可在 SketchUp 使用「匯入」開啟。";
       } else {
-        el.exportHint.textContent = "JPG 會依照所選視圖輸出目前設計。";
+        if (wasDisabled && el.exportView.dataset.jpgSelection) {
+          el.exportView.value = el.exportView.dataset.jpgSelection;
+        }
+        const selection = el.exportView.value;
+        if (selection === "visible") {
+          const names = [
+            state.view.floor ? "平面" : null,
+            state.view.elevation ? "立面" : null,
+            state.view.three ? "3D" : null
+          ].filter(Boolean);
+          el.exportHint.textContent = `將依序合併目前點亮的視圖：${names.join(" → ") || "尚未點亮視圖"}。`;
+        } else if (selection === "all") {
+          el.exportHint.textContent = "將依序合併平面圖、立面圖與 3D；每一格皆為橫向 4:3。";
+        } else {
+          el.exportHint.textContent = "單張 JPG 固定輸出為橫向 4:3；推薦使用 1920 × 1440。";
+        }
       }
     }
 
@@ -1938,7 +2398,16 @@
             `modudraft-sketchup-${exportDateToken()}.dae`
           );
         } else {
-          await captureViewImage(el.exportView.value, true);
+          const selection = el.exportView.value;
+          const longEdge = Number(el.exportResolution.value);
+          if (selection === "visible" || selection === "all") {
+            const viewNames = selection === "all"
+              ? ["floor", "elevation", "three"]
+              : ["floor", "elevation", "three"].filter((name) => state.view[name]);
+            await captureCombinedViews(viewNames, true, longEdge);
+          } else {
+            await captureViewImage(selection, true, longEdge);
+          }
         }
         el.exportHint.textContent = "匯出完成，檔案已送到瀏覽器下載資料夾。";
       } catch (error) {
@@ -1957,7 +2426,7 @@
       el.aiRenderStatus.textContent = "正在產生設計截圖...";
 
       try {
-        aiScreenshotDataUrl = await captureViewImage(el.aiRenderView.value, true);
+        aiScreenshotDataUrl = await captureViewImage(el.aiRenderView.value, true, 1920);
         el.aiScreenshotPreview.src = aiScreenshotDataUrl;
         el.aiScreenshotPreview.classList.add("visible");
         el.openGeminiBtn.disabled = false;
@@ -2014,6 +2483,48 @@
 
     function scaleFor(width, viewWidth) {
       return Math.max(0.05, (viewWidth - 92) / Math.max(1, width));
+    }
+
+    function scaleFor2DDrawings(wall) {
+      const visibleCanvases = [
+        state.view.floor ? el.floorCanvas : null,
+        state.view.elevation ? el.elevationCanvas : null
+      ].filter(Boolean);
+      const widths = visibleCanvases
+        .map((canvas) => canvas.getBoundingClientRect().width)
+        .filter((width) => width > 0);
+      const sharedWidth = widths.length ? Math.min(...widths) : 1;
+      let scale = (sharedWidth - 72) / Math.max(1, wall.width + sizes.counterDepth);
+
+      if (state.view.floor) {
+        const floorHeight = el.floorCanvas.getBoundingClientRect().height;
+        const depthScale = (floorHeight * 0.833) / Math.max(1, sizes.lowerDepth * 0.78);
+        const wallScale = (floorHeight * 0.075) / Math.max(1, sizes.wallThickness);
+        scale = Math.min(scale, depthScale, wallScale);
+      }
+
+      if (state.view.elevation) {
+        const elevationHeight = el.elevationCanvas.getBoundingClientRect().height;
+        const elevationScale = (elevationHeight * 0.867) / Math.max(1, wall.height);
+        scale = Math.min(scale, elevationScale);
+      }
+
+      return Math.max(0.05, scale);
+    }
+
+    function elevationDrawingLayout(wall, rect, scale) {
+      const frontWidth = wall.width * scale;
+      const sideWidth = sizes.counterDepth * scale;
+      const gap = 72;
+      const totalWidth = frontWidth + gap + sideWidth;
+      const frontX = Math.max(8, (rect.width - totalWidth) / 2);
+      return {
+        frontX,
+        frontWidth,
+        sideX: frontX + frontWidth + gap,
+        sideWidth,
+        gap
+      };
     }
 
     function clearDraftCanvas(canvas, context) {
@@ -2165,26 +2676,38 @@
       ctx.floor.translate(z.panX, z.panY);
       ctx.floor.scale(z.scale, z.scale);
 
-      const baseScale = scaleFor(wall.width, rect.width);
-      const offsetX = 46;
-      const wallY = rect.height - 54;
+      const baseScale = scaleFor2DDrawings(wall);
       const wallWidth = wall.width * baseScale;
+      const offsetX = (rect.width - wallWidth) / 2;
       const wallThickness = sizes.wallThickness * baseScale;
+      const planDepth = Math.max(28, sizes.lowerDepth * baseScale * 0.78);
+      const visibleWallThickness = Math.max(8, wallThickness);
+      const drawingBlockHeight = 48 + planDepth + visibleWallThickness + 38;
+      const blockTop = Math.max(10, (rect.height - drawingBlockHeight) / 2);
+      const wallY = blockTop + 48 + planDepth;
 
       ctx.floor.fillStyle = "#d5d0c5";
-      ctx.floor.fillRect(offsetX, wallY, wallWidth, Math.max(8, wallThickness));
+      ctx.floor.fillRect(offsetX, wallY, wallWidth, visibleWallThickness);
       ctx.floor.strokeStyle = "#151a22";
       ctx.floor.lineWidth = 1.5;
-      ctx.floor.strokeRect(offsetX, wallY, wallWidth, Math.max(8, wallThickness));
+      ctx.floor.strokeRect(offsetX, wallY, wallWidth, visibleWallThickness);
 
       wall.cabinets.forEach((cabinet) => {
+        normalizeCabinet(cabinet);
         const x = offsetX + cabinet.x * baseScale;
         const width = cabinet.width * baseScale;
-        const depthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
-        const depth = Math.max(28, depthMm * baseScale * 0.78);
-        const y = wallY - depth;
+        const bodyDepthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+        const depthMm = bodyDepthMm + sizes.doorThickness;
+        const fullDepth = Math.max(28, depthMm * baseScale * 0.78);
+        const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
+        const depth = isWallFiller
+          ? Math.max(4, sizes.sidePanelThickness * baseScale * 0.78)
+          : fullDepth;
+        const y = isWallFiller ? wallY - fullDepth : wallY - depth;
 
-        ctx.floor.fillStyle = cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)";
+        ctx.floor.fillStyle = isWallFiller
+          ? "#d9d2c8"
+          : (cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)");
         ctx.floor.fillRect(x, y, width, depth);
         ctx.floor.strokeStyle = cabinet.type === "lower" ? "#151a22" : "#6d7c8f";
         ctx.floor.lineWidth = cabinet.type === "lower" ? 1.5 : 1;
@@ -2194,9 +2717,16 @@
         drawDimension(ctx.floor, x, x + width, y - 13, `${cabinet.width}`, "#354151");
       });
 
-      drawDimension(ctx.floor, offsetX, offsetX + wallWidth, 28, `牆寬 ${wall.width}`, "#151a22");
-      drawDimension(ctx.floor, offsetX, offsetX + sizes.lowerDepth * baseScale, wallY + 34, `深 ${sizes.lowerDepth}`, "#6d4a20");
-      drawLayerRemainder(ctx.floor, wall, "lower", offsetX, baseScale, wallY + 58);
+      drawDimension(
+        ctx.floor,
+        offsetX,
+        offsetX + wallWidth,
+        Math.max(24, wallY - planDepth - 32),
+        `牆寬 ${wall.width}`,
+        "#151a22"
+      );
+      drawDimension(ctx.floor, offsetX, offsetX + sizes.lowerDepth * baseScale, wallY + visibleWallThickness + 18, `深 ${sizes.lowerDepth}`, "#6d4a20");
+      drawLayerRemainder(ctx.floor, wall, "lower", offsetX, baseScale, wallY + visibleWallThickness + 38);
       ctx.floor.restore();
     }
 
@@ -2221,22 +2751,66 @@
       ctx.elevation.translate(z.panX, z.panY);
       ctx.elevation.scale(z.scale, z.scale);
 
-      const baseScaleX = scaleFor(wall.width, rect.width);
-      const scaleY = Math.max(0.05, (rect.height - 128) / wall.height);
-      const offsetX = 54;
-      const baseY = rect.height - 58;
-      const wallWidth = wall.width * baseScaleX;
+      const baseScaleX = scaleFor2DDrawings(wall);
+      const scaleY = baseScaleX;
+      const layout = elevationDrawingLayout(wall, rect, baseScaleX);
+      const wallWidth = layout.frontWidth;
+      const offsetX = layout.frontX;
       const wallHeight = wall.height * scaleY;
+      const baseY = (rect.height + wallHeight) / 2 + 6;
       const upperH = wallUpperHeight(wall);
-      const upperTopY = baseY - wallHeight;
+      const wallTopY = baseY - wallHeight;
       const upperBottomY = baseY - upperBottom() * scaleY;
+      const upperCabinetTopY = upperBottomY - upperH * scaleY;
       const lowerTopY = baseY - sizes.lowerHeight * scaleY;
 
       ctx.elevation.fillStyle = "rgba(246, 238, 226, 0.88)";
-      ctx.elevation.fillRect(offsetX, upperTopY, wallWidth, wallHeight);
+      ctx.elevation.fillRect(offsetX, wallTopY, wallWidth, wallHeight);
       ctx.elevation.strokeStyle = "#b7a991";
       ctx.elevation.lineWidth = 1.2;
-      ctx.elevation.strokeRect(offsetX, upperTopY, wallWidth, wallHeight);
+      ctx.elevation.strokeRect(offsetX, wallTopY, wallWidth, wallHeight);
+
+      const lowerUsedWidth = Math.min(wall.width, layerTotal(wall, "lower")) * baseScaleX;
+      const backsplashHeight = sizes.backsplashHeight * scaleY;
+      if (lowerUsedWidth > 0) {
+        ctx.elevation.fillStyle = "#e3ded5";
+        ctx.elevation.strokeStyle = "#8f8b83";
+        ctx.elevation.fillRect(offsetX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
+        ctx.elevation.strokeRect(offsetX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
+        const counterHeight = sizes.counterThickness * scaleY;
+        ctx.elevation.fillStyle = "#e6e0d7";
+        ctx.elevation.strokeStyle = "#68645e";
+        ctx.elevation.fillRect(offsetX, lowerTopY, lowerUsedWidth, counterHeight);
+        ctx.elevation.strokeRect(offsetX, lowerTopY, lowerUsedWidth, counterHeight);
+      }
+
+      const topFillH = topFillerHeight(wall);
+      const upperUsedWidth = Math.min(wall.width, layerTotal(wall, "upper")) * baseScaleX;
+      if (state.showTopFiller && topFillH > 0 && upperUsedWidth > 0) {
+        ctx.elevation.fillStyle = "#d9d5ce";
+        ctx.elevation.strokeStyle = "#777f88";
+        ctx.elevation.fillRect(offsetX, wallTopY, upperUsedWidth, topFillH * scaleY);
+        ctx.elevation.strokeRect(offsetX, wallTopY, upperUsedWidth, topFillH * scaleY);
+        if (topFillH * scaleY > 15) {
+          ctx.elevation.fillStyle = "#4e5965";
+          ctx.elevation.font = "700 10px Noto Sans TC, sans-serif";
+          ctx.elevation.textAlign = "center";
+          ctx.elevation.textBaseline = "middle";
+          ctx.elevation.fillText("頂部補板", offsetX + upperUsedWidth / 2, wallTopY + topFillH * scaleY / 2);
+        }
+      }
+
+      if (lowerUsedWidth > 0) {
+        const toeHeight = sizes.toeKickHeight * scaleY;
+        const toeSpan = lowerToeKickSpan(wall);
+        const toeX = offsetX + toeSpan.start * baseScaleX;
+        const toeWidth = toeSpan.width * baseScaleX;
+        ctx.elevation.fillStyle = "#c9c4bc";
+        ctx.elevation.strokeStyle = "#68645e";
+        ctx.elevation.lineWidth = 1;
+        ctx.elevation.fillRect(toeX, baseY - toeHeight, toeWidth, toeHeight);
+        ctx.elevation.strokeRect(toeX, baseY - toeHeight, toeWidth, toeHeight);
+      }
 
       ctx.elevation.strokeStyle = "rgba(92, 69, 42, 0.35)";
       ctx.elevation.setLineDash([6, 5]);
@@ -2254,20 +2828,146 @@
         drawDimension(ctx.elevation, box.x, box.x + box.width, box.y + box.height + 16, `${cabinet.width}`, "#354151");
       });
 
-      drawDimension(ctx.elevation, offsetX, offsetX + wallWidth, upperTopY - 22, `牆寬 ${wall.width}`, "#151a22");
-      drawVerticalDimension(ctx.elevation, offsetX - 24, upperTopY, baseY, `牆高 ${wall.height}`, "#151a22");
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 22, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 66, upperTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
-      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 38);
+      drawElevationSideView(ctx.elevation, wall, {
+        x: layout.sideX,
+        width: layout.sideWidth,
+        baseY,
+        scale: baseScaleX,
+        wallTopY,
+        upperBottomY,
+        upperCabinetTopY,
+        lowerTopY
+      });
+
+      drawDimension(ctx.elevation, offsetX, offsetX + wallWidth, wallTopY - 14, `牆寬 ${wall.width}`, "#151a22");
+      drawVerticalDimension(ctx.elevation, offsetX - 14, wallTopY, baseY, `牆高 ${wall.height}`, "#151a22");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 12, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 28, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperCabinetTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
+      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 30);
       ctx.elevation.restore();
     }
 
+    function drawElevationSideView(context, wall, layout) {
+      const {
+        x,
+        width,
+        baseY,
+        scale,
+        wallTopY,
+        upperBottomY,
+        upperCabinetTopY,
+        lowerTopY
+      } = layout;
+      const px = (millimeters) => millimeters * scale;
+      const bodyTopY = baseY - px(sizes.toeKickHeight + sizes.lowerBodyHeight);
+      const bodyBottomY = baseY - px(sizes.toeKickHeight);
+      const lowerBodyDepth = px(sizes.lowerDepth);
+      const counterDepth = px(sizes.counterDepth);
+      const upperBodyDepth = px(sizes.upperDepth);
+      const doorDepth = Math.max(2, px(sizes.doorThickness));
+      const toeBoardX = x + px(sizes.lowerDepth - 60);
+      const toeBoardWidth = Math.max(2, px(sizes.sidePanelThickness));
+      const toeTopY = baseY - px(sizes.toeKickHeight);
+      const footXs = [x + px(90), x + px(450)];
+      const hasLower = layerTotal(wall, "lower") > 0;
+      const hasUpper = layerTotal(wall, "upper") > 0;
+
+      context.save();
+      context.translate(2 * x + width, 0);
+      context.scale(-1, 1);
+      context.lineWidth = 1.2;
+      context.strokeStyle = "#59616a";
+      context.fillStyle = "rgba(246, 238, 226, 0.88)";
+      context.fillRect(x, wallTopY, Math.max(2, px(sizes.wallThickness) * 0.16), baseY - wallTopY);
+      context.strokeRect(x, wallTopY, Math.max(2, px(sizes.wallThickness) * 0.16), baseY - wallTopY);
+
+      if (hasLower) {
+        context.fillStyle = "#f9faf9";
+        context.strokeStyle = "#151a22";
+        context.fillRect(x, bodyTopY, lowerBodyDepth, bodyBottomY - bodyTopY);
+        context.strokeRect(x, bodyTopY, lowerBodyDepth, bodyBottomY - bodyTopY);
+
+        context.fillStyle = "#e7e1d7";
+        context.fillRect(x + lowerBodyDepth, bodyTopY, doorDepth, bodyBottomY - bodyTopY);
+        context.strokeRect(x + lowerBodyDepth, bodyTopY, doorDepth, bodyBottomY - bodyTopY);
+
+        context.fillStyle = "#e6e0d7";
+        context.strokeStyle = "#68645e";
+        context.fillRect(x, lowerTopY, counterDepth, px(sizes.counterThickness));
+        context.strokeRect(x, lowerTopY, counterDepth, px(sizes.counterThickness));
+
+        context.fillStyle = "#d8d2c8";
+        context.fillRect(x, lowerTopY - px(sizes.backsplashHeight), px(sizes.backsplashThickness), px(sizes.backsplashHeight));
+        context.strokeRect(x, lowerTopY - px(sizes.backsplashHeight), px(sizes.backsplashThickness), px(sizes.backsplashHeight));
+
+        context.fillStyle = "#c9c4bc";
+        context.fillRect(toeBoardX, toeTopY, toeBoardWidth, px(sizes.toeKickHeight));
+        context.strokeRect(toeBoardX, toeTopY, toeBoardWidth, px(sizes.toeKickHeight));
+
+        context.strokeStyle = "#4d5359";
+        context.fillStyle = "#656b70";
+        footXs.forEach((footX) => {
+          const stemWidth = Math.max(2, px(18));
+          const padWidth = Math.max(5, px(50));
+          const topPadY = toeTopY + Math.max(2, px(10));
+          const bottomPadY = baseY - Math.max(3, px(18));
+          context.fillRect(footX - padWidth / 2, topPadY, padWidth, Math.max(2, px(12)));
+          context.strokeRect(footX - padWidth / 2, topPadY, padWidth, Math.max(2, px(12)));
+          context.fillRect(footX - stemWidth / 2, topPadY + px(12), stemWidth, Math.max(3, bottomPadY - topPadY - px(12)));
+          context.fillRect(footX - padWidth / 2, bottomPadY, padWidth, Math.max(3, px(18)));
+          context.strokeRect(footX - padWidth / 2, bottomPadY, padWidth, Math.max(3, px(18)));
+        });
+      }
+
+      if (hasUpper) {
+        context.fillStyle = "#eef2f6";
+        context.strokeStyle = "#151a22";
+        context.fillRect(x, upperCabinetTopY, upperBodyDepth, upperBottomY - upperCabinetTopY);
+        context.strokeRect(x, upperCabinetTopY, upperBodyDepth, upperBottomY - upperCabinetTopY);
+        context.fillStyle = "#e1e6ea";
+        context.fillRect(x + upperBodyDepth, upperCabinetTopY, doorDepth, upperBottomY - upperCabinetTopY);
+        context.strokeRect(x + upperBodyDepth, upperCabinetTopY, doorDepth, upperBottomY - upperCabinetTopY);
+      }
+
+      const topFillH = topFillerHeight(wall);
+      if (hasUpper && state.showTopFiller && topFillH > 0) {
+        context.fillStyle = "#d9d5ce";
+        context.strokeStyle = "#777f88";
+        context.fillRect(x, wallTopY, upperBodyDepth + doorDepth, upperCabinetTopY - wallTopY);
+        context.strokeRect(x, wallTopY, upperBodyDepth + doorDepth, upperCabinetTopY - wallTopY);
+      }
+
+      context.strokeStyle = "#151a22";
+      context.lineWidth = 1.5;
+      context.beginPath();
+      context.moveTo(x - 4, baseY);
+      context.lineTo(x + width + 8, baseY);
+      context.stroke();
+      context.restore();
+
+      context.save();
+      context.fillStyle = "#29323d";
+      context.font = "800 11px Noto Sans TC, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "bottom";
+      context.fillText("側視圖", x + width / 2, wallTopY - 5);
+      context.restore();
+
+      if (hasLower) {
+        drawDimension(context, x, x + counterDepth, baseY + 30, `檯深 ${sizes.counterDepth}`, "#6d4a20");
+        drawVerticalDimension(context, x + width + 16, lowerTopY, baseY, `總高 ${sizes.lowerHeight}`, "#6d4a20");
+      }
+      el.elevationCanvas.dataset.hasSideView = "true";
+      el.elevationCanvas.dataset.sideViewDirection = "right";
+    }
+
     function cabinetBox(cabinet, index, wall, rect) {
-      const baseScaleX = scaleFor(wall.width, rect.width);
-      const scaleY = Math.max(0.05, (rect.height - 128) / wall.height);
-      const offsetX = 54;
-      const baseY = rect.height - 58;
+      const baseScaleX = scaleFor2DDrawings(wall);
+      const scaleY = baseScaleX;
+      const offsetX = elevationDrawingLayout(wall, rect, baseScaleX).frontX;
+      const wallHeight = wall.height * scaleY;
+      const baseY = (rect.height + wallHeight) / 2 + 6;
       const width = cabinet.width * baseScaleX;
       const height = cabinetHeight(cabinet, wall) * scaleY;
       const y = cabinet.type === "lower"
@@ -2285,30 +2985,219 @@
 
     function drawCabinet(context, cabinet, box, selected) {
       context.save();
-      context.fillStyle = cabinet.type === "lower" ? "#fffdf9" : "#eef2f6";
+      normalizeCabinet(cabinet);
+      const scaleY = cabinet.type === "lower" ? box.height / sizes.lowerHeight : box.height / Math.max(1, sizes.upperHeight);
+      const counterH = cabinet.type === "lower" ? sizes.counterThickness * scaleY : 0;
+      const toeH = cabinet.type === "lower" ? sizes.toeKickHeight * scaleY : 0;
+      const face = cabinet.type === "lower"
+        ? { x: box.x, y: box.y + counterH, width: box.width, height: Math.max(1, box.height - counterH - toeH) }
+        : { x: box.x, y: box.y, width: box.width, height: box.height };
+      const isSidePanel = cabinet.purpose === "filler";
+      const isFinishedEnd = isSidePanel && cabinet.sideTreatment === "finished-end";
+
       context.strokeStyle = selected ? "#d99a32" : "#151a22";
       context.lineWidth = selected ? 3 : 1.5;
-      context.fillRect(box.x, box.y, box.width, box.height);
-      context.strokeRect(box.x, box.y, box.width, box.height);
-
-      if (cabinet.type === "lower" && box.width > 38 && box.height > 52) {
-        const drawerH = box.height * 0.42;
-        context.strokeStyle = "#718092";
-        context.lineWidth = 1;
-        context.strokeRect(box.x + 6, box.y + 7, box.width - 12, drawerH - 10);
-        context.strokeRect(box.x + 6, box.y + drawerH + 2, box.width - 12, box.height - drawerH - 9);
+      if (isSidePanel) {
+        const panelY = cabinet.type === "lower" ? box.y + counterH : box.y;
+        const panelHeight = cabinet.type === "lower" && isFinishedEnd
+          ? box.height - counterH
+          : face.height;
+        context.fillStyle = isFinishedEnd ? "#d2cbc1" : "#e7e1d7";
+        context.fillRect(box.x, panelY, box.width, panelHeight);
+        context.strokeRect(box.x, panelY, box.width, panelHeight);
+      } else if (cabinet.type === "lower") {
+        context.fillStyle = "#fffdf9";
+        context.fillRect(face.x, face.y, face.width, face.height);
+        context.strokeRect(face.x, face.y, face.width, face.height);
+      } else {
+        context.fillStyle = "#eef2f6";
+        context.fillRect(box.x, box.y, box.width, box.height);
+        context.strokeRect(box.x, box.y, box.width, box.height);
       }
 
-      if (cabinet.name.includes("爐台") && box.width > 44) {
-        context.strokeStyle = "#d99a32";
-        context.lineWidth = 1.2;
+      if (!isSidePanel) drawCabinetFront(context, cabinet, face);
+      drawCabinetEquipment(context, cabinet, box, counterH);
+
+      if (box.width > 34 && box.height > 24) {
+        drawCabinetLabel(context, cabinet.name, face.x, face.y, face.width, face.height);
+      }
+      context.restore();
+    }
+
+    function frontPanelRects(cabinet, face) {
+      const gap = Math.max(2, Math.min(5, Math.min(face.width, face.height) * 0.025));
+      const inner = {
+        x: face.x + gap,
+        y: face.y + gap,
+        width: Math.max(1, face.width - gap * 2),
+        height: Math.max(1, face.height - gap * 2)
+      };
+      const splitVertical = (count, ratios = null) => {
+        const result = [];
+        let y = inner.y;
+        for (let index = 0; index < count; index += 1) {
+          const ratio = ratios ? ratios[index] : 1 / count;
+          const height = index === count - 1 ? inner.y + inner.height - y : inner.height * ratio - gap / 2;
+          result.push({ x: inner.x, y, width: inner.width, height: Math.max(1, height) });
+          y += inner.height * ratio;
+        }
+        return result;
+      };
+
+      if (cabinet.frontStyle === "open") return [];
+      if (cabinet.frontStyle === "double-door") {
+        const half = (inner.width - gap) / 2;
+        return [
+          { x: inner.x, y: inner.y, width: half, height: inner.height },
+          { x: inner.x + half + gap, y: inner.y, width: half, height: inner.height }
+        ];
+      }
+      if (cabinet.frontStyle === "two-drawer") return splitVertical(2);
+      if (cabinet.frontStyle === "three-drawer") return splitVertical(3);
+      if (cabinet.frontStyle === "two-small-one-large") return splitVertical(3, [0.24, 0.24, 0.52]);
+      return [inner];
+    }
+
+    function drawCabinetFront(context, cabinet, face) {
+      const panels = frontPanelRects(cabinet, face);
+      if (cabinet.frontStyle === "open") {
+        context.fillStyle = "#d8dee5";
+        context.fillRect(face.x + 4, face.y + 4, Math.max(1, face.width - 8), Math.max(1, face.height - 8));
+        context.strokeStyle = "#718092";
         context.beginPath();
-        context.arc(box.x + box.width / 2, box.y + 18, Math.min(22, box.width / 5), 0, Math.PI * 2);
+        context.moveTo(face.x + 5, face.y + face.height / 2);
+        context.lineTo(face.x + face.width - 5, face.y + face.height / 2);
+        context.stroke();
+        return;
+      }
+
+      panels.forEach((panel) => {
+        context.fillStyle = cabinet.frontStyle === "appliance" ? "#38434e" : "rgba(255,255,255,0.42)";
+        context.strokeStyle = "#718092";
+        context.lineWidth = 1;
+        context.fillRect(panel.x, panel.y, panel.width, panel.height);
+        context.strokeRect(panel.x, panel.y, panel.width, panel.height);
+        drawHandle2D(context, cabinet, panel);
+      });
+    }
+
+    function drawHandle2D(context, cabinet, panel) {
+      const handleStyle = cabinet.handleStyle;
+      if (handleStyle === "none" || panel.width < 12 || panel.height < 10) return;
+      context.strokeStyle = handleStyle === "bar" ? "#5c6268" : "#37414a";
+      context.lineCap = "round";
+      const edgeY = cabinet.type === "upper"
+        ? panel.y + panel.height - 5
+        : panel.y + 5;
+      if (handleStyle === "c-channel") {
+        context.lineWidth = Math.max(2, Math.min(4, panel.height * 0.045));
+        context.beginPath();
+        context.moveTo(panel.x + 4, edgeY);
+        context.lineTo(panel.x + panel.width - 4, edgeY);
+        context.stroke();
+      } else if (handleStyle === "bevel") {
+        const stripHeight = Math.max(5, Math.min(12, panel.height * 0.09));
+        const stripY = cabinet.type === "upper"
+          ? panel.y + panel.height - stripHeight - 1
+          : panel.y + 1;
+        const gradient = context.createLinearGradient(0, stripY, 0, stripY + stripHeight);
+        if (cabinet.type === "upper") {
+          gradient.addColorStop(0, "rgba(245,245,241,0.18)");
+          gradient.addColorStop(1, "rgba(54,61,67,0.82)");
+        } else {
+          gradient.addColorStop(0, "rgba(54,61,67,0.82)");
+          gradient.addColorStop(1, "rgba(245,245,241,0.18)");
+        }
+        context.fillStyle = gradient;
+        context.beginPath();
+        if (cabinet.type === "upper") {
+          context.moveTo(panel.x + 2, stripY);
+          context.lineTo(panel.x + panel.width - 2, stripY + 2);
+          context.lineTo(panel.x + panel.width - 2, stripY + stripHeight);
+          context.lineTo(panel.x + 2, stripY + stripHeight);
+        } else {
+          context.moveTo(panel.x + 2, stripY);
+          context.lineTo(panel.x + panel.width - 2, stripY);
+          context.lineTo(panel.x + panel.width - 2, stripY + stripHeight - 2);
+          context.lineTo(panel.x + 2, stripY + stripHeight);
+        }
+        context.closePath();
+        context.fill();
+        context.strokeStyle = "rgba(42,48,53,0.72)";
+        context.lineWidth = 1;
+        context.beginPath();
+        const shadowY = cabinet.type === "upper" ? stripY + stripHeight : stripY;
+        context.moveTo(panel.x + 2, shadowY);
+        context.lineTo(panel.x + panel.width - 2, shadowY);
+        context.stroke();
+      } else {
+        const handleWidth = Math.min(panel.width * 0.36, 34);
+        context.lineWidth = 2;
+        context.beginPath();
+        const barY = cabinet.type === "upper" ? panel.y + panel.height - 9 : panel.y + 9;
+        context.moveTo(panel.x + (panel.width - handleWidth) / 2, barY);
+        context.lineTo(panel.x + (panel.width + handleWidth) / 2, barY);
+        context.stroke();
+      }
+      context.lineCap = "butt";
+    }
+
+    function drawCabinetEquipment(context, cabinet, box, counterH) {
+      if (cabinet.purpose === "stove" && cabinet.type === "lower" && box.width > 44) {
+        const plateWidth = box.width * 0.72;
+        const plateX = box.x + (box.width - plateWidth) / 2;
+        context.fillStyle = "#31383f";
+        context.strokeStyle = "#111820";
+        context.fillRect(plateX, box.y - 4, plateWidth, Math.max(5, counterH * 0.48));
+        context.strokeRect(plateX, box.y - 4, plateWidth, Math.max(5, counterH * 0.48));
+        context.strokeStyle = "#d99a32";
+        [0.25, 0.5, 0.75].forEach((ratio, index) => {
+          context.beginPath();
+          context.arc(plateX + plateWidth * ratio, box.y - 1, index === 1 ? 6 : 4, 0, Math.PI * 2);
+          context.stroke();
+        });
+      }
+
+      if (cabinet.purpose === "sink" && cabinet.type === "lower" && box.width > 48) {
+        const basinWidth = box.width * 0.58;
+        const basinX = box.x + (box.width - basinWidth) / 2;
+        const basinDepth = Math.min(box.height * 0.2, 48);
+        const mountY = cabinet.sinkMount === "topmount"
+          ? box.y - 2
+          : (cabinet.sinkMount === "flush" ? box.y + 1 : box.y + Math.max(3, counterH * 0.55));
+        context.strokeStyle = "#667787";
+        context.lineWidth = 1.5;
+        context.beginPath();
+        context.moveTo(basinX, mountY);
+        context.lineTo(basinX + 4, box.y + counterH + basinDepth);
+        context.quadraticCurveTo(basinX + basinWidth / 2, box.y + counterH + basinDepth + 8, basinX + basinWidth - 4, box.y + counterH + basinDepth);
+        context.lineTo(basinX + basinWidth, mountY);
+        context.stroke();
+        if (cabinet.sinkMount !== "undermount") {
+          context.lineWidth = cabinet.sinkMount === "topmount" ? 3 : 1.5;
+          context.beginPath();
+          context.moveTo(basinX - 4, mountY);
+          context.lineTo(basinX + basinWidth + 4, mountY);
+          context.stroke();
+        }
+        const faucetX = box.x + box.width * 0.72;
+        const faucetHeight = Math.max(38, Math.min(58, box.height * 0.09));
+        const faucetReach = Math.max(24, Math.min(42, box.width * 0.12));
+        context.lineWidth = 2.4;
+        context.beginPath();
+        context.moveTo(faucetX, box.y);
+        context.lineTo(faucetX, box.y - faucetHeight * 0.55);
+        context.quadraticCurveTo(faucetX, box.y - faucetHeight, faucetX - faucetReach * 0.5, box.y - faucetHeight);
+        context.quadraticCurveTo(faucetX - faucetReach, box.y - faucetHeight, faucetX - faucetReach, box.y - faucetHeight * 0.52);
         context.stroke();
       }
 
-      drawCabinetLabel(context, cabinet.name, box.x, box.y, box.width, box.height);
-      context.restore();
+      if (cabinet.purpose === "hood" && cabinet.type === "upper") {
+        context.fillStyle = "#596674";
+        context.strokeStyle = "#303943";
+        context.fillRect(box.x + 5, box.y + box.height - 13, Math.max(1, box.width - 10), 10);
+        context.strokeRect(box.x + 5, box.y + box.height - 13, Math.max(1, box.width - 10), 10);
+      }
     }
 
     function loadThree() {
@@ -2366,6 +3255,14 @@
       }
 
       if (!state.view.three) return;
+      const previousCamera = three.camera && three.target
+        ? {
+            position: three.camera.position.clone(),
+            target: three.target.clone(),
+            orbitAzimuth: three.orbitAzimuth,
+            orbitElevation: three.orbitElevation
+          }
+        : null;
       dispose3D();
       container.innerHTML = "";
 
@@ -2390,8 +3287,18 @@
       three.scene.add(three.group);
 
       build3DWalls();
-      fit3DCamera();
+      if (previousCamera) {
+        three.target = previousCamera.target;
+        three.orbitAzimuth = previousCamera.orbitAzimuth;
+        three.orbitElevation = previousCamera.orbitElevation;
+        three.camera.position.copy(previousCamera.position);
+        three.camera.up.set(0, 1, 0);
+        three.camera.lookAt(three.target);
+      } else {
+        fit3DCamera();
+      }
       update3DWallVisibility();
+      update3DTopFillerVisibility();
       bind3DControls(three.renderer.domElement);
       animate3D();
     }
@@ -2518,10 +3425,9 @@
 
       state.walls.forEach((wall, wallIndex) => {
         const wallGroup = new THREE.Group();
-        const isActive = wallIndex === state.activeWallIndex;
         const wallGeometry = new THREE.BoxGeometry(wall.width, wall.height, sizes.wallThickness);
         const wallMaterial = new THREE.MeshStandardMaterial({
-          color: isActive ? 0xefe4d4 : 0xd8d2c7,
+          color: 0xd8d2c7,
           roughness: 0.88,
           metalness: 0
         });
@@ -2529,8 +3435,7 @@
         wallMesh.position.set(wall.width / 2, wall.height / 2, -sizes.wallThickness / 2);
         wallMesh.userData.wallVisual = true;
         wallGroup.add(wallMesh);
-        addEdges(wallGroup, wallGeometry, wallMesh.position, isActive ? 0xd99a32 : 0x6c7480, true);
-        addDimensionBars(wallGroup, wall);
+        addEdges(wallGroup, wallGeometry, wallMesh.position, 0x6c7480, true);
 
         if (wallIndex < state.walls.length - 1) {
           const nextWall = state.walls[wallIndex + 1];
@@ -2552,27 +3457,78 @@
             wallGroup,
             cornerGeometry,
             cornerMesh.position,
-            isActive ? 0xd99a32 : 0x6c7480,
+            0x6c7480,
             true
           );
         }
 
-        wall.cabinets.forEach((cabinet) => {
-          const height = cabinetHeight(cabinet, wall);
-          const depth = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
-          const y = cabinet.type === "lower" ? height / 2 : upperBottom() + height / 2;
-          const z = depth / 2;
-          const geometry = new THREE.BoxGeometry(cabinet.width, height, depth);
-          const material = new THREE.MeshStandardMaterial({
-            color: cabinet.type === "lower" ? 0xfffdf9 : 0xeef2f6,
-            roughness: 0.36,
+        wall.cabinets.forEach((cabinet) => addCabinet3D(wallGroup, cabinet, wall));
+
+        const lowerUsed = Math.min(wall.width, layerTotal(wall, "lower"));
+        if (lowerUsed > 0) {
+          const toeDepth = Math.max(120, sizes.lowerDepth - 60);
+          const toeSpan = lowerToeKickSpan(wall);
+          const toeGeometry = new THREE.BoxGeometry(toeSpan.width, sizes.toeKickHeight, toeDepth);
+          const toeMaterial = new THREE.MeshStandardMaterial({ color: 0xbdb8b0, roughness: 0.72 });
+          const toe = new THREE.Mesh(toeGeometry, toeMaterial);
+          toe.position.set(toeSpan.start + toeSpan.width / 2, sizes.toeKickHeight / 2, toeDepth / 2);
+          toe.userData.toeKickVisual = true;
+          wallGroup.add(toe);
+          addEdges(wallGroup, toeGeometry, toe.position, 0x625f5a);
+
+          const counterGeometry = new THREE.BoxGeometry(
+            lowerUsed,
+            sizes.counterThickness,
+            sizes.counterDepth
+          );
+          const counterMaterial = new THREE.MeshStandardMaterial({ color: 0xe6e0d7, roughness: 0.42 });
+          const counter = new THREE.Mesh(counterGeometry, counterMaterial);
+          counter.position.set(
+            lowerUsed / 2,
+            sizes.toeKickHeight + sizes.lowerBodyHeight + sizes.counterThickness / 2,
+            sizes.counterDepth / 2
+          );
+          counter.userData.countertopVisual = true;
+          wallGroup.add(counter);
+          addEdges(wallGroup, counterGeometry, counter.position, 0x68645e);
+
+          const backsplashGeometry = new THREE.BoxGeometry(
+            lowerUsed,
+            sizes.backsplashHeight,
+            sizes.backsplashThickness
+          );
+          const backsplashMaterial = new THREE.MeshStandardMaterial({
+            color: 0xe3ded5,
+            roughness: 0.54,
             metalness: 0.02
           });
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.position.set(cabinet.x + cabinet.width / 2, y, z);
-          wallGroup.add(mesh);
-          addEdges(wallGroup, geometry, mesh.position, 0x111820);
-        });
+          const backsplash = new THREE.Mesh(backsplashGeometry, backsplashMaterial);
+          backsplash.position.set(
+            lowerUsed / 2,
+            sizes.lowerHeight + sizes.backsplashHeight / 2,
+            sizes.backsplashThickness / 2
+          );
+          backsplash.userData.backsplashVisual = true;
+          wallGroup.add(backsplash);
+          addEdges(wallGroup, backsplashGeometry, backsplash.position, 0x77736d);
+        }
+
+        const fillHeight = topFillerHeight(wall);
+        const upperUsed = Math.min(wall.width, layerTotal(wall, "upper"));
+        if (fillHeight > 0 && upperUsed > 0) {
+          const fillerGeometry = new THREE.BoxGeometry(upperUsed, fillHeight, sizes.upperDepth);
+          const fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd9d5ce, roughness: 0.46 });
+          const filler = new THREE.Mesh(fillerGeometry, fillerMaterial);
+          filler.position.set(
+            upperUsed / 2,
+            upperBottom() + wallUpperHeight(wall) + fillHeight / 2,
+            sizes.upperDepth / 2
+          );
+          filler.userData.topFillerVisual = true;
+          wallGroup.add(filler);
+          const fillerEdges = addEdges(wallGroup, fillerGeometry, filler.position, 0x6d747c);
+          fillerEdges.userData.topFillerVisual = true;
+        }
 
         const angle = Math.atan2(-direction.z, direction.x);
         wallGroup.rotation.y = angle;
@@ -2589,7 +3545,249 @@
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(totalWidth / 4, -2, floorSize / 4);
+      floor.userData.floorVisual = true;
       three.group.add(floor);
+    }
+
+    function addCabinet3D(parent, cabinet, wall) {
+      normalizeCabinet(cabinet);
+      const isLower = cabinet.type === "lower";
+      const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
+      const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
+      const fullDepth = isLower ? sizes.lowerDepth : sizes.upperDepth;
+      const finishedDepth = fullDepth + sizes.doorThickness;
+      const depth = isWallFiller
+        ? sizes.sidePanelThickness
+        : (isFinishedEnd ? finishedDepth : fullDepth);
+      const bodyZ = isWallFiller
+        ? finishedDepth - depth / 2
+        : depth / 2;
+      const height = isLower
+        ? sizes.lowerBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
+        : wallUpperHeight(wall);
+      const bodyY = isLower
+        ? (isFinishedEnd ? height / 2 : sizes.toeKickHeight + height / 2)
+        : upperBottom() + height / 2;
+      const bodyGeometry = new THREE.BoxGeometry(cabinet.width, height, depth);
+      const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: isLower ? 0xfffdf9 : 0xeef2f6,
+        roughness: 0.36,
+        metalness: 0.02
+      });
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+      body.position.set(cabinet.x + cabinet.width / 2, bodyY, bodyZ);
+      if (cabinet.purpose === "filler") {
+        body.userData.sideTreatment = cabinet.sideTreatment;
+      }
+      parent.add(body);
+      addEdges(parent, bodyGeometry, body.position, 0x111820);
+
+      const face = {
+        x: cabinet.x,
+        y: isLower ? (isFinishedEnd ? 0 : sizes.toeKickHeight) : upperBottom(),
+        width: cabinet.width,
+        height
+      };
+      if (cabinet.purpose !== "filler") addCabinetFront3D(parent, cabinet, face, depth);
+      addCabinetEquipment3D(parent, cabinet, wall);
+    }
+
+    function addCabinetFront3D(parent, cabinet, face, depth) {
+      if (cabinet.frontStyle === "open") return;
+      const panelMaterial = new THREE.MeshStandardMaterial({
+        color: cabinet.frontStyle === "appliance" ? 0x35404a : 0xf5f4f0,
+        roughness: 0.32,
+        metalness: cabinet.frontStyle === "appliance" ? 0.22 : 0.02
+      });
+      const panels = frontPanelRects(cabinet, face).map((panel) => ({
+        ...panel,
+        y: face.y + face.height - (panel.y - face.y) - panel.height
+      }));
+
+      panels.forEach((panel) => {
+        const geometry = new THREE.BoxGeometry(panel.width, panel.height, sizes.doorThickness);
+        const mesh = new THREE.Mesh(geometry, panelMaterial);
+        mesh.position.set(
+          panel.x + panel.width / 2,
+          panel.y + panel.height / 2,
+          depth + sizes.doorThickness / 2
+        );
+        mesh.userData.doorPanel = true;
+        parent.add(mesh);
+        addEdges(parent, geometry, mesh.position, 0x6f7a84);
+        addHandle3D(parent, cabinet, panel, depth + sizes.doorThickness + 4);
+      });
+    }
+
+    function addHandle3D(parent, cabinet, panel, z) {
+      const handleStyle = cabinet.handleStyle;
+      if (handleStyle === "none" || panel.width < 40 || panel.height < 40) return;
+      const material = new THREE.MeshStandardMaterial({
+        color: handleStyle === "bevel" ? 0x8d9499 : (handleStyle === "bar" ? 0x9ba2a8 : 0x30383f),
+        roughness: handleStyle === "bevel" ? 0.42 : 0.26,
+        metalness: handleStyle === "bevel" ? 0.24 : 0.62
+      });
+      const width = handleStyle === "bar"
+        ? Math.min(180, panel.width * 0.38)
+        : Math.max(20, panel.width - 28);
+      const height = handleStyle === "bevel" ? 10 : 14;
+      const geometry = handleStyle === "bevel"
+        ? createBevelHandleGeometry(width, Math.min(42, Math.max(24, panel.height * 0.09)), 24, cabinet.type === "upper")
+        : new THREE.BoxGeometry(width, height, 18);
+      const handle = new THREE.Mesh(geometry, material);
+      const profileHeight = Math.min(42, Math.max(24, panel.height * 0.09));
+      const edgeY = cabinet.type === "upper"
+        ? panel.y + (handleStyle === "bevel" ? profileHeight / 2 : (handleStyle === "bar" ? 42 : 18))
+        : panel.y + panel.height - (handleStyle === "bevel" ? profileHeight / 2 : (handleStyle === "bar" ? 42 : 18));
+      handle.position.set(
+        panel.x + panel.width / 2,
+        edgeY,
+        handleStyle === "bevel" ? z - 4 : z
+      );
+      if (handleStyle === "bevel") handle.userData.bevelHandleProfile = true;
+      parent.add(handle);
+    }
+
+    function createBevelHandleGeometry(width, height, depth, isUpper) {
+      const halfWidth = width / 2;
+      const halfHeight = height / 2;
+      const protrudingY = isUpper ? halfHeight : -halfHeight;
+      const recessedY = -protrudingY;
+      const positions = new Float32Array([
+        -halfWidth, protrudingY, 0,
+        -halfWidth, protrudingY, depth,
+        -halfWidth, recessedY, 0,
+        halfWidth, protrudingY, 0,
+        halfWidth, protrudingY, depth,
+        halfWidth, recessedY, 0
+      ]);
+      const indices = [
+        0, 1, 2,
+        3, 5, 4,
+        0, 3, 4, 0, 4, 1,
+        1, 4, 5, 1, 5, 2,
+        2, 5, 3, 2, 3, 0
+      ];
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      geometry.setIndex(indices);
+      geometry.computeVertexNormals();
+      return geometry;
+    }
+
+    function addCabinetEquipment3D(parent, cabinet, wall) {
+      if (cabinet.type === "lower" && cabinet.purpose === "stove") {
+        const plateWidth = Math.max(180, Math.min(cabinet.width - 80, cabinet.width * 0.74));
+        const plateDepth = Math.min(420, sizes.counterDepth * 0.62);
+        const plateGeometry = new THREE.BoxGeometry(plateWidth, 12, plateDepth);
+        const plateMaterial = new THREE.MeshStandardMaterial({ color: 0x242a2f, roughness: 0.24, metalness: 0.32 });
+        const plate = new THREE.Mesh(plateGeometry, plateMaterial);
+        plate.position.set(cabinet.x + cabinet.width / 2, sizes.lowerHeight + 6, sizes.counterDepth / 2);
+        parent.add(plate);
+        const burnerMaterial = new THREE.MeshStandardMaterial({ color: 0x111416, metalness: 0.7, roughness: 0.2 });
+        [-0.25, 0, 0.25].forEach((offset, index) => {
+          const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(index === 1 ? 62 : 48, 8, 10, 28),
+            burnerMaterial
+          );
+          ring.rotation.x = Math.PI / 2;
+          ring.position.set(
+            cabinet.x + cabinet.width / 2 + plateWidth * offset,
+            sizes.lowerHeight + 14,
+            sizes.counterDepth / 2
+          );
+          parent.add(ring);
+        });
+      }
+
+      if (cabinet.type === "lower" && cabinet.purpose === "sink") {
+        const sinkWidth = Math.max(180, Math.min(cabinet.width - 90, cabinet.width * 0.66));
+        const sinkDepth = Math.min(400, sizes.counterDepth * 0.58);
+        const sinkMaterial = new THREE.MeshStandardMaterial({ color: 0x75818a, roughness: 0.22, metalness: 0.72 });
+        const sinkGeometry = new THREE.BoxGeometry(sinkWidth * 0.9, 120, sinkDepth * 0.88);
+        const sink = new THREE.Mesh(sinkGeometry, sinkMaterial);
+        sink.position.set(cabinet.x + cabinet.width / 2, sizes.lowerHeight - 68, sizes.counterDepth / 2);
+        sink.userData.equipment = "sink";
+        sink.userData.sinkMount = cabinet.sinkMount;
+        parent.add(sink);
+        addEdges(parent, sinkGeometry, sink.position, 0xb8c0c6);
+
+        const openingMaterial = new THREE.MeshStandardMaterial({ color: 0x27323a, roughness: 0.3, metalness: 0.34 });
+        const opening = new THREE.Mesh(
+          new THREE.BoxGeometry(sinkWidth * 0.82, 5, sinkDepth * 0.8),
+          openingMaterial
+        );
+        opening.position.set(
+          cabinet.x + cabinet.width / 2,
+          cabinet.sinkMount === "topmount" ? sizes.lowerHeight + 4 : sizes.lowerHeight + 1,
+          sizes.counterDepth / 2
+        );
+        opening.userData.equipment = "sink-opening";
+        opening.userData.sinkMount = cabinet.sinkMount;
+        parent.add(opening);
+
+        const rimY = cabinet.sinkMount === "topmount"
+          ? sizes.lowerHeight + 10
+          : (cabinet.sinkMount === "flush" ? sizes.lowerHeight + 2 : sizes.lowerHeight - 9);
+        const rimThickness = cabinet.sinkMount === "topmount" ? 20 : (cabinet.sinkMount === "flush" ? 12 : 8);
+        addSinkRim3D(
+          parent,
+          cabinet.x + cabinet.width / 2,
+          sizes.counterDepth / 2,
+          sinkWidth,
+          sinkDepth,
+          rimY,
+          rimThickness,
+          cabinet.sinkMount
+        );
+
+        const faucetMaterial = new THREE.MeshStandardMaterial({ color: 0xaeb8bf, roughness: 0.18, metalness: 0.82 });
+        const faucetX = cabinet.x + cabinet.width * 0.74;
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(14, 16, 155, 20), faucetMaterial);
+        stem.position.set(faucetX, sizes.lowerHeight + 77, 112);
+        stem.userData.equipment = "faucet";
+        parent.add(stem);
+        const arch = new THREE.Mesh(new THREE.TorusGeometry(78, 12, 12, 32, Math.PI), faucetMaterial);
+        arch.position.set(faucetX - 78, sizes.lowerHeight + 155, 112);
+        arch.userData.equipment = "faucet";
+        parent.add(arch);
+      }
+
+      if (cabinet.type === "upper" && cabinet.purpose === "hood") {
+        const hoodGeometry = new THREE.BoxGeometry(
+          Math.max(120, cabinet.width - 70),
+          38,
+          sizes.upperDepth + 90
+        );
+        const hoodMaterial = new THREE.MeshStandardMaterial({ color: 0x66727b, roughness: 0.26, metalness: 0.58 });
+        const hood = new THREE.Mesh(hoodGeometry, hoodMaterial);
+        hood.position.set(
+          cabinet.x + cabinet.width / 2,
+          upperBottom() + 19,
+          (sizes.upperDepth + 90) / 2
+        );
+        parent.add(hood);
+      }
+    }
+
+    function addSinkRim3D(parent, centerX, centerZ, width, depth, y, thickness, mount) {
+      const rimMaterial = new THREE.MeshStandardMaterial({ color: 0xaeb7bd, roughness: 0.2, metalness: 0.78 });
+      const horizontalGeometry = new THREE.BoxGeometry(width + thickness * 2, 6, thickness);
+      const verticalGeometry = new THREE.BoxGeometry(thickness, 6, depth);
+      const parts = [
+        { geometry: horizontalGeometry, x: centerX, z: centerZ - depth / 2 },
+        { geometry: horizontalGeometry, x: centerX, z: centerZ + depth / 2 },
+        { geometry: verticalGeometry, x: centerX - width / 2, z: centerZ },
+        { geometry: verticalGeometry, x: centerX + width / 2, z: centerZ }
+      ];
+
+      parts.forEach((part) => {
+        const rim = new THREE.Mesh(part.geometry, rimMaterial);
+        rim.position.set(part.x, y, part.z);
+        rim.userData.equipment = "sink-rim";
+        rim.userData.sinkMount = mount;
+        parent.add(rim);
+      });
     }
 
     function addDimensionBars(parent, wall) {
@@ -2612,6 +3810,7 @@
       line.position.copy(position);
       line.userData.wallVisual = wallVisual;
       parent.add(line);
+      return line;
     }
 
     function update3DWallVisibility() {
@@ -2624,12 +3823,36 @@
       });
     }
 
+    function update3DTopFillerVisibility() {
+      el.topFillerVisibilityToggle.checked = state.showTopFiller;
+      if (!three.group) return;
+      three.group.traverse((object) => {
+        if (object.userData.topFillerVisual) object.visible = state.showTopFiller;
+      });
+    }
+
+    function resize3DRenderer() {
+      if (!three.renderer || !three.camera) return;
+      const width = Math.max(1, el.threeContainer.offsetWidth);
+      const height = Math.max(1, el.threeContainer.offsetHeight);
+      three.renderer.setSize(width, height, false);
+      three.camera.aspect = width / height;
+      three.camera.updateProjectionMatrix();
+    }
+
     function fit3DCamera() {
-      const box = new THREE.Box3().setFromObject(three.group);
+      const box = new THREE.Box3();
+      three.group.updateMatrixWorld(true);
+      three.group.traverse((object) => {
+        if (!object.isMesh || object.userData.floorVisual) return;
+        if (!state.showWalls && object.userData.wallVisual) return;
+        box.expandByObject(object);
+      });
+      if (box.isEmpty()) box.setFromObject(three.group);
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       const maxSize = Math.max(size.x, size.y, size.z, 1000);
-      const distance = maxSize * 1.7;
+      const distance = maxSize * 2.05;
 
       three.target = center.clone();
       three.orbitAzimuth = Math.PI / 4;
@@ -2809,6 +4032,14 @@
       };
     }
 
+    function sync2DTransform(sourceName) {
+      const targetName = sourceName === "floor" ? "elevation" : "floor";
+      const source = state.zoom[sourceName];
+      const target = state.zoom[targetName];
+      target.scale = source.scale;
+      target.panX = source.panX;
+    }
+
     function bindPanZoom(canvas, name) {
       const pointers = new Map();
       let pinchDistance = 0;
@@ -2835,6 +4066,7 @@
         const after = canvasPoint(event, canvas, z);
         z.panX += (after.x - before.x) * z.scale;
         z.panY += (after.y - before.y) * z.scale;
+        sync2DTransform(name);
         render2D();
       }, { passive: false });
 
@@ -2877,6 +4109,7 @@
               z.panX += (after.x - before.x) * z.scale;
               z.panY += (after.y - before.y) * z.scale;
             }
+            sync2DTransform(name);
             pinchDistance = current.distance;
             pinchCenter = current.center;
             drag.moved = true;
@@ -2892,6 +4125,7 @@
         }
         z.panX = nextPanX;
         z.panY = nextPanY;
+        sync2DTransform(name);
         render2D();
       });
 
@@ -2978,13 +4212,27 @@
     function openEditModal(index) {
       const wall = activeWall();
       if (!wall || !wall.cabinets[index]) return;
-      const cabinet = wall.cabinets[index];
+      const cabinet = normalizeCabinet(wall.cabinets[index]);
       state.selectedIndex = index;
       el.editName.value = cabinet.name;
       el.editWidth.value = String(cabinet.width);
       el.editType.value = cabinet.type;
+      el.editPurpose.value = cabinet.purpose;
+      el.editFrontStyle.value = cabinet.frontStyle;
+      el.editHandleStyle.value = cabinet.handleStyle;
+      el.editSideTreatment.value = cabinet.sideTreatment;
+      el.editSinkMount.value = cabinet.sinkMount;
+      updateSideTreatmentField();
       el.editModal.classList.add("open");
       render2D();
+    }
+
+    function updateSideTreatmentField() {
+      const isFiller = el.editPurpose.value === "filler";
+      el.editSideTreatmentField.classList.toggle("hidden", !isFiller);
+      el.editSinkMountField.classList.toggle("hidden", el.editPurpose.value !== "sink");
+      el.editHandleStyle.disabled = el.editPurpose.value === "hood" || isFiller || el.editPurpose.value === "open";
+      if (el.editHandleStyle.disabled) el.editHandleStyle.value = "none";
     }
 
     function closeModal() {
@@ -3059,11 +4307,44 @@
       const index = state.selectedIndex;
       if (!wall || index === null || !wall.cabinets[index]) return;
 
-      const width = Math.max(50, Number(el.editWidth.value) || 50);
-      wall.cabinets[index].name = el.editName.value.trim() || "未命名櫃體";
-      wall.cabinets[index].width = Math.round(width);
-      wall.cabinets[index].type = el.editType.value === "upper" ? "upper" : "lower";
+      const cabinet = wall.cabinets[index];
+      const nextType = el.editType.value === "upper" ? "upper" : "lower";
+      const usedByOthers = wall.cabinets
+        .filter((item, itemIndex) => itemIndex !== index && item.type === nextType)
+        .reduce((sum, item) => sum + item.width, 0);
+      const available = Math.max(10, wall.width - usedByOthers);
+      const requestedWidth = Math.max(10, Number(el.editWidth.value) || 10);
+      cabinet.name = el.editName.value.trim() || "未命名櫃體";
+      cabinet.width = Math.min(Math.round(requestedWidth), available);
+      cabinet.type = nextType;
+      cabinet.purpose = el.editPurpose.value;
+      cabinet.frontStyle = el.editFrontStyle.value;
+      cabinet.handleStyle = el.editHandleStyle.value;
+      cabinet.sideTreatment = el.editSideTreatment.value;
+      cabinet.sinkMount = el.editSinkMount.value;
+      normalizeCabinet(cabinet);
       closeModal();
+      renderAll();
+    }
+
+    function copyCabinet() {
+      const wall = activeWall();
+      const index = state.selectedIndex;
+      if (!wall || index === null || !wall.cabinets[index]) return;
+      const source = normalizeCabinet(wall.cabinets[index]);
+      const remaining = wall.width - layerTotal(wall, source.type);
+      if (remaining < 50) {
+        window.alert("目前牆面剩餘寬度不足，無法複製此櫃體。");
+        return;
+      }
+      const copy = {
+        ...source,
+        id: uid(source.type),
+        name: `${source.name} 副本`,
+        width: Math.min(source.width, remaining)
+      };
+      wall.cabinets.splice(index + 1, 0, copy);
+      openEditModal(index + 1);
       renderAll();
     }
 
@@ -3081,10 +4362,16 @@
       const index = state.selectedIndex;
       if (!wall || index === null) return;
 
-      const target = index + direction;
-      if (target < 0 || target >= wall.cabinets.length) return;
       const currentType = wall.cabinets[index].type;
-      if (wall.cabinets[target].type !== currentType) return;
+      let target = index + direction;
+      while (
+        target >= 0
+        && target < wall.cabinets.length
+        && wall.cabinets[target].type !== currentType
+      ) {
+        target += direction;
+      }
+      if (target < 0 || target >= wall.cabinets.length) return;
 
       const temp = wall.cabinets[index];
       wall.cabinets[index] = wall.cabinets[target];
@@ -3143,15 +4430,25 @@
       document.getElementById("clearWallBtn").addEventListener("click", clearWall);
       document.getElementById("cancelEditBtn").addEventListener("click", closeModal);
       document.getElementById("saveCabinetBtn").addEventListener("click", saveCabinet);
+      document.getElementById("copyCabinetBtn").addEventListener("click", copyCabinet);
       document.getElementById("deleteCabinetBtn").addEventListener("click", deleteCabinet);
       document.getElementById("moveLeftBtn").addEventListener("click", () => moveCabinet(-1));
       document.getElementById("moveRightBtn").addEventListener("click", () => moveCabinet(1));
+      el.editPurpose.addEventListener("change", () => {
+        el.editFrontStyle.value = defaultFrontStyle(el.editPurpose.value, el.editType.value);
+        if (el.editPurpose.value === "filler" || el.editPurpose.value === "open") {
+          el.editHandleStyle.value = "none";
+        }
+        updateSideTreatmentField();
+      });
+      el.globalHandleStyle.addEventListener("change", applyGlobalHandleStyle);
       document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
       el.installNowBtn.addEventListener("click", installApp);
       el.copyMobileUrlBtn.addEventListener("click", copyMobileAccessUrl);
       document.getElementById("closeExportBtn").addEventListener("click", closeExportModal);
       document.getElementById("confirmExportBtn").addEventListener("click", exportSelected);
       el.exportFormat.addEventListener("change", updateExportOptions);
+      el.exportView.addEventListener("change", updateExportOptions);
       document.getElementById("closeAiRenderBtn").addEventListener("click", closeAiRenderModal);
       document.getElementById("captureAiScreenshotBtn").addEventListener("click", captureAiScreenshot);
       document.getElementById("recaptureAiBtn").addEventListener("click", captureAiScreenshot);
@@ -3161,6 +4458,15 @@
       el.wallVisibilityToggle.addEventListener("change", () => {
         state.showWalls = el.wallVisibilityToggle.checked;
         update3DWallVisibility();
+        if (state.view.three && three.unavailable) {
+          drawFallback3D();
+        }
+      });
+
+      el.topFillerVisibilityToggle.addEventListener("change", () => {
+        state.showTopFiller = el.topFillerVisibilityToggle.checked;
+        update3DTopFillerVisibility();
+        render2D();
         if (state.view.three && three.unavailable) {
           drawFallback3D();
         }
@@ -3198,21 +4504,29 @@
         if (!wall) return;
         const rect = el.elevationCanvas.getBoundingClientRect();
         const point = canvasPoint(event, el.elevationCanvas, state.zoom.elevation);
-        let found = null;
+        const candidates = [];
 
         wall.cabinets.forEach((cabinet, index) => {
           const box = cabinetBox(cabinet, index, wall, rect);
+          const hitPadding = cabinet.purpose === "filler"
+            ? Math.max(0, (18 - box.width) / 2)
+            : 0;
           if (
-            point.x >= box.x &&
-            point.x <= box.x + box.width &&
+            point.x >= box.x - hitPadding &&
+            point.x <= box.x + box.width + hitPadding &&
             point.y >= box.y &&
             point.y <= box.y + box.height
           ) {
-            found = index;
+            candidates.push({
+              index,
+              priority: cabinet.purpose === "filler" ? 0 : 1,
+              distance: Math.abs(point.x - (box.x + box.width / 2))
+            });
           }
         });
 
-        if (found !== null) openEditModal(found);
+        candidates.sort((a, b) => a.priority - b.priority || a.distance - b.distance);
+        if (candidates.length) openEditModal(candidates[0].index);
       });
 
       window.addEventListener("resize", () => {
