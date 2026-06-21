@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v8-draft";
+const CACHE_NAME = "modudraft-pwa-v15";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -33,6 +33,20 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  if (event.request.mode === "navigate") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          return response;
+        })
+        .catch(() => caches.match(event.request)
+          .then((cached) => cached || caches.match("./index.html") || caches.match("./modudraft_fixed.html")))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
@@ -46,12 +60,7 @@ self.addEventListener("fetch", (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => {
-          if (event.request.mode === "navigate") {
-            return caches.match("./index.html") || caches.match("./modudraft_fixed.html");
-          }
-          return new Response("", { status: 503, statusText: "Offline" });
-        });
+        .catch(() => new Response("", { status: 503, statusText: "Offline" }));
     })
   );
 });
