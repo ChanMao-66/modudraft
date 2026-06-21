@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v16";
+const CACHE_NAME = "modudraft-pwa-v17";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -7,7 +7,10 @@ const APP_ASSETS = [
   "./icons/modudraft-logo-refined.png",
   "./icons/modudraft-192-refined.png",
   "./icons/modudraft-512-refined.png",
-  "./icons/mobile-access-qr.png"
+  "./icons/mobile-access-qr.png",
+  "./icons/tutorial-mobile.png",
+  "./icons/tutorial-elevation.png",
+  "./icons/tutorial-3d.png"
 ];
 
 self.addEventListener("install", (event) => {
