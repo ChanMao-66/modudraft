@@ -1458,6 +1458,7 @@
             <option value="drawer">抽屜櫃</option>
             <option value="appliance">嵌入電器櫃</option>
             <option value="hood">排油煙機吊櫃</option>
+            <option value="dish-dryer">吊掛式烘碗機</option>
             <option value="open">開放櫃</option>
             <option value="filler">補板／補邊</option>
           </select>
@@ -1805,14 +1806,44 @@
       return Math.max(0, wall.height - upperBottom() - wallUpperHeight(wall));
     }
 
+    function upperFinishedDepth() {
+      return sizes.upperDepth + sizes.doorThickness;
+    }
+
+    function upperMachineSpec(cabinet) {
+      if (!cabinet || cabinet.type !== "upper") return null;
+      if (cabinet.purpose === "hood") {
+        return { height: 38, projection: 4, equipment: "hood" };
+      }
+      if (cabinet.purpose === "dish-dryer") {
+        return { height: 400, projection: 4, equipment: "dish-dryer" };
+      }
+      return null;
+    }
+
+    function faucetSideForSink(wall, sinkCabinet) {
+      if (!wall || !sinkCabinet) return "right";
+      const sinkCenter = sinkCabinet.x + sinkCabinet.width / 2;
+      const nearestStove = wall.cabinets
+        .filter((cabinet) => cabinet.type === "lower" && cabinet.purpose === "stove")
+        .map((cabinet) => ({
+          cabinet,
+          distance: Math.abs(cabinet.x + cabinet.width / 2 - sinkCenter)
+        }))
+        .sort((a, b) => a.distance - b.distance)[0]?.cabinet;
+      if (!nearestStove) return "right";
+      return nearestStove.x + nearestStove.width / 2 < sinkCenter ? "right" : "left";
+    }
+
     function inferCabinetPurpose(cabinet) {
       const name = cabinet.name || "";
       if (name.includes("補邊") || name.includes("補板") || name.includes("封板")) return "filler";
       if (name.includes("排油煙機")) return "hood";
+      if (name.includes("烘碗機")) return "dish-dryer";
       if (name.includes("爐台") || name.includes("瓦斯爐")) return "stove";
       if (name.includes("水槽")) return "sink";
       if (name.includes("抽屜") || name.includes("抽櫃")) return "drawer";
-      if (name.includes("電器") || name.includes("洗碗機") || name.includes("烘碗機")) return "appliance";
+      if (name.includes("電器") || name.includes("洗碗機")) return "appliance";
       if (name.includes("開放")) return "open";
       return "general";
     }
@@ -1822,7 +1853,7 @@
       if (purpose === "open") return "open";
       if (purpose === "appliance") return "appliance";
       if (purpose === "drawer") return "two-small-one-large";
-      if (purpose === "stove" || purpose === "sink" || purpose === "hood") return "double-door";
+      if (purpose === "stove" || purpose === "sink" || purpose === "hood" || purpose === "dish-dryer") return "double-door";
       return type === "upper" ? "double-door" : "two-small-one-large";
     }
 
@@ -1834,7 +1865,7 @@
       cabinet.sinkMount = ["flush", "topmount", "undermount"].includes(cabinet.sinkMount)
         ? cabinet.sinkMount
         : "undermount";
-      if (cabinet.purpose === "hood" || cabinet.purpose === "filler" || cabinet.purpose === "open") {
+      if (cabinet.purpose === "hood" || cabinet.purpose === "dish-dryer" || cabinet.purpose === "filler" || cabinet.purpose === "open") {
         cabinet.handleStyle = "none";
       } else {
         cabinet.handleStyle = cabinet.handleStyle || state.globalHandleStyle || "none";
@@ -1860,6 +1891,7 @@
         wall.cabinets.forEach((cabinet) => {
           normalizeCabinet(cabinet);
           cabinet.handleStyle = cabinet.purpose === "hood"
+            || cabinet.purpose === "dish-dryer"
             || cabinet.purpose === "filler"
             || cabinet.purpose === "open"
             ? "none"
@@ -2101,7 +2133,7 @@
           const suffix = worktopCount > 1 ? ` ${index + 1}` : "";
           upper.push(makeCabinet(`收納吊櫃${suffix}`, cabinetWidth, "upper", "general", "double-door"));
         });
-        upper.push(makeCabinet("水槽上方吊櫃", sink, "upper", "general", "double-door"));
+        upper.push(makeCabinet("吊掛式烘碗機", sink, "upper", "dish-dryer", "double-door", "none"));
         if (filler > 0) upper.push(makeCabinet("右補邊", filler, "upper", "filler", "panel", "none"));
       }
 
@@ -2483,6 +2515,21 @@
             depth,
             cabinet.type === "lower" ? "lower-material" : "upper-material"
           ));
+          const machineSpec = upperMachineSpec(cabinet);
+          if (machineSpec) {
+            const machineDepth = upperFinishedDepth() + machineSpec.projection;
+            const machineWidth = Math.max(120, cabinet.width - (machineSpec.equipment === "hood" ? 70 : 60));
+            children.push(boxDaeNode(
+              `wall-${wallIndex + 1}-${machineSpec.equipment}-${cabinetIndex + 1}`,
+              cabinet.x + cabinet.width / 2,
+              upperBottom() + machineSpec.height / 2,
+              machineDepth / 2,
+              machineWidth,
+              machineSpec.height,
+              machineDepth,
+              "appliance-material"
+            ));
+          }
         });
 
         const lowerSpan = layerSpan(wall, "lower");
@@ -2493,10 +2540,10 @@
             `wall-${wallIndex + 1}-continuous-toe-kick`,
             toeSpan.start + toeSpan.width / 2,
             sizes.toeKickHeight / 2,
-            Math.max(120, sizes.lowerDepth - 60) / 2,
+            (sizes.lowerDepth - 20) / 2,
             toeSpan.width,
             sizes.toeKickHeight,
-            Math.max(120, sizes.lowerDepth - 60),
+            sizes.lowerDepth - 20,
             "toe-material"
           ));
           children.push(boxDaeNode(
@@ -2525,14 +2572,15 @@
         const upperUsed = upperSpan.width;
         const fillerHeight = topFillerHeight(wall);
         if (state.showTopFiller && upperUsed > 0 && fillerHeight > 0) {
+          const fillerDepth = upperFinishedDepth();
           children.push(boxDaeNode(
             `wall-${wallIndex + 1}-top-filler`,
             upperSpan.start + upperUsed / 2,
             upperBottom() + wallUpperHeight(wall) + fillerHeight / 2,
-            sizes.upperDepth / 2,
+            fillerDepth / 2,
             upperUsed,
             fillerHeight,
-            sizes.upperDepth,
+            fillerDepth,
             "upper-material"
           ));
         }
@@ -2557,6 +2605,7 @@
     <effect id="lower-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.98 0.97 0.94 1</color></diffuse></lambert></technique></profile_COMMON></effect>
     <effect id="upper-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.84 0.88 0.92 1</color></diffuse></lambert></technique></profile_COMMON></effect>
     <effect id="toe-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.58 0.56 0.52 1</color></diffuse></lambert></technique></profile_COMMON></effect>
+    <effect id="appliance-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.38 0.44 0.49 1</color></diffuse></lambert></technique></profile_COMMON></effect>
     <effect id="counter-effect"><profile_COMMON><technique sid="common"><lambert><diffuse><color>0.90 0.88 0.84 1</color></diffuse></lambert></technique></profile_COMMON></effect>
   </library_effects>
   <library_materials>
@@ -2564,6 +2613,7 @@
     <material id="lower-material" name="下櫃"><instance_effect url="#lower-effect"/></material>
     <material id="upper-material" name="吊櫃"><instance_effect url="#upper-effect"/></material>
     <material id="toe-material" name="踢腳板"><instance_effect url="#toe-effect"/></material>
+    <material id="appliance-material" name="吊掛設備"><instance_effect url="#appliance-effect"/></material>
     <material id="counter-material" name="連續人造石檯面"><instance_effect url="#counter-effect"/></material>
   </library_materials>
   <library_geometries>
@@ -2736,7 +2786,7 @@
         .map((canvas) => canvas.getBoundingClientRect().width)
         .filter((width) => width > 0);
       const sharedWidth = widths.length ? Math.min(...widths) : 1;
-      let scale = (sharedWidth - 72) / Math.max(1, wall.width + sizes.counterDepth);
+      let scale = (sharedWidth - 128) / Math.max(1, wall.width + sizes.counterDepth);
 
       if (state.view.floor) {
         const floorHeight = el.floorCanvas.getBoundingClientRect().height;
@@ -3124,7 +3174,7 @@
 
       wall.cabinets.forEach((cabinet, index) => {
         const box = cabinetBox(cabinet, index, wall, rect);
-        drawCabinet(ctx.elevation, cabinet, box, index === state.selectedIndex);
+        drawCabinet(ctx.elevation, cabinet, box, index === state.selectedIndex, wall);
         drawDimension(ctx.elevation, box.x, box.x + box.width, box.y + box.height + 16, `${cabinet.width}`, "#354151");
       });
 
@@ -3166,7 +3216,7 @@
       const counterDepth = px(sizes.counterDepth);
       const upperBodyDepth = px(sizes.upperDepth);
       const doorDepth = Math.max(2, px(sizes.doorThickness));
-      const toeBoardX = x + px(sizes.lowerDepth - 60);
+      const toeBoardX = x + px(sizes.lowerDepth - 40);
       const toeBoardWidth = Math.max(2, px(sizes.sidePanelThickness));
       const toeTopY = baseY - px(sizes.toeKickHeight);
       const footXs = [x + px(90), x + px(450)];
@@ -3254,12 +3304,28 @@
       context.fillText("側視圖", x + width / 2, wallTopY - 5);
       context.restore();
 
+      const dimensionX = x + width + 16;
       if (hasLower) {
         drawDimension(context, x, x + counterDepth, baseY + 30, `檯深 ${sizes.counterDepth}`, "#6d4a20");
-        drawVerticalDimension(context, x + width + 16, lowerTopY, baseY, `總高 ${sizes.lowerHeight}`, "#6d4a20");
+        drawVerticalDimension(context, dimensionX, bodyBottomY, baseY, `${sizes.toeKickHeight}`, "#6d4a20");
+        drawVerticalDimension(context, dimensionX, bodyTopY, bodyBottomY, `${sizes.lowerBodyHeight}`, "#6d4a20");
+        drawVerticalDimension(context, dimensionX, lowerTopY, bodyTopY, `${sizes.counterThickness}`, "#6d4a20");
+      }
+      if (hasUpper) {
+        drawVerticalDimension(context, dimensionX, upperCabinetTopY, upperBottomY, `${wallUpperHeight(wall)}`, "#6d4a20");
+        if (state.showTopFiller && topFillH > 0) {
+          drawVerticalDimension(context, dimensionX, wallTopY, upperCabinetTopY, `${topFillH}`, "#6d4a20");
+        }
       }
       el.elevationCanvas.dataset.hasSideView = "true";
       el.elevationCanvas.dataset.sideViewDirection = "right";
+      el.elevationCanvas.dataset.sideHeightDimensions = [
+        sizes.toeKickHeight,
+        sizes.lowerBodyHeight,
+        sizes.counterThickness,
+        wallUpperHeight(wall),
+        state.showTopFiller ? topFillH : 0
+      ].join(",");
     }
 
     function cabinetBox(cabinet, index, wall, rect) {
@@ -3283,15 +3349,17 @@
       };
     }
 
-    function drawCabinet(context, cabinet, box, selected) {
+    function drawCabinet(context, cabinet, box, selected, wall) {
       context.save();
       normalizeCabinet(cabinet);
       const scaleY = cabinet.type === "lower" ? box.height / sizes.lowerHeight : box.height / Math.max(1, sizes.upperHeight);
       const counterH = cabinet.type === "lower" ? sizes.counterThickness * scaleY : 0;
       const toeH = cabinet.type === "lower" ? sizes.toeKickHeight * scaleY : 0;
+      const machineSpec = upperMachineSpec(cabinet);
+      const machineReserve = machineSpec ? (machineSpec.height + 5) * scaleY : 0;
       const face = cabinet.type === "lower"
         ? { x: box.x, y: box.y + counterH, width: box.width, height: Math.max(1, box.height - counterH - toeH) }
-        : { x: box.x, y: box.y, width: box.width, height: box.height };
+        : { x: box.x, y: box.y, width: box.width, height: Math.max(1, box.height - machineReserve) };
       const isSidePanel = cabinet.purpose === "filler";
       const isFinishedEnd = isSidePanel && cabinet.sideTreatment === "finished-end";
 
@@ -3316,7 +3384,7 @@
       }
 
       if (!isSidePanel) drawCabinetFront(context, cabinet, face);
-      drawCabinetEquipment(context, cabinet, box, counterH);
+      drawCabinetEquipment(context, cabinet, box, counterH, scaleY, wall);
 
       if (box.width > 34 && box.height > 24) {
         drawCabinetLabel(context, cabinet.name, face.x, face.y, face.width, face.height);
@@ -3442,7 +3510,7 @@
       context.lineCap = "butt";
     }
 
-    function drawCabinetEquipment(context, cabinet, box, counterH) {
+    function drawCabinetEquipment(context, cabinet, box, counterH, scaleY, wall) {
       if (cabinet.purpose === "stove" && cabinet.type === "lower" && box.width > 44) {
         const plateWidth = box.width * 0.72;
         const plateX = box.x + (box.width - plateWidth) / 2;
@@ -3480,23 +3548,46 @@
           context.lineTo(basinX + basinWidth + 4, mountY);
           context.stroke();
         }
-        const faucetX = box.x + box.width * 0.72;
+        const faucetSide = faucetSideForSink(wall, cabinet);
+        const faucetX = box.x + box.width * (faucetSide === "right" ? 0.78 : 0.22);
         const faucetHeight = Math.max(38, Math.min(58, box.height * 0.09));
         const faucetReach = Math.max(24, Math.min(42, box.width * 0.12));
+        const reachDirection = faucetSide === "right" ? -1 : 1;
         context.lineWidth = 2.4;
         context.beginPath();
         context.moveTo(faucetX, box.y);
         context.lineTo(faucetX, box.y - faucetHeight * 0.55);
-        context.quadraticCurveTo(faucetX, box.y - faucetHeight, faucetX - faucetReach * 0.5, box.y - faucetHeight);
-        context.quadraticCurveTo(faucetX - faucetReach, box.y - faucetHeight, faucetX - faucetReach, box.y - faucetHeight * 0.52);
+        context.quadraticCurveTo(faucetX, box.y - faucetHeight, faucetX + reachDirection * faucetReach * 0.5, box.y - faucetHeight);
+        context.quadraticCurveTo(faucetX + reachDirection * faucetReach, box.y - faucetHeight, faucetX + reachDirection * faucetReach, box.y - faucetHeight * 0.52);
         context.stroke();
       }
 
-      if (cabinet.purpose === "hood" && cabinet.type === "upper") {
+      const machineSpec = upperMachineSpec(cabinet);
+      if (machineSpec) {
+        const machineHeight = Math.min(box.height, Math.max(10, machineSpec.height * scaleY));
+        const machineY = box.y + box.height - machineHeight;
         context.fillStyle = "#596674";
         context.strokeStyle = "#303943";
-        context.fillRect(box.x + 5, box.y + box.height - 13, Math.max(1, box.width - 10), 10);
-        context.strokeRect(box.x + 5, box.y + box.height - 13, Math.max(1, box.width - 10), 10);
+        context.fillRect(box.x + 5, machineY, Math.max(1, box.width - 10), machineHeight);
+        context.strokeRect(box.x + 5, machineY, Math.max(1, box.width - 10), machineHeight);
+        if (machineSpec.equipment === "dish-dryer") {
+          const glassInset = Math.max(4, Math.min(10, box.width * 0.04));
+          context.fillStyle = "#cad3da";
+          context.fillRect(
+            box.x + 5 + glassInset,
+            machineY + glassInset,
+            Math.max(1, box.width - 10 - glassInset * 2),
+            Math.max(1, machineHeight - glassInset * 2)
+          );
+          context.strokeStyle = "#75818b";
+          for (let index = 1; index < 6; index += 1) {
+            const rackX = box.x + 5 + glassInset + (box.width - 10 - glassInset * 2) * index / 6;
+            context.beginPath();
+            context.moveTo(rackX, machineY + glassInset + 2);
+            context.lineTo(rackX, machineY + machineHeight - glassInset - 2);
+            context.stroke();
+          }
+        }
       }
     }
 
@@ -3765,7 +3856,7 @@
         const lowerSpan = layerSpan(wall, "lower");
         const lowerUsed = lowerSpan.width;
         if (lowerUsed > 0) {
-          const toeDepth = Math.max(120, sizes.lowerDepth - 60);
+          const toeDepth = sizes.lowerDepth - 20;
           const toeSpan = lowerToeKickSpan(wall);
           const toeGeometry = new THREE.BoxGeometry(toeSpan.width, sizes.toeKickHeight, toeDepth);
           const toeMaterial = new THREE.MeshStandardMaterial({ color: 0xbdb8b0, roughness: 0.72 });
@@ -3816,13 +3907,14 @@
         const upperSpan = layerSpan(wall, "upper");
         const upperUsed = upperSpan.width;
         if (fillHeight > 0 && upperUsed > 0) {
-          const fillerGeometry = new THREE.BoxGeometry(upperUsed, fillHeight, sizes.upperDepth);
+          const fillerDepth = upperFinishedDepth();
+          const fillerGeometry = new THREE.BoxGeometry(upperUsed, fillHeight, fillerDepth);
           const fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd9d5ce, roughness: 0.46 });
           const filler = new THREE.Mesh(fillerGeometry, fillerMaterial);
           filler.position.set(
             upperSpan.start + upperUsed / 2,
             upperBottom() + wallUpperHeight(wall) + fillHeight / 2,
-            sizes.upperDepth / 2
+            fillerDepth / 2
           );
           filler.userData.topFillerVisual = true;
           wallGroup.add(filler);
@@ -3884,6 +3976,11 @@
         width: cabinet.width,
         height
       };
+      const machineSpec = upperMachineSpec(cabinet);
+      if (machineSpec) {
+        face.y += machineSpec.height + 5;
+        face.height = Math.max(1, face.height - machineSpec.height - 5);
+      }
       if (cabinet.purpose !== "filler") addCabinetFront3D(parent, cabinet, face, depth);
       addCabinetEquipment3D(parent, cabinet, wall);
     }
@@ -4038,31 +4135,69 @@
         );
 
         const faucetMaterial = new THREE.MeshStandardMaterial({ color: 0xaeb8bf, roughness: 0.18, metalness: 0.82 });
-        const faucetX = cabinet.x + cabinet.width * 0.74;
+        const faucetSide = faucetSideForSink(wall, cabinet);
+        const faucetX = cabinet.x + cabinet.width * (faucetSide === "right" ? 0.78 : 0.22);
+        const faucetGroup = new THREE.Group();
+        faucetGroup.position.set(faucetX, 0, 112);
+        faucetGroup.rotation.y = faucetSide === "right" ? Math.PI / 4 : -Math.PI / 4;
+        faucetGroup.userData.equipment = "faucet";
+        faucetGroup.userData.side = faucetSide;
+        faucetGroup.userData.angleDegrees = 45;
         const stem = new THREE.Mesh(new THREE.CylinderGeometry(14, 16, 155, 20), faucetMaterial);
-        stem.position.set(faucetX, sizes.lowerHeight + 77, 112);
+        stem.position.set(0, sizes.lowerHeight + 77, 0);
         stem.userData.equipment = "faucet";
-        parent.add(stem);
+        faucetGroup.add(stem);
         const arch = new THREE.Mesh(new THREE.TorusGeometry(78, 12, 12, 32, Math.PI), faucetMaterial);
-        arch.position.set(faucetX - 78, sizes.lowerHeight + 155, 112);
+        arch.position.set(faucetSide === "right" ? -78 : 78, sizes.lowerHeight + 155, 0);
+        if (faucetSide === "left") arch.rotation.y = Math.PI;
         arch.userData.equipment = "faucet";
-        parent.add(arch);
+        faucetGroup.add(arch);
+        parent.add(faucetGroup);
       }
 
-      if (cabinet.type === "upper" && cabinet.purpose === "hood") {
+      const machineSpec = upperMachineSpec(cabinet);
+      if (machineSpec) {
+        const machineDepth = upperFinishedDepth() + machineSpec.projection;
+        const machineWidth = Math.max(120, cabinet.width - (machineSpec.equipment === "hood" ? 70 : 60));
         const hoodGeometry = new THREE.BoxGeometry(
-          Math.max(120, cabinet.width - 70),
-          38,
-          sizes.upperDepth + 90
+          machineWidth,
+          machineSpec.height,
+          machineDepth
         );
         const hoodMaterial = new THREE.MeshStandardMaterial({ color: 0x66727b, roughness: 0.26, metalness: 0.58 });
         const hood = new THREE.Mesh(hoodGeometry, hoodMaterial);
         hood.position.set(
           cabinet.x + cabinet.width / 2,
-          upperBottom() + 19,
-          (sizes.upperDepth + 90) / 2
+          upperBottom() + machineSpec.height / 2,
+          machineDepth / 2
         );
+        hood.userData.equipment = machineSpec.equipment;
+        hood.userData.frontProjection = machineSpec.projection;
+        hood.userData.doorClearance = 5;
         parent.add(hood);
+        addEdges(parent, hoodGeometry, hood.position, 0x3f4850);
+
+        if (machineSpec.equipment === "dish-dryer") {
+          const glassWidth = Math.max(90, machineWidth - 34);
+          const glassHeight = Math.max(80, machineSpec.height - 54);
+          const glassGeometry = new THREE.BoxGeometry(glassWidth, glassHeight, 5);
+          const glassMaterial = new THREE.MeshStandardMaterial({
+            color: 0xbecbd3,
+            roughness: 0.18,
+            metalness: 0.38,
+            transparent: true,
+            opacity: 0.82
+          });
+          const glass = new THREE.Mesh(glassGeometry, glassMaterial);
+          glass.position.set(
+            cabinet.x + cabinet.width / 2,
+            upperBottom() + machineSpec.height / 2 + 8,
+            machineDepth + 3
+          );
+          glass.userData.equipment = "dish-dryer-front";
+          parent.add(glass);
+          addEdges(parent, glassGeometry, glass.position, 0x66727b);
+        }
       }
     }
 
@@ -4544,7 +4679,10 @@
       const isFiller = el.editPurpose.value === "filler";
       el.editSideTreatmentField.classList.toggle("hidden", !isFiller);
       el.editSinkMountField.classList.toggle("hidden", el.editPurpose.value !== "sink");
-      el.editHandleStyle.disabled = el.editPurpose.value === "hood" || isFiller || el.editPurpose.value === "open";
+      el.editHandleStyle.disabled = el.editPurpose.value === "hood"
+        || el.editPurpose.value === "dish-dryer"
+        || isFiller
+        || el.editPurpose.value === "open";
       if (el.editHandleStyle.disabled) el.editHandleStyle.value = "none";
     }
 
@@ -4795,7 +4933,7 @@
       document.getElementById("moveRightBtn").addEventListener("click", () => moveCabinet(1));
       el.editPurpose.addEventListener("change", () => {
         el.editFrontStyle.value = defaultFrontStyle(el.editPurpose.value, el.editType.value);
-        if (el.editPurpose.value === "filler" || el.editPurpose.value === "open") {
+        if (el.editPurpose.value === "hood" || el.editPurpose.value === "dish-dryer" || el.editPurpose.value === "filler" || el.editPurpose.value === "open") {
           el.editHandleStyle.value = "none";
         }
         updateSideTreatmentField();
