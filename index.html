@@ -602,6 +602,84 @@
       font-size: 18px;
     }
 
+    .tutorial-content {
+      width: min(960px, 100%);
+      max-height: calc(100vh - 28px);
+      overflow: auto;
+      padding: 0;
+    }
+
+    .tutorial-header {
+      position: sticky;
+      z-index: 2;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #d8c9b4;
+      background: rgba(251, 246, 236, .96);
+      backdrop-filter: blur(8px);
+    }
+
+    .tutorial-header h2 {
+      margin: 0;
+    }
+
+    .tutorial-header button {
+      min-width: 72px;
+    }
+
+    .tutorial-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0;
+    }
+
+    .tutorial-step {
+      display: grid;
+      align-content: start;
+      gap: 10px;
+      padding: 18px;
+      border-bottom: 1px solid #d8c9b4;
+    }
+
+    .tutorial-step:nth-child(odd) {
+      border-right: 1px solid #d8c9b4;
+    }
+
+    .tutorial-step h3 {
+      margin: 0;
+      color: #1c2632;
+      font-size: 16px;
+    }
+
+    .tutorial-step p,
+    .tutorial-step li {
+      color: #596270;
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .tutorial-step p,
+    .tutorial-step ol {
+      margin: 0;
+    }
+
+    .tutorial-step ol {
+      padding-left: 20px;
+    }
+
+    .tutorial-shot {
+      width: 100%;
+      height: 250px;
+      border: 1px solid #cdbda7;
+      border-radius: 6px;
+      background: #18202a;
+      object-fit: contain;
+    }
+
     .form-grid {
       display: grid;
       gap: 10px;
@@ -850,6 +928,18 @@
       .choice-grid,
       .provider-grid {
         grid-template-columns: 1fr;
+      }
+
+      .tutorial-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .tutorial-step:nth-child(odd) {
+        border-right: 0;
+      }
+
+      .tutorial-shot {
+        height: 210px;
       }
     }
 
@@ -1176,6 +1266,53 @@
           <b>多面牆丈量建立</b>
           <small>建立多面牆，逐面調整牆寬；天花高度全案共用。</small>
         </button>
+        <button class="mode-btn" id="openTutorialBtn" type="button">
+          <b>軟體使用說明</b>
+          <small>用圖片快速認識牆面、櫃體編輯、手機手勢、3D、匯出與分享。</small>
+        </button>
+      </div>
+    </section>
+  </div>
+
+  <div id="tutorialModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+    <section class="modal-content tutorial-content">
+      <div class="tutorial-header">
+        <h2 id="tutorialTitle">MODUDRAFT 使用說明</h2>
+        <button type="button" class="muted-button" id="closeTutorialBtn">關閉</button>
+      </div>
+      <div class="tutorial-grid">
+        <section class="tutorial-step">
+          <img class="tutorial-shot" src="./icons/tutorial-mobile.png" alt="手機版工具列與平面立面畫布">
+          <h3>1. 建立牆面與操作畫布</h3>
+          <ol>
+            <li>選擇直線牆或多面牆開始；多面牆預設在較寬的第二面牆配置廚具。</li>
+            <li>左上角可新增、選擇、刪除牆面，並設定整排櫃體靠左或靠右生成。</li>
+            <li>手機用雙指同時縮放與移動畫布；右側捲動軌可快速上下切換圖面。</li>
+          </ol>
+        </section>
+        <section class="tutorial-step">
+          <img class="tutorial-shot" src="./icons/tutorial-elevation.png" alt="立面圖與右側視圖">
+          <h3>2. 編輯櫃體與工程圖</h3>
+          <ol>
+            <li>點選平面圖或立面圖中的櫃體，即可修改寬度、用途、門片、把手與水槽形式。</li>
+            <li>編輯視窗可複製櫃體、往左或往右調整順序，也能刪除單一櫃體。</li>
+            <li>平面圖與立面圖共用比例和水平基準，尺寸標註會跟著配置更新。</li>
+          </ol>
+        </section>
+        <section class="tutorial-step">
+          <img class="tutorial-shot" src="./icons/tutorial-3d.png" alt="真實尺寸牆面與櫃體 3D 預覽">
+          <h3>3. 3D 預覽與出圖</h3>
+          <ol>
+            <li>3D 可旋轉、縮放與平移，並能開關牆面及吊櫃頂部補板。</li>
+            <li>匯出可選平面、立面、3D 或全部合併，圖片採橫向 4:3，最高 2560 × 1920。</li>
+            <li>AI 渲染視圖會先截取目前畫面，再交給 Gemini 或 ChatGPT 進一步渲染。</li>
+          </ol>
+        </section>
+        <section class="tutorial-step">
+          <img class="tutorial-shot" src="./icons/mobile-access-qr.png" alt="MODUDRAFT 公開網址 QR Code">
+          <h3>4. 分享給手機或客戶</h3>
+          <p>按工具列的「分享」，可使用系統分享、複製永久網址，或讓另一支手機掃描 QR Code。對方不需要下載 APK，直接開啟連結即可使用。</p>
+        </section>
       </div>
     </section>
   </div>
@@ -1250,14 +1387,14 @@
         <button id="renderViewBtn" type="button">AI 渲染視圖</button>
         <button id="exportBtn" type="button">匯出</button>
         <button id="resetViewBtn" type="button">重設視圖</button>
-        <button id="installAppBtn" type="button">安裝手機版</button>
+        <button id="installAppBtn" type="button">分享</button>
         <button class="danger" id="clearWallBtn" type="button">清空牆面</button>
       </div>
     </section>
 
     <section class="workspace" id="workspace">
       <article id="floorView" class="view">
-        <div class="view-label">1. 平面圖 TOP VIEW</div>
+        <div class="view-label">1. 平面圖 TOP VIEW（點選櫃體可編輯）</div>
         <canvas id="floorCanvas" aria-label="平面圖畫布"></canvas>
       </article>
 
@@ -1374,36 +1511,30 @@
 
   <div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <section class="modal-content install-content">
-      <h2 id="installTitle">安裝 MODUDRAFT 手機版</h2>
+      <h2 id="installTitle">分享 MODUDRAFT</h2>
       <div class="install-mark">
         <img src="./icons/modudraft-192-refined.png" alt="">
         <div>
           <strong>MODUDRAFT</strong>
-          <span>廚具系統櫃設計工作台</span>
+          <span>直接用連結開啟，不需下載 APP 檔案</span>
         </div>
       </div>
-      <p id="installStatus" class="install-status">檢查目前瀏覽器的安裝方式...</p>
+      <p id="installStatus" class="install-status">掃描 QR Code、複製網址，或使用手機的系統分享功能。</p>
       <div class="mobile-access">
-        <img src="./icons/mobile-access-qr.png" alt="手機開啟 MODUDRAFT 的 QR Code">
+        <img src="./icons/mobile-access-qr.png" alt="分享 MODUDRAFT 的 QR Code">
         <div class="mobile-access-copy">
-          <strong>用手機掃描開啟</strong>
-          <p>使用手機相機掃描後，會從永久 HTTPS 網址直接開啟這套設計軟體。</p>
+          <strong>掃描後直接使用</strong>
+          <p>對方使用手機相機掃描後，會從永久 HTTPS 網址直接開啟這套軟體。</p>
           <code id="mobileAccessUrl" class="mobile-url">https://chanmao-66.github.io/modudraft/</code>
           <div class="mobile-access-actions">
-            <button type="button" id="copyMobileUrlBtn">複製手機網址</button>
-            <a class="button-link" href="./MODUDRAFT-offline.zip" download>下載離線網頁包</a>
+            <button type="button" id="copyMobileUrlBtn">複製分享網址</button>
           </div>
         </div>
       </div>
-      <ol class="install-steps">
-        <li>Android Chrome：按「立即安裝」，或從瀏覽器選單選擇「安裝應用程式」。</li>
-        <li>iPhone Safari：按分享按鈕，再選擇「加入主畫面」。</li>
-        <li>安裝後可從手機桌面開啟，設計資料仍保留在這台裝置的瀏覽器中。</li>
-      </ol>
-      <p class="install-note">GitHub Pages 使用 HTTPS，可支援瀏覽器原生 PWA 安裝；離線網頁包是備份檔，不是 Android APK。</p>
+      <p class="install-note">分享的是同一個公開版本；每支裝置的草圖資料會各自保留在該裝置瀏覽器中。</p>
       <div class="modal-actions">
         <button type="button" class="muted-button" id="closeInstallBtn">關閉</button>
-        <button type="button" class="primary" id="installNowBtn">立即安裝</button>
+        <button type="button" class="primary" id="installNowBtn">系統分享</button>
       </div>
     </section>
   </div>
@@ -1523,6 +1654,7 @@
 
     const el = {
       startOverlay: document.getElementById("startOverlay"),
+      tutorialModal: document.getElementById("tutorialModal"),
       wallSelect: document.getElementById("wallSelect"),
       alignWallLeftBtn: document.getElementById("alignWallLeftBtn"),
       alignWallRightBtn: document.getElementById("alignWallRightBtn"),
@@ -1749,13 +1881,13 @@
       const sharedHeight = 2300;
       const walls = mode === "multi"
         ? [
-          createWall(2340, sharedHeight, 0),
-          createWall(1500, sharedHeight, 1)
+          createWall(800, sharedHeight, 0),
+          createWall(2300, sharedHeight, 1)
         ]
-        : [createWall(2340, sharedHeight, 0)];
+        : [createWall(2300, sharedHeight, 0)];
 
       state.walls = walls;
-      state.activeWallIndex = 0;
+      state.activeWallIndex = mode === "multi" ? 1 : 0;
       state.selectedIndex = null;
       el.startOverlay.style.display = "none";
       rebuildWallSelect();
@@ -1850,14 +1982,18 @@
           cabinet.width = Math.max(minWidth, Number(cabinet.width) || minWidth);
         });
 
-        const cursor = {
-          lower: wall.alignment === "right" ? Math.max(0, wall.width - layerTotal(wall, "lower")) : 0,
-          upper: wall.alignment === "right" ? Math.max(0, wall.width - layerTotal(wall, "upper")) : 0
-        };
+        const cursor = wall.alignment === "right"
+          ? { lower: wall.width, upper: wall.width }
+          : { lower: 0, upper: 0 };
         wall.cabinets.forEach((cabinet) => {
           const type = cabinet.type;
-          cabinet.x = cursor[type];
-          cursor[type] += cabinet.width;
+          if (wall.alignment === "right") {
+            cursor[type] -= cabinet.width;
+            cabinet.x = cursor[type];
+          } else {
+            cabinet.x = cursor[type];
+            cursor[type] += cabinet.width;
+          }
         });
       });
     }
@@ -1868,9 +2004,19 @@
         .reduce((sum, cabinet) => sum + cabinet.width, 0);
     }
 
+    function layerSpan(wall, type) {
+      const cabinets = wall.cabinets.filter((cabinet) => cabinet.type === type);
+      if (!cabinets.length) return { start: 0, end: 0, width: 0 };
+      const start = Math.min(...cabinets.map((cabinet) => cabinet.x));
+      const end = Math.max(...cabinets.map((cabinet) => cabinet.x + cabinet.width));
+      return { start, end, width: Math.max(0, end - start) };
+    }
+
     function lowerToeKickSpan(wall) {
-      const lowerCabinets = wall.cabinets.filter((cabinet) => cabinet.type === "lower");
-      const total = lowerCabinets.reduce((sum, cabinet) => sum + cabinet.width, 0);
+      const lowerCabinets = wall.cabinets
+        .filter((cabinet) => cabinet.type === "lower")
+        .sort((a, b) => a.x - b.x);
+      const span = layerSpan(wall, "lower");
       if (!lowerCabinets.length) return { start: 0, width: 0 };
 
       const first = normalizeCabinet(lowerCabinets[0]);
@@ -1882,8 +2028,8 @@
         ? last.width
         : 0;
       return {
-        start: leftInset,
-        width: Math.max(0, total - leftInset - rightInset)
+        start: span.start + leftInset,
+        width: Math.max(0, span.width - leftInset - rightInset)
       };
     }
 
@@ -2256,16 +2402,36 @@
         </node>`;
     }
 
+    function wallPlacements() {
+      let originX = 0;
+      let originZ = 0;
+      let directionX = 0;
+      let directionZ = 1;
+      return state.walls.map((wall, wallIndex) => {
+        const placement = {
+          wall,
+          wallIndex,
+          originX,
+          originZ,
+          directionX,
+          directionZ,
+          angleDegrees: Math.atan2(-directionZ, directionX) * 180 / Math.PI,
+          angleRadians: Math.atan2(-directionZ, directionX)
+        };
+        originX += directionX * wall.width;
+        originZ += directionZ * wall.width;
+        const nextDirectionX = -directionZ;
+        directionZ = directionX;
+        directionX = nextDirectionX;
+        return placement;
+      });
+    }
+
     function buildSketchUpDae() {
       calculatePositions();
       const wallNodes = [];
-      let originX = 0;
-      let originZ = 0;
-      let directionX = 1;
-      let directionZ = 0;
 
-      state.walls.forEach((wall, wallIndex) => {
-        const angle = Math.atan2(-directionZ, directionX) * 180 / Math.PI;
+      wallPlacements().forEach(({ wall, wallIndex, originX, originZ, angleDegrees }) => {
         const children = [
           boxDaeNode(
             `wall-${wallIndex + 1}`,
@@ -2319,7 +2485,8 @@
           ));
         });
 
-        const lowerUsed = Math.min(wall.width, layerTotal(wall, "lower"));
+        const lowerSpan = layerSpan(wall, "lower");
+        const lowerUsed = lowerSpan.width;
         if (lowerUsed > 0) {
           const toeSpan = lowerToeKickSpan(wall);
           children.push(boxDaeNode(
@@ -2334,7 +2501,7 @@
           ));
           children.push(boxDaeNode(
             `wall-${wallIndex + 1}-continuous-countertop`,
-            lowerUsed / 2,
+            lowerSpan.start + lowerUsed / 2,
             sizes.toeKickHeight + sizes.lowerBodyHeight + sizes.counterThickness / 2,
             sizes.counterDepth / 2,
             lowerUsed,
@@ -2344,7 +2511,7 @@
           ));
           children.push(boxDaeNode(
             `wall-${wallIndex + 1}-continuous-backsplash`,
-            lowerUsed / 2,
+            lowerSpan.start + lowerUsed / 2,
             sizes.lowerHeight + sizes.backsplashHeight / 2,
             sizes.backsplashThickness / 2,
             lowerUsed,
@@ -2354,12 +2521,13 @@
           ));
         }
 
-        const upperUsed = Math.min(wall.width, layerTotal(wall, "upper"));
+        const upperSpan = layerSpan(wall, "upper");
+        const upperUsed = upperSpan.width;
         const fillerHeight = topFillerHeight(wall);
         if (state.showTopFiller && upperUsed > 0 && fillerHeight > 0) {
           children.push(boxDaeNode(
             `wall-${wallIndex + 1}-top-filler`,
-            upperUsed / 2,
+            upperSpan.start + upperUsed / 2,
             upperBottom() + wallUpperHeight(wall) + fillerHeight / 2,
             sizes.upperDepth / 2,
             upperUsed,
@@ -2372,15 +2540,9 @@
         wallNodes.push(`
           <node id="wall-set-${wallIndex + 1}" name="牆面 ${wallIndex + 1}">
             <translate>${originX} 0 ${originZ}</translate>
-            <rotate>0 1 0 ${angle}</rotate>
+            <rotate>0 1 0 ${angleDegrees}</rotate>
             ${children.join("")}
           </node>`);
-
-        originX += directionX * wall.width;
-        originZ += directionZ * wall.width;
-        const nextDirectionX = -directionZ;
-        directionZ = directionX;
-        directionX = nextDirectionX;
       });
 
       return `<?xml version="1.0" encoding="UTF-8"?>
@@ -2847,17 +3009,34 @@
       ctx.floor.restore();
     }
 
-    function drawLayerRemainder(context, wall, type, offsetX, baseScale, y) {
+    function layerRemainderInfo(wall, type) {
       const used = layerTotal(wall, type);
       const remain = wall.width - used;
-      if (remain === 0) return;
-      const x1 = offsetX + Math.min(used, wall.width) * baseScale;
-      const x2 = offsetX + wall.width * baseScale;
+      if (remain === 0) return null;
       if (remain > 0) {
-        drawDimension(context, x1, x2, y, `剩餘 ${remain}`, "#d75b51");
-      } else {
-        drawDimension(context, offsetX + wall.width * baseScale, offsetX + used * baseScale, y, `超出 ${Math.abs(remain)}`, "#d75b51");
+        if (wall.alignment === "right") {
+          return { side: "left", start: 0, end: remain, label: `左側剩餘 ${remain}`, remain };
+        }
+        return { side: "right", start: used, end: wall.width, label: `右側剩餘 ${remain}`, remain };
       }
+      const overflow = Math.abs(remain);
+      if (wall.alignment === "right") {
+        return { side: "left", start: -overflow, end: 0, label: `左側超出 ${overflow}`, remain };
+      }
+      return { side: "right", start: wall.width, end: used, label: `右側超出 ${overflow}`, remain };
+    }
+
+    function drawLayerRemainder(context, wall, type, offsetX, baseScale, y) {
+      const info = layerRemainderInfo(wall, type);
+      if (!info) return;
+      drawDimension(
+        context,
+        offsetX + info.start * baseScale,
+        offsetX + info.end * baseScale,
+        y,
+        info.label,
+        "#d75b51"
+      );
     }
 
     function drawElevation(wall) {
@@ -2887,33 +3066,37 @@
       ctx.elevation.lineWidth = 1.2;
       ctx.elevation.strokeRect(offsetX, wallTopY, wallWidth, wallHeight);
 
-      const lowerUsedWidth = Math.min(wall.width, layerTotal(wall, "lower")) * baseScaleX;
+      const lowerSpan = layerSpan(wall, "lower");
+      const lowerUsedWidth = lowerSpan.width * baseScaleX;
+      const lowerStartX = offsetX + lowerSpan.start * baseScaleX;
       const backsplashHeight = sizes.backsplashHeight * scaleY;
       if (lowerUsedWidth > 0) {
         ctx.elevation.fillStyle = "#e3ded5";
         ctx.elevation.strokeStyle = "#8f8b83";
-        ctx.elevation.fillRect(offsetX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
-        ctx.elevation.strokeRect(offsetX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
+        ctx.elevation.fillRect(lowerStartX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
+        ctx.elevation.strokeRect(lowerStartX, lowerTopY - backsplashHeight, lowerUsedWidth, backsplashHeight);
         const counterHeight = sizes.counterThickness * scaleY;
         ctx.elevation.fillStyle = "#e6e0d7";
         ctx.elevation.strokeStyle = "#68645e";
-        ctx.elevation.fillRect(offsetX, lowerTopY, lowerUsedWidth, counterHeight);
-        ctx.elevation.strokeRect(offsetX, lowerTopY, lowerUsedWidth, counterHeight);
+        ctx.elevation.fillRect(lowerStartX, lowerTopY, lowerUsedWidth, counterHeight);
+        ctx.elevation.strokeRect(lowerStartX, lowerTopY, lowerUsedWidth, counterHeight);
       }
 
       const topFillH = topFillerHeight(wall);
-      const upperUsedWidth = Math.min(wall.width, layerTotal(wall, "upper")) * baseScaleX;
+      const upperSpan = layerSpan(wall, "upper");
+      const upperUsedWidth = upperSpan.width * baseScaleX;
+      const upperStartX = offsetX + upperSpan.start * baseScaleX;
       if (state.showTopFiller && topFillH > 0 && upperUsedWidth > 0) {
         ctx.elevation.fillStyle = "#d9d5ce";
         ctx.elevation.strokeStyle = "#777f88";
-        ctx.elevation.fillRect(offsetX, wallTopY, upperUsedWidth, topFillH * scaleY);
-        ctx.elevation.strokeRect(offsetX, wallTopY, upperUsedWidth, topFillH * scaleY);
+        ctx.elevation.fillRect(upperStartX, wallTopY, upperUsedWidth, topFillH * scaleY);
+        ctx.elevation.strokeRect(upperStartX, wallTopY, upperUsedWidth, topFillH * scaleY);
         if (topFillH * scaleY > 15) {
           ctx.elevation.fillStyle = "#4e5965";
           ctx.elevation.font = "700 10px Noto Sans TC, sans-serif";
           ctx.elevation.textAlign = "center";
           ctx.elevation.textBaseline = "middle";
-          ctx.elevation.fillText("頂部補板", offsetX + upperUsedWidth / 2, wallTopY + topFillH * scaleY / 2);
+          ctx.elevation.fillText("頂部補板", upperStartX + upperUsedWidth / 2, wallTopY + topFillH * scaleY / 2);
         }
       }
 
@@ -2961,7 +3144,7 @@
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 12, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 28, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperCabinetTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
-      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 30);
+      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 6);
       ctx.elevation.restore();
     }
 
@@ -3535,12 +3718,10 @@
     }
 
     function build3DWalls() {
-      let origin = new THREE.Vector3(0, 0, 0);
-      let direction = new THREE.Vector3(1, 0, 0);
       const totalWidth = state.walls.reduce((sum, wall) => sum + wall.width, 0);
       const maxHeight = Math.max(...state.walls.map((wall) => wall.height), 2300);
 
-      state.walls.forEach((wall, wallIndex) => {
+      wallPlacements().forEach(({ wall, wallIndex, originX, originZ, angleRadians }) => {
         const wallGroup = new THREE.Group();
         const wallGeometry = new THREE.BoxGeometry(wall.width, wall.height, sizes.wallThickness);
         const wallMaterial = new THREE.MeshStandardMaterial({
@@ -3581,7 +3762,8 @@
 
         wall.cabinets.forEach((cabinet) => addCabinet3D(wallGroup, cabinet, wall));
 
-        const lowerUsed = Math.min(wall.width, layerTotal(wall, "lower"));
+        const lowerSpan = layerSpan(wall, "lower");
+        const lowerUsed = lowerSpan.width;
         if (lowerUsed > 0) {
           const toeDepth = Math.max(120, sizes.lowerDepth - 60);
           const toeSpan = lowerToeKickSpan(wall);
@@ -3601,7 +3783,7 @@
           const counterMaterial = new THREE.MeshStandardMaterial({ color: 0xe6e0d7, roughness: 0.42 });
           const counter = new THREE.Mesh(counterGeometry, counterMaterial);
           counter.position.set(
-            lowerUsed / 2,
+            lowerSpan.start + lowerUsed / 2,
             sizes.toeKickHeight + sizes.lowerBodyHeight + sizes.counterThickness / 2,
             sizes.counterDepth / 2
           );
@@ -3621,7 +3803,7 @@
           });
           const backsplash = new THREE.Mesh(backsplashGeometry, backsplashMaterial);
           backsplash.position.set(
-            lowerUsed / 2,
+            lowerSpan.start + lowerUsed / 2,
             sizes.lowerHeight + sizes.backsplashHeight / 2,
             sizes.backsplashThickness / 2
           );
@@ -3631,13 +3813,14 @@
         }
 
         const fillHeight = topFillerHeight(wall);
-        const upperUsed = Math.min(wall.width, layerTotal(wall, "upper"));
+        const upperSpan = layerSpan(wall, "upper");
+        const upperUsed = upperSpan.width;
         if (fillHeight > 0 && upperUsed > 0) {
           const fillerGeometry = new THREE.BoxGeometry(upperUsed, fillHeight, sizes.upperDepth);
           const fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd9d5ce, roughness: 0.46 });
           const filler = new THREE.Mesh(fillerGeometry, fillerMaterial);
           filler.position.set(
-            upperUsed / 2,
+            upperSpan.start + upperUsed / 2,
             upperBottom() + wallUpperHeight(wall) + fillHeight / 2,
             sizes.upperDepth / 2
           );
@@ -3647,13 +3830,9 @@
           fillerEdges.userData.topFillerVisual = true;
         }
 
-        const angle = Math.atan2(-direction.z, direction.x);
-        wallGroup.rotation.y = angle;
-        wallGroup.position.copy(origin);
+        wallGroup.rotation.y = angleRadians;
+        wallGroup.position.set(originX, 0, originZ);
         three.group.add(wallGroup);
-
-        origin = origin.clone().add(direction.clone().multiplyScalar(wall.width));
-        direction = new THREE.Vector3(-direction.z, 0, direction.x);
       });
 
       const floorSize = Math.max(1800, totalWidth + 900, maxHeight);
@@ -4375,26 +4554,21 @@
       render2D();
     }
 
+    function openTutorial() {
+      el.tutorialModal.classList.add("open");
+      const content = el.tutorialModal.querySelector(".tutorial-content");
+      if (content) content.scrollTop = 0;
+    }
+
+    function closeTutorial() {
+      el.tutorialModal.classList.remove("open");
+    }
+
     function openInstallModal() {
       el.installModal.classList.add("open");
       el.mobileAccessUrl.textContent = currentMobileAccessUrl();
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-        || window.navigator.standalone === true;
-      const isFile = location.protocol === "file:";
-
-      if (isStandalone) {
-        el.installStatus.textContent = "MODUDRAFT 已經以手機 APP 模式開啟。";
-        el.installNowBtn.disabled = true;
-      } else if (deferredInstallPrompt) {
-        el.installStatus.textContent = "此瀏覽器已準備好安裝，按下「立即安裝」即可。";
-        el.installNowBtn.disabled = false;
-      } else if (isFile) {
-        el.installStatus.textContent = "目前是本機檔案模式；請改用 HTTPS 網址開啟後再安裝。";
-        el.installNowBtn.disabled = true;
-      } else {
-        el.installStatus.textContent = "若未出現安裝視窗，請依下方步驟從瀏覽器選單加入主畫面。";
-        el.installNowBtn.disabled = false;
-      }
+      el.installStatus.textContent = "掃描 QR Code、複製網址，或使用手機的系統分享功能。";
+      el.installNowBtn.disabled = false;
     }
 
     function closeInstallModal() {
@@ -4417,23 +4591,30 @@
       }
       el.copyMobileUrlBtn.textContent = "已複製";
       window.setTimeout(() => {
-        el.copyMobileUrlBtn.textContent = "複製手機網址";
+        el.copyMobileUrlBtn.textContent = "複製分享網址";
       }, 1600);
     }
 
-    async function installApp() {
-      if (!deferredInstallPrompt) {
-        el.installStatus.textContent = "請使用瀏覽器選單的「安裝應用程式」或「加入主畫面」。";
-        return;
+    async function shareApp() {
+      const url = currentMobileAccessUrl();
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "MODUDRAFT 廚具設計工作台",
+            text: "開啟 MODUDRAFT，直接在手機或電腦設計廚具。",
+            url
+          });
+          el.installStatus.textContent = "分享面板已開啟。";
+          return;
+        } catch (error) {
+          if (error?.name === "AbortError") {
+            el.installStatus.textContent = "已取消分享。";
+            return;
+          }
+        }
       }
-
-      deferredInstallPrompt.prompt();
-      const choice = await deferredInstallPrompt.userChoice;
-      deferredInstallPrompt = null;
-      el.installNowBtn.disabled = true;
-      el.installStatus.textContent = choice.outcome === "accepted"
-        ? "安裝已開始，完成後可從手機桌面開啟。"
-        : "已取消安裝，稍後仍可再次開啟此頁安裝。";
+      await copyMobileAccessUrl();
+      el.installStatus.textContent = "此瀏覽器不支援系統分享，網址已複製。";
     }
 
     function saveCabinet() {
@@ -4497,13 +4678,14 @@
       if (!wall || index === null) return;
 
       const currentType = wall.cabinets[index].type;
-      let target = index + direction;
+      const arrayDirection = wall.alignment === "right" ? -direction : direction;
+      let target = index + arrayDirection;
       while (
         target >= 0
         && target < wall.cabinets.length
         && wall.cabinets[target].type !== currentType
       ) {
-        target += direction;
+        target += arrayDirection;
       }
       if (target < 0 || target >= wall.cabinets.length) return;
 
@@ -4553,9 +4735,11 @@
     }
 
     function bindEvents() {
-      document.querySelectorAll(".mode-btn").forEach((button) => {
+      document.querySelectorAll(".mode-btn[data-mode]").forEach((button) => {
         button.addEventListener("click", () => initialize(button.dataset.mode));
       });
+      document.getElementById("openTutorialBtn").addEventListener("click", openTutorial);
+      document.getElementById("closeTutorialBtn").addEventListener("click", closeTutorial);
 
       el.wallSelect.addEventListener("change", () => {
         state.activeWallIndex = Number(el.wallSelect.value) || 0;
@@ -4618,7 +4802,7 @@
       });
       el.globalHandleStyle.addEventListener("change", applyGlobalHandleStyle);
       document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
-      el.installNowBtn.addEventListener("click", installApp);
+      el.installNowBtn.addEventListener("click", shareApp);
       el.copyMobileUrlBtn.addEventListener("click", copyMobileAccessUrl);
       document.getElementById("closeExportBtn").addEventListener("click", closeExportModal);
       document.getElementById("confirmExportBtn").addEventListener("click", exportSelected);
@@ -4650,6 +4834,9 @@
       el.editModal.addEventListener("click", (event) => {
         if (event.target === el.editModal) closeModal();
       });
+      el.tutorialModal.addEventListener("click", (event) => {
+        if (event.target === el.tutorialModal) closeTutorial();
+      });
       el.installModal.addEventListener("click", (event) => {
         if (event.target === el.installModal) closeInstallModal();
       });
@@ -4662,6 +4849,7 @@
 
       document.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
+          if (el.tutorialModal.classList.contains("open")) closeTutorial();
           if (el.editModal.classList.contains("open")) closeModal();
           if (el.installModal.classList.contains("open")) closeInstallModal();
           if (el.exportModal.classList.contains("open")) closeExportModal();
@@ -4691,16 +4879,10 @@
       window.addEventListener("beforeinstallprompt", (event) => {
         event.preventDefault();
         deferredInstallPrompt = event;
-        if (el.installModal.classList.contains("open")) {
-          el.installStatus.textContent = "此瀏覽器已準備好安裝，按下「立即安裝」即可。";
-          el.installNowBtn.disabled = false;
-        }
       });
 
       window.addEventListener("appinstalled", () => {
         deferredInstallPrompt = null;
-        el.installStatus.textContent = "安裝完成，可從手機桌面開啟 MODUDRAFT。";
-        el.installNowBtn.disabled = true;
       });
     }
 
