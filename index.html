@@ -136,6 +136,11 @@
       flex-wrap: wrap;
     }
 
+    .project-tools {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
     .brand {
       display: grid;
       grid-template-columns: 42px minmax(0, 1fr);
@@ -190,14 +195,41 @@
     }
 
     .wall-picker {
-      display: flex;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 38px;
       align-items: center;
       gap: 6px;
       min-width: 0;
     }
 
     .wall-picker .select-style {
-      flex: 1 1 180px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .wall-align-controls {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: auto minmax(116px, 1fr) auto;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wall-align-controls > span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .wall-align-controls .segmented {
+      width: 100%;
+    }
+
+    #deleteWallBtn {
+      min-width: 68px;
+      padding-inline: 8px;
+      white-space: nowrap;
     }
 
     .icon-button {
@@ -1150,7 +1182,7 @@
 
   <main class="app" aria-label="廚具系統櫃設計工作台">
     <section class="toolbar" aria-label="工具列">
-      <div class="tool-group">
+      <div class="tool-group project-tools">
         <div class="brand">
           <img src="./icons/modudraft-logo-refined.png" alt="">
           <div class="brand-copy">
@@ -1161,6 +1193,14 @@
         <div class="wall-picker">
           <select id="wallSelect" class="select-style" aria-label="選擇牆面"></select>
           <button id="addWallBtn" class="icon-button" type="button" title="新增牆面" aria-label="新增牆面">+</button>
+          <div class="wall-align-controls" aria-label="目前牆面排列">
+            <span>整排對齊</span>
+            <div class="segmented">
+              <button id="alignWallLeftBtn" class="active" type="button">靠左</button>
+              <button id="alignWallRightBtn" type="button">靠右</button>
+            </div>
+            <button id="deleteWallBtn" class="danger" type="button">刪除牆面</button>
+          </div>
         </div>
       </div>
 
@@ -1254,8 +1294,8 @@
       <h2 id="modalTitle">編輯櫃體</h2>
       <div class="form-grid">
         <div class="order-actions">
-          <button type="button" id="moveLeftBtn">往左</button>
-          <button type="button" id="moveRightBtn">往右</button>
+          <button type="button" id="moveLeftBtn">櫃體往左</button>
+          <button type="button" id="moveRightBtn">櫃體往右</button>
         </div>
         <label>
           名稱
@@ -1484,6 +1524,9 @@
     const el = {
       startOverlay: document.getElementById("startOverlay"),
       wallSelect: document.getElementById("wallSelect"),
+      alignWallLeftBtn: document.getElementById("alignWallLeftBtn"),
+      alignWallRightBtn: document.getElementById("alignWallRightBtn"),
+      deleteWallBtn: document.getElementById("deleteWallBtn"),
       wallWidthInput: document.getElementById("wallWidthInput"),
       wallHeightInput: document.getElementById("wallHeightInput"),
       wallVisibilityToggle: document.getElementById("wallVisibilityToggle"),
@@ -1617,6 +1660,7 @@
         id,
         width,
         height,
+        alignment: "left",
         cabinets: []
       };
     }
@@ -1734,8 +1778,12 @@
     function syncWallInputs() {
       const wall = activeWall();
       if (!wall) return;
+      wall.alignment = wall.alignment === "right" ? "right" : "left";
       el.wallWidthInput.value = String(wall.width);
       el.wallHeightInput.value = String(sharedWallHeight());
+      el.alignWallLeftBtn.classList.toggle("active", wall.alignment === "left");
+      el.alignWallRightBtn.classList.toggle("active", wall.alignment === "right");
+      el.deleteWallBtn.disabled = state.walls.length <= 1;
     }
 
     function applyWallSize() {
@@ -1764,18 +1812,50 @@
       autoGenerateKitchen();
     }
 
+    function setWallAlignment(alignment) {
+      const wall = activeWall();
+      if (!wall) return;
+      wall.alignment = alignment === "right" ? "right" : "left";
+      syncWallInputs();
+      renderAll();
+    }
+
+    function deleteActiveWall() {
+      if (state.walls.length <= 1) {
+        window.alert("專案至少需要保留一面牆。");
+        return;
+      }
+      const wallNumber = state.activeWallIndex + 1;
+      if (!window.confirm(`確定刪除牆 ${wallNumber}？這面牆上的櫃體也會一起刪除。`)) return;
+      state.walls.splice(state.activeWallIndex, 1);
+      state.walls.forEach((wall, index) => {
+        wall.id = index;
+      });
+      state.activeWallIndex = Math.min(state.activeWallIndex, state.walls.length - 1);
+      state.selectedIndex = null;
+      rebuildWallSelect();
+      resetViews();
+    }
+
     function calculatePositions() {
       state.walls.forEach((wall) => {
         wall.width = clampNumber(wall.width, 300, 12000, 2340);
         wall.height = clampNumber(wall.height, 1600, 4200, 2300);
-
-        const cursor = { lower: 0, upper: 0 };
+        wall.alignment = wall.alignment === "right" ? "right" : "left";
         wall.cabinets.forEach((cabinet) => {
           normalizeCabinet(cabinet);
           const type = cabinet.type === "upper" ? "upper" : "lower";
           cabinet.type = type;
           const minWidth = cabinet.name.includes("補邊") || cabinet.name.includes("封板") ? 10 : 50;
           cabinet.width = Math.max(minWidth, Number(cabinet.width) || minWidth);
+        });
+
+        const cursor = {
+          lower: wall.alignment === "right" ? Math.max(0, wall.width - layerTotal(wall, "lower")) : 0,
+          upper: wall.alignment === "right" ? Math.max(0, wall.width - layerTotal(wall, "upper")) : 0
+        };
+        wall.cabinets.forEach((cabinet) => {
+          const type = cabinet.type;
           cabinet.x = cursor[type];
           cursor[type] += cabinet.width;
         });
@@ -2668,6 +2748,44 @@
       if (state.view.elevation) drawElevation(wall);
     }
 
+    function floorDrawingLayout(wall, rect) {
+      const baseScale = scaleFor2DDrawings(wall);
+      const wallWidth = wall.width * baseScale;
+      const offsetX = elevationDrawingLayout(wall, rect, baseScale).frontX;
+      const wallThickness = sizes.wallThickness * baseScale;
+      const planDepth = Math.max(28, sizes.lowerDepth * baseScale * 0.78);
+      const visibleWallThickness = Math.max(8, wallThickness);
+      const drawingBlockHeight = 48 + planDepth + visibleWallThickness + 38;
+      const blockTop = Math.max(10, (rect.height - drawingBlockHeight) / 2);
+      const wallY = blockTop + 48 + planDepth;
+      return {
+        baseScale,
+        wallWidth,
+        offsetX,
+        planDepth,
+        visibleWallThickness,
+        wallY
+      };
+    }
+
+    function floorCabinetBox(cabinet, index, wall, rect) {
+      const layout = floorDrawingLayout(wall, rect);
+      const bodyDepthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+      const depthMm = bodyDepthMm + sizes.doorThickness;
+      const fullDepth = Math.max(28, depthMm * layout.baseScale * 0.78);
+      const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
+      const depth = isWallFiller
+        ? Math.max(4, sizes.sidePanelThickness * layout.baseScale * 0.78)
+        : fullDepth;
+      return {
+        x: layout.offsetX + cabinet.x * layout.baseScale,
+        y: isWallFiller ? layout.wallY - fullDepth : layout.wallY - depth,
+        width: cabinet.width * layout.baseScale,
+        height: depth,
+        index
+      };
+    }
+
     function drawFloorplan(wall) {
       const rect = clearDraftCanvas(el.floorCanvas, ctx.floor);
       const z = state.zoom.floor;
@@ -2676,15 +2794,14 @@
       ctx.floor.translate(z.panX, z.panY);
       ctx.floor.scale(z.scale, z.scale);
 
-      const baseScale = scaleFor2DDrawings(wall);
-      const wallWidth = wall.width * baseScale;
-      const offsetX = (rect.width - wallWidth) / 2;
-      const wallThickness = sizes.wallThickness * baseScale;
-      const planDepth = Math.max(28, sizes.lowerDepth * baseScale * 0.78);
-      const visibleWallThickness = Math.max(8, wallThickness);
-      const drawingBlockHeight = 48 + planDepth + visibleWallThickness + 38;
-      const blockTop = Math.max(10, (rect.height - drawingBlockHeight) / 2);
-      const wallY = blockTop + 48 + planDepth;
+      const {
+        baseScale,
+        wallWidth,
+        offsetX,
+        planDepth,
+        visibleWallThickness,
+        wallY
+      } = floorDrawingLayout(wall, rect);
 
       ctx.floor.fillStyle = "#d5d0c5";
       ctx.floor.fillRect(offsetX, wallY, wallWidth, visibleWallThickness);
@@ -4042,8 +4159,7 @@
 
     function bindPanZoom(canvas, name) {
       const pointers = new Map();
-      let pinchDistance = 0;
-      let pinchCenter = null;
+      let pinchStart = null;
 
       function gesture() {
         const points = [...pointers.values()].slice(0, 2);
@@ -4054,6 +4170,22 @@
             y: (points[0].y + points[1].y) / 2
           },
           distance: Math.hypot(points[1].x - points[0].x, points[1].y - points[0].y)
+        };
+      }
+
+      function beginPinch() {
+        const current = gesture();
+        if (current.distance <= 0) {
+          pinchStart = null;
+          return;
+        }
+        const z = state.zoom[name];
+        const rect = canvas.getBoundingClientRect();
+        pinchStart = {
+          distance: current.distance,
+          scale: z.scale,
+          anchorX: (current.center.x - rect.left - z.panX) / z.scale,
+          anchorY: (current.center.y - rect.top - z.panY) / z.scale
         };
       }
 
@@ -4073,6 +4205,10 @@
       canvas.addEventListener("pointerdown", (event) => {
         const z = state.zoom[name];
         if (event.pointerType === "touch") {
+          if (event.isPrimary && !pointers.has(event.pointerId)) {
+            pointers.clear();
+            pinchStart = null;
+          }
           pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
         }
         drag = {
@@ -4083,11 +4219,11 @@
           moved: pointers.size >= 2
         };
         if (pointers.size >= 2) {
-          const current = gesture();
-          pinchDistance = current.distance;
-          pinchCenter = current.center;
+          beginPinch();
         }
-        canvas.setPointerCapture(event.pointerId);
+        try {
+          canvas.setPointerCapture(event.pointerId);
+        } catch (_error) {}
       });
 
       canvas.addEventListener("pointermove", (event) => {
@@ -4098,20 +4234,14 @@
           pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
           if (pointers.size >= 2) {
             const current = gesture();
-            if (pinchCenter) {
-              z.panX += current.center.x - pinchCenter.x;
-              z.panY += current.center.y - pinchCenter.y;
-            }
-            if (pinchDistance > 0 && current.distance > 0) {
-              const before = canvasPoint(current.center, canvas, z);
-              z.scale = Math.max(0.45, Math.min(5, z.scale * (current.distance / pinchDistance)));
-              const after = canvasPoint(current.center, canvas, z);
-              z.panX += (after.x - before.x) * z.scale;
-              z.panY += (after.y - before.y) * z.scale;
+            if (!pinchStart) beginPinch();
+            if (pinchStart && current.distance > 0) {
+              const rect = canvas.getBoundingClientRect();
+              z.scale = Math.max(0.45, Math.min(5, pinchStart.scale * (current.distance / pinchStart.distance)));
+              z.panX = current.center.x - rect.left - pinchStart.anchorX * z.scale;
+              z.panY = current.center.y - rect.top - pinchStart.anchorY * z.scale;
             }
             sync2DTransform(name);
-            pinchDistance = current.distance;
-            pinchCenter = current.center;
             drag.moved = true;
             render2D();
             return;
@@ -4134,11 +4264,10 @@
         if (canvas.hasPointerCapture(event.pointerId)) {
           canvas.releasePointerCapture(event.pointerId);
         }
-        pinchDistance = 0;
-        pinchCenter = null;
         if (pointers.size === 1) {
           const remaining = [...pointers.values()][0];
           const z = state.zoom[name];
+          pinchStart = null;
           drag.active = true;
           drag.target = name;
           drag.startX = remaining.x - z.panX;
@@ -4146,18 +4275,21 @@
           drag.moved = true;
           return;
         }
+        pointers.clear();
+        pinchStart = null;
         window.setTimeout(() => {
           drag.active = false;
           drag.target = null;
+          drag.moved = false;
         }, 0);
       });
 
       canvas.addEventListener("pointercancel", (event) => {
-        pointers.delete(event.pointerId);
-        pinchDistance = 0;
-        pinchCenter = null;
+        pointers.clear();
+        pinchStart = null;
         drag.active = false;
         drag.target = null;
+        drag.moved = false;
       });
     }
 
@@ -4224,6 +4356,8 @@
       el.editSinkMount.value = cabinet.sinkMount;
       updateSideTreatmentField();
       el.editModal.classList.add("open");
+      const modalContent = el.editModal.querySelector(".modal-content");
+      if (modalContent) modalContent.scrollTop = 0;
       render2D();
     }
 
@@ -4380,6 +4514,44 @@
       renderAll();
     }
 
+    function cabinetIndexAtCanvasPoint(canvas, name, event) {
+      const wall = activeWall();
+      if (!wall) return null;
+      const rect = canvas.getBoundingClientRect();
+      const point = canvasPoint(event, canvas, state.zoom[name]);
+      const candidates = [];
+
+      wall.cabinets.forEach((cabinet, index) => {
+        const box = name === "floor"
+          ? floorCabinetBox(cabinet, index, wall, rect)
+          : cabinetBox(cabinet, index, wall, rect);
+        const hitPadding = cabinet.purpose === "filler"
+          ? Math.max(0, (22 - box.width) / 2)
+          : 0;
+        if (
+          point.x >= box.x - hitPadding
+          && point.x <= box.x + box.width + hitPadding
+          && point.y >= box.y
+          && point.y <= box.y + box.height
+        ) {
+          candidates.push({
+            index,
+            priority: (cabinet.type === state.currentLayer ? 0 : 2) + (cabinet.purpose === "filler" ? 1 : 0),
+            distance: Math.abs(point.x - (box.x + box.width / 2))
+          });
+        }
+      });
+
+      candidates.sort((a, b) => a.priority - b.priority || a.distance - b.distance);
+      return candidates.length ? candidates[0].index : null;
+    }
+
+    function openCabinetFromCanvas(canvas, name, event) {
+      if (drag.moved) return;
+      const index = cabinetIndexAtCanvasPoint(canvas, name, event);
+      if (index !== null) openEditModal(index);
+    }
+
     function bindEvents() {
       document.querySelectorAll(".mode-btn").forEach((button) => {
         button.addEventListener("click", () => initialize(button.dataset.mode));
@@ -4423,6 +4595,9 @@
       document.getElementById("addCabinetBtn").addEventListener("click", addCabinet);
       document.getElementById("autoLayoutBtn").addEventListener("click", autoGenerateKitchen);
       document.getElementById("addWallBtn").addEventListener("click", addWall);
+      el.alignWallLeftBtn.addEventListener("click", () => setWallAlignment("left"));
+      el.alignWallRightBtn.addEventListener("click", () => setWallAlignment("right"));
+      el.deleteWallBtn.addEventListener("click", deleteActiveWall);
       document.getElementById("renderViewBtn").addEventListener("click", showRenderView);
       document.getElementById("exportBtn").addEventListener("click", openExportModal);
       document.getElementById("resetViewBtn").addEventListener("click", resetViews);
@@ -4498,36 +4673,8 @@
       bindPanZoom(el.elevationCanvas, "elevation");
       bindMobileScrollRail();
 
-      el.elevationCanvas.addEventListener("click", (event) => {
-        if (drag.moved) return;
-        const wall = activeWall();
-        if (!wall) return;
-        const rect = el.elevationCanvas.getBoundingClientRect();
-        const point = canvasPoint(event, el.elevationCanvas, state.zoom.elevation);
-        const candidates = [];
-
-        wall.cabinets.forEach((cabinet, index) => {
-          const box = cabinetBox(cabinet, index, wall, rect);
-          const hitPadding = cabinet.purpose === "filler"
-            ? Math.max(0, (18 - box.width) / 2)
-            : 0;
-          if (
-            point.x >= box.x - hitPadding &&
-            point.x <= box.x + box.width + hitPadding &&
-            point.y >= box.y &&
-            point.y <= box.y + box.height
-          ) {
-            candidates.push({
-              index,
-              priority: cabinet.purpose === "filler" ? 0 : 1,
-              distance: Math.abs(point.x - (box.x + box.width / 2))
-            });
-          }
-        });
-
-        candidates.sort((a, b) => a.priority - b.priority || a.distance - b.distance);
-        if (candidates.length) openEditModal(candidates[0].index);
-      });
+      el.floorCanvas.addEventListener("click", (event) => openCabinetFromCanvas(el.floorCanvas, "floor", event));
+      el.elevationCanvas.addEventListener("click", (event) => openCabinetFromCanvas(el.elevationCanvas, "elevation", event));
 
       window.addEventListener("resize", () => {
         renderAll();
