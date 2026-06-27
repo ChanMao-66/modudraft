@@ -1,7 +1,7 @@
 {
-  "name": "MODUDRAFT 廚具系統櫃設計工作台",
+  "name": "MODUDRAFT 室內設計草圖工作台",
   "short_name": "MODUDRAFT",
-  "description": "以真實毫米尺寸建立廚具系統櫃平面圖、立面圖與多牆 3D 預覽。",
+  "description": "以真實毫米尺寸建立廚具與系統櫃的平面圖、立面圖與 3D 草圖。",
   "lang": "zh-Hant",
   "start_url": "./",
   "scope": "./",

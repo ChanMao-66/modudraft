@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#202833">
+  <title>MODUDRAFT 系統櫃原型工作台</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-block">
+      <img src="../icons/modudraft-logo-refined.png" alt="MODUDRAFT">
+      <div>
+        <div class="brand-name">MODUDRAFT</div>
+        <div class="brand-subtitle">系統櫃原型工作台 <span>獨立測試版</span></div>
+      </div>
+    </div>
+
+    <div class="global-fields" aria-label="空間尺寸">
+      <label>牆寬
+        <span class="number-field"><input id="wallWidth" type="number" min="600" max="12000" step="10" value="3000"><b>mm</b></span>
+      </label>
+      <label>天花高
+        <span class="number-field"><input id="ceilingHeight" type="number" min="2100" max="5000" step="10" value="2500"><b>mm</b></span>
+      </label>
+    </div>
+
+    <div class="header-actions">
+      <a class="icon-command home-command" href="../" title="返回模式選擇" aria-label="返回模式選擇"><i data-lucide="house"></i></a>
+      <button id="addCabinetBtn" class="primary-command" type="button"><i data-lucide="panel-top"></i><span>新增櫃體</span></button>
+      <button id="resetBtn" class="icon-command" type="button" title="重設原型" aria-label="重設原型"><i data-lucide="rotate-ccw"></i></button>
+    </div>
+  </header>
+
+  <nav class="view-tabs" aria-label="視圖切換">
+    <button type="button" data-view="floor"><i data-lucide="scan"></i><span>平面圖</span></button>
+    <button type="button" data-view="elevation" class="active"><i data-lucide="panels-top-left"></i><span>立面圖</span></button>
+    <button type="button" data-view="configuration"><i data-lucide="layout-panel-left"></i><span>立面配置</span></button>
+    <button type="button" data-view="three"><i data-lucide="box"></i><span>3D</span></button>
+  </nav>
+
+  <main class="app-shell">
+    <aside class="cabinet-sidebar" aria-label="櫃體管理">
+      <section class="side-section wall-section">
+        <div class="section-heading compact"><h2>牆面配置</h2><span id="activeWallLabel">A 牆</span></div>
+        <div class="wall-switcher">
+          <select id="wallSelector" aria-label="選擇牆面"></select>
+          <button id="addWallBtn" type="button" title="新增牆面"><i data-lucide="plus"></i></button>
+          <button id="deleteWallBtn" type="button" title="刪除牆面"><i data-lucide="trash-2"></i></button>
+        </div>
+        <div class="mode-segment three wall-align" aria-label="排列方式">
+          <button type="button" data-wall-align="left" class="active">靠左</button>
+          <button type="button" data-wall-align="center">置中</button>
+          <button type="button" data-wall-align="right">靠右</button>
+        </div>
+        <button id="regenerateWallBtn" class="wide-command" type="button"><i data-lucide="wand-sparkles"></i><span>重新生成牆面配置</span></button>
+      </section>
+
+      <section class="side-section project-summary">
+        <div class="section-heading">
+          <div><span class="eyebrow">專案配置</span><h2>系統高櫃配置</h2></div>
+          <span id="cabinetCount" class="count-badge">1 座</span>
+        </div>
+        <div class="summary-grid">
+          <div><span>使用寬度</span><strong id="usedWidthMetric">1,240</strong><small>mm</small></div>
+          <div><span>牆面餘量</span><strong id="remainingWidthMetric">1,760</strong><small>mm</small></div>
+          <div><span>板材規格</span><strong>4 × 8</strong><small>尺</small></div>
+          <div><span>標準板厚</span><strong id="boardThicknessMetric">18</strong><small>mm</small></div>
+        </div>
+      </section>
+
+      <section class="side-section presets-section">
+        <div class="section-heading compact"><h2>用途預設</h2><span>套用至選取櫃</span></div>
+        <div class="preset-grid">
+          <button type="button" data-preset="wardrobe"><i data-lucide="shirt"></i><b>衣櫃</b><small>600 / 650 深</small></button>
+          <button type="button" data-preset="shoe"><i data-lucide="footprints"></i><b>鞋櫃</b><small>400 深</small></button>
+          <button type="button" data-preset="book"><i data-lucide="library-big"></i><b>書櫃</b><small>350 深</small></button>
+          <button type="button" data-preset="storage"><i data-lucide="archive"></i><b>儲藏櫃</b><small>450 深</small></button>
+        </div>
+      </section>
+
+      <section class="side-section cabinet-list-section">
+        <div class="section-heading compact"><h2>牆面物件</h2><span id="runDirectionLabel">由左往右</span></div>
+        <div id="cabinetList" class="cabinet-list"></div>
+        <button id="addFillerBtn" class="wide-command add-filler-command" type="button"><i data-lucide="panel-left"></i><span>插入獨立補板</span></button>
+        <div class="list-actions">
+          <button id="moveItemLeftBtn" type="button" title="向左移"><i data-lucide="arrow-left"></i></button>
+          <button id="moveItemRightBtn" type="button" title="向右移"><i data-lucide="arrow-right"></i></button>
+          <button id="duplicateCabinetBtn" type="button"><i data-lucide="copy"></i><span>複製</span></button>
+          <button id="deleteCabinetBtn" type="button" class="danger-subtle"><i data-lucide="trash-2"></i><span>刪除</span></button>
+        </div>
+      </section>
+
+      <section class="side-section workflow-section">
+        <div class="section-heading compact"><h2>製作順序</h2><span id="workflowStatus">空櫃完成</span></div>
+        <ol class="workflow-steps">
+          <li data-workflow="carcass" class="done"><span>1</span><div><b>空櫃</b><small>櫃身、腳座、中立板</small></div></li>
+          <li data-workflow="shelves"><span>2</span><div><b>層板</b><small>等分或手動分格</small></div></li>
+          <li data-workflow="doors"><span>3</span><div><b>門片</b><small>長門、分段或推拉門</small></div></li>
+          <li data-workflow="accessories"><span>4</span><div><b>配件</b><small>吊衣桿與抽屜</small></div></li>
+        </ol>
+      </section>
+    </aside>
+
+    <section class="workspace" aria-label="設計視圖">
+      <div class="workspace-bar">
+        <div>
+          <span id="viewIndex" class="view-index">02</span>
+          <div><span class="eyebrow">工程視圖</span><h1 id="viewTitle">立面圖 · 門片配置</h1></div>
+        </div>
+        <div class="canvas-tools">
+          <button id="showDoorsBtn" type="button" class="active" title="顯示門片" aria-label="顯示門片"><i data-lucide="eye"></i></button>
+          <button id="zoomOutBtn" type="button" title="縮小" aria-label="縮小"><i data-lucide="zoom-out"></i></button>
+          <span id="zoomValue">100%</span>
+          <button id="zoomInBtn" type="button" title="放大" aria-label="放大"><i data-lucide="zoom-in"></i></button>
+          <button id="fitViewBtn" type="button" title="符合畫面" aria-label="符合畫面"><i data-lucide="maximize"></i></button>
+        </div>
+      </div>
+
+      <div id="drawingStage" class="drawing-stage">
+        <canvas id="draftCanvas" aria-label="系統櫃工程圖"></canvas>
+        <div id="threeStage" class="three-stage hidden" aria-label="系統櫃 3D 視圖"></div>
+        <div class="scale-stamp"><span id="viewScaleLabel">比例 1:20</span><b>單位 mm</b></div>
+      </div>
+
+      <div class="workspace-footer">
+        <div class="selection-readout"><span>目前選取</span><strong id="selectedReadout">系統高櫃 01</strong></div>
+        <div id="validationStrip" class="validation-strip valid"><i data-lucide="circle-check"></i><span>尺寸可製作</span></div>
+        <div class="material-readout"><span>板材</span><strong>1200 × 2400 × 18</strong></div>
+      </div>
+    </section>
+
+    <aside class="property-panel" aria-label="櫃體屬性">
+      <div class="property-tabs" role="tablist">
+        <button type="button" data-panel="carcass" class="active">櫃體</button>
+        <button type="button" data-panel="shelves">層板</button>
+        <button type="button" data-panel="doors">門片</button>
+        <button type="button" data-panel="accessories">配件</button>
+      </div>
+
+      <div class="property-scroll">
+        <section class="property-view active" data-property-view="carcass">
+          <div id="cabinetEditor">
+          <div class="property-title"><div><span class="eyebrow">櫃體結構</span><h2>空櫃設定</h2></div><span id="carcassStatus" class="status-pill">已建立</span></div>
+          <div class="form-grid">
+            <label class="wide">櫃體名稱<input id="cabinetName" type="text" value="系統高櫃 01"></label>
+            <label>用途<select id="cabinetUse"><option value="wardrobe">衣櫃</option><option value="shoe">玄關鞋櫃</option><option value="book">書櫃／展示櫃</option><option value="storage">儲藏櫃</option></select></label>
+            <label>門型<select id="doorSystem"><option value="hinged">對開門</option><option value="sliding">推拉門</option></select></label>
+            <label>櫃身寬<span class="unit-input"><input id="cabinetWidth" type="number" min="300" max="3600" step="10"><b>mm</b></span></label>
+            <label>櫃身高<span class="unit-input"><input id="bodyHeight" type="number" min="400" max="3000" step="10"><b>mm</b></span></label>
+            <label>櫃身深<span class="unit-input"><input id="bodyDepth" type="number" min="250" max="900" step="10"><b>mm</b></span></label>
+            <label>腳座高<span class="unit-input"><input id="plinthHeight" type="number" min="0" max="300" step="10"><b>mm</b></span></label>
+            <label>板材厚<span class="unit-input"><input id="boardThickness" type="number" min="15" max="25" step="1"><b>mm</b></span></label>
+          </div>
+
+          <div class="toggle-row"><div><b>頂天花</b><small id="totalHeightHint">總高 2,500 mm</small></div><label class="switch"><input id="toCeiling" type="checkbox" checked><span></span></label></div>
+
+          <div class="subsection">
+            <div class="subsection-heading"><h3>中立板</h3><span id="baySummary">單一 1,200 mm 櫃格</span></div>
+            <label class="select-row">分櫃方式<select id="partitionMode"><option value="none">不加中立板</option><option value="auto">自動分櫃</option><option value="custom">自訂櫃格數</option></select></label>
+            <label id="bayCountField" class="select-row hidden">櫃格數<span class="unit-input"><input id="bayCount" type="number" min="2" max="8" step="1"><b>格</b></span></label>
+          </div>
+
+          <div class="subsection">
+            <div class="subsection-heading"><h3>牆側處理</h3><span>補板改由牆面獨立插入</span></div>
+            <label class="select-row">靠牆位置<select id="wallRelation"><option value="none">不靠牆</option><option value="left">左側靠牆</option><option value="right">右側靠牆</option><option value="both">左右靠牆</option></select></label>
+            <div class="legacy-filler-controls hidden"><label class="select-row">補邊位置<select id="fillerMode"><option value="none">無補邊</option><option value="left">左補邊</option><option value="right">右補邊</option><option value="both">雙側補邊</option></select></label>
+            <div class="form-grid compact-grid">
+              <label>左補邊<span class="unit-input"><input id="leftFiller" type="number" min="0" max="500" step="1"><b>mm</b></span></label>
+              <label>右補邊<span class="unit-input"><input id="rightFiller" type="number" min="0" max="500" step="1"><b>mm</b></span></label>
+            </div></div>
+            <div class="check-grid">
+              <label><input id="leftFinishedEnd" type="checkbox"><span>左見光側封</span></label>
+              <label><input id="rightFinishedEnd" type="checkbox" checked><span>右見光側封</span></label>
+            </div>
+          </div>
+          </div>
+
+          <div id="fillerEditor" class="hidden">
+            <div class="property-title"><div><span class="eyebrow">牆側處理</span><h2>獨立補板設定</h2></div><span class="status-pill">牆面物件</span></div>
+            <div class="form-grid">
+              <label class="wide">補板名稱<input id="fillerName" type="text"></label>
+              <label>寬度<span class="unit-input"><input id="fillerWidth" type="number" min="5" max="500" step="1"><b>mm</b></span></label>
+              <label>高度<span class="unit-input"><input id="fillerHeight" type="number" min="100" max="5000" step="10"><b>mm</b></span></label>
+              <label>深度<span class="unit-input"><input id="fillerDepth" type="number" min="20" max="900" step="10"><b>mm</b></span></label>
+            </div>
+            <p class="panel-note">補板獨立參與牆面排列，不會加入櫃體內部、層板或門片計算。</p>
+          </div>
+        </section>
+
+        <section class="property-view" data-property-view="shelves">
+          <div class="property-title"><div><span class="eyebrow">內部配置</span><h2>層板與分格</h2></div><span id="shelfStatus" class="status-pill neutral">尚未配置</span></div>
+          <div class="dimension-formula"><span>可配置高度</span><strong id="configurableHeight">2,382 mm</strong><small>櫃身高度 − 底板厚度</small></div>
+          <div class="mode-segment" aria-label="層板模式">
+            <button type="button" data-shelf-mode="auto" class="active">自動等分</button>
+            <button type="button" data-shelf-mode="manual">手動設定</button>
+          </div>
+
+          <div id="autoShelfPanel" class="shelf-mode-panel active">
+            <label class="select-row">最大上緣間距<span class="unit-input"><input id="maxShelfSpacing" type="number" min="150" max="600" step="10" value="300"><b>mm</b></span></label>
+            <button id="autoShelvesBtn" class="wide-command" type="button"><i data-lucide="rows-3"></i><span>自動等分</span></button>
+            <div class="result-line"><span>預計分格</span><strong id="autoShelfResult">8 格 · 298 mm</strong></div>
+          </div>
+
+          <div id="manualShelfPanel" class="shelf-mode-panel">
+            <div class="manual-controls">
+              <label>分格數<span class="unit-input"><input id="manualCompartmentCount" type="number" min="1" max="12" step="1" value="4"><b>格</b></span></label>
+              <button id="buildManualFieldsBtn" type="button">建立欄位</button>
+            </div>
+            <div id="manualStack" class="manual-stack"></div>
+            <div id="manualTotal" class="manual-total valid"><span>合計</span><strong>2,382 / 2,382 mm</strong></div>
+            <button id="applyManualShelvesBtn" class="wide-command" type="button"><i data-lucide="check"></i><span>套用分格</span></button>
+          </div>
+
+          <div class="subsection shelf-kind-section">
+            <div class="subsection-heading"><h3>層板形式</h3><span>全櫃套用</span></div>
+            <div class="mode-segment two"><button type="button" data-shelf-kind="fixed" class="active">固定層板</button><button type="button" data-shelf-kind="adjustable">活動層板</button></div>
+          </div>
+        </section>
+
+        <section class="property-view" data-property-view="doors">
+          <div class="property-title"><div><span class="eyebrow">門片配置</span><h2>門片生成</h2></div><span id="doorStatus" class="status-pill neutral">尚未生成</span></div>
+          <div id="hingedDoorControls">
+            <div class="subsection first">
+              <div class="subsection-heading"><h3>門片位置</h3><span>僅對開門</span></div>
+              <div class="mode-segment two"><button type="button" data-door-position="overlay" class="active">外門</button><button type="button" data-door-position="inset">內門</button></div>
+            </div>
+            <div class="subsection">
+              <div class="subsection-heading"><h3>門片高度</h3><span>可跨越層板</span></div>
+              <div class="mode-segment two"><button type="button" data-door-layout="full" class="active">整片長門</button><button type="button" data-door-layout="segmented">依分格生門</button></div>
+            </div>
+            <label class="select-row">單扇最大寬<span class="unit-input"><input id="maxHingedDoorWidth" type="number" min="300" max="600" step="10" value="500"><b>mm</b></span></label>
+          </div>
+          <div id="slidingDoorControls" class="hidden">
+            <div class="track-diagram">
+              <div><span>櫃身 600</span><b></b></div><div><span>雙軌 50</span><b></b></div>
+            </div>
+            <label class="select-row">推拉門片數<select id="slidingDoorCount"><option value="auto">自動判斷</option><option value="2">2 片</option><option value="3">3 片</option><option value="4">4 片</option></select></label>
+            <div class="result-line"><span>總成品深度</span><strong>650 mm</strong></div>
+          </div>
+          <button id="generateDoorsBtn" class="wide-command accent-command" type="button"><i data-lucide="panels-top-left"></i><span>生成門片</span></button>
+          <div id="doorPreviewList" class="door-preview-list"></div>
+        </section>
+
+        <section class="property-view" data-property-view="accessories">
+          <div class="property-title"><div><span class="eyebrow">機能配件</span><h2>配件與抽屜</h2></div><span id="accessoryStatus" class="status-pill neutral">未加入</span></div>
+          <div class="subsection first">
+            <div class="subsection-heading"><h3>吊衣桿區高度</h3><span>整個吊衣區淨高</span></div>
+            <label class="select-row">建議高度<select id="rodHeightPreset"><option value="0">不使用</option><option value="1000">短衣 1000 mm</option><option value="1500">長衣 1500 mm</option><option value="1650">大衣 1650 mm</option><option value="custom">自訂</option></select></label>
+            <label id="customRodHeightField" class="select-row hidden">自訂高度<span class="unit-input"><input id="customRodHeight" type="number" min="600" max="2100" step="10" value="1650"><b>mm</b></span></label>
+            <button id="applyRodBtn" class="wide-command" type="button"><i data-lucide="minus"></i><span>套用吊衣桿</span></button>
+          </div>
+          <div class="subsection">
+            <div class="subsection-heading"><h3>抽屜</h3><span>第一版外觀配置</span></div>
+            <div class="form-grid compact-grid">
+              <label>抽屜數<span class="unit-input"><input id="drawerCount" type="number" min="0" max="6" step="1" value="0"><b>屜</b></span></label>
+              <label>單屜高<span class="unit-input"><input id="drawerHeight" type="number" min="120" max="400" step="10" value="200"><b>mm</b></span></label>
+            </div>
+            <button id="applyDrawersBtn" class="wide-command" type="button"><i data-lucide="archive"></i><span>套用抽屜</span></button>
+          </div>
+          <button id="clearAccessoriesBtn" class="wide-command muted-command" type="button"><i data-lucide="x"></i><span>清除配件</span></button>
+        </section>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

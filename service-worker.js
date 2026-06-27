@@ -1,8 +1,12 @@
-const CACHE_NAME = "modudraft-pwa-v18";
+const CACHE_NAME = "modudraft-pwa-v19";
 const APP_ASSETS = [
   "./",
   "./index.html",
   "./modudraft_fixed.html",
+  "./system-cabinet-prototype/",
+  "./system-cabinet-prototype/index.html",
+  "./system-cabinet-prototype/styles.css",
+  "./system-cabinet-prototype/app.js",
   "./manifest.webmanifest",
   "./icons/modudraft-logo-refined.png",
   "./icons/modudraft-192-refined.png",
