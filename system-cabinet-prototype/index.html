@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#202833">
-  <title>MODUDRAFT 系統櫃原型工作台</title>
+  <title>MODUDRAFT 系統櫃設計工作台</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -13,7 +13,7 @@
       <img src="../icons/modudraft-logo-refined.png" alt="MODUDRAFT">
       <div>
         <div class="brand-name">MODUDRAFT</div>
-        <div class="brand-subtitle">系統櫃原型工作台 <span>獨立測試版</span></div>
+        <div class="brand-subtitle">為室內設計與系統櫃配置打造的模組化工作台 <span>搶先體驗</span></div>
       </div>
     </div>
 
@@ -109,7 +109,7 @@
           <span id="viewIndex" class="view-index">02</span>
           <div><span class="eyebrow">工程視圖</span><h1 id="viewTitle">立面圖 · 門片配置</h1></div>
         </div>
-        <div class="canvas-tools">
+        <div class="canvas-tools" aria-label="畫布工具">
           <button id="showDoorsBtn" type="button" class="active" title="顯示門片" aria-label="顯示門片"><i data-lucide="eye"></i></button>
           <button id="zoomOutBtn" type="button" title="縮小" aria-label="縮小"><i data-lucide="zoom-out"></i></button>
           <span id="zoomValue">100%</span>
@@ -119,6 +119,7 @@
       </div>
 
       <div id="drawingStage" class="drawing-stage">
+        <div class="stage-badge"><span></span>設計工作區</div>
         <canvas id="draftCanvas" aria-label="系統櫃工程圖"></canvas>
         <div id="threeStage" class="three-stage hidden" aria-label="系統櫃 3D 視圖"></div>
         <div class="scale-stamp"><span id="viewScaleLabel">比例 1:20</span><b>單位 mm</b></div>
@@ -132,6 +133,7 @@
     </section>
 
     <aside class="property-panel" aria-label="櫃體屬性">
+      <div class="inspector-context"><span>目前選取</span><strong id="inspectorSelection">A 牆 / 系統高櫃 01</strong></div>
       <div class="property-tabs" role="tablist">
         <button type="button" data-panel="carcass" class="active">櫃體</button>
         <button type="button" data-panel="shelves">層板</button>
