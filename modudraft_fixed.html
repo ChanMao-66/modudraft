@@ -1250,6 +1250,131 @@
         pointer-events: none;
       }
     }
+
+    /* MODUDRAFT 統一高級感 UI V1 */
+    :root {
+      --bg: #e7eae9;
+      --bg-2: #eef0ef;
+      --panel: rgba(250, 251, 248, .78);
+      --panel-2: #f4f5f2;
+      --panel-3: #fbfbf8;
+      --line: rgba(39, 49, 58, .13);
+      --line-soft: rgba(39, 49, 58, .075);
+      --text: #303b42;
+      --muted: #747d80;
+      --paper: #f8f5ee;
+      --paper-2: #eee8dc;
+      --paper-line: #d8cbb9;
+      --ink: #273139;
+      --accent: #a9783c;
+      --accent-2: #bd925e;
+      --green: #6f8f72;
+      --red: #a96763;
+      --blue: #748b94;
+    }
+
+    body {
+      background: #e7eae9;
+      color: var(--text);
+    }
+
+    button {
+      border-color: var(--line);
+      background: rgba(248, 249, 246, .86);
+      color: #4d5960;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.72);
+      transition: border-color 220ms ease, background 220ms ease, color 220ms ease, box-shadow 220ms ease, transform 220ms ease;
+    }
+
+    button:hover:not(:disabled) {
+      border-color: rgba(169, 120, 60, .34);
+      background: #eee7dd;
+      color: #654b31;
+      transform: translateY(-1px);
+    }
+
+    button:disabled { opacity: .42; cursor: not-allowed; }
+    button.primary { border-color: #3d4c53; background: #3d4c53; color: #fffdf8; box-shadow: 0 8px 18px rgba(45,57,64,.15), inset 0 1px 0 rgba(255,255,255,.12); }
+    button.primary:hover:not(:disabled) { border-color: #303e45; background: #303e45; color: #fff; }
+    button.success { border-color: #6f8f72; background: #6f8f72; color: white; }
+    button.danger { border-color: rgba(169,103,99,.25); background: #f0e2e0; color: #8d514e; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid rgba(169,120,60,.26); outline-offset: 2px; }
+
+    .app { gap: 10px; padding: 10px; background: #e7eae9; }
+    .toolbar {
+      padding: 11px;
+      border-color: rgba(255,255,255,.76);
+      background: rgba(249,250,247,.72);
+      box-shadow: 0 14px 34px rgba(43,50,54,.09), inset 0 1px 0 rgba(255,255,255,.72);
+      -webkit-backdrop-filter: blur(22px) saturate(1.18);
+      backdrop-filter: blur(22px) saturate(1.18);
+    }
+
+    .brand img { border-color: rgba(39,49,58,.12); background: #29343d; box-shadow: 0 7px 18px rgba(39,49,58,.15); }
+    .brand strong { color: #354149; }
+    .brand span { color: #7a8386; }
+
+    .select-style, .field, .measure-field, .toggle-control, .global-style-control {
+      border-color: rgba(39,49,58,.11);
+      background: rgba(252,252,249,.84);
+      color: #697478;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.68);
+    }
+    .select-style, .field { color: #344149; }
+    .select-style:focus, .field:focus { border-color: rgba(169,120,60,.48); box-shadow: 0 0 0 3px rgba(169,120,60,.08); }
+    .measure-field input { color: #303b42; }
+    .global-style-control select { border-color: rgba(39,49,58,.12); background-color: #f8f9f6; color: #354148; }
+
+    .segmented { border-color: rgba(39,49,58,.09); background: #e9edeb; box-shadow: inset 0 1px 2px rgba(39,49,58,.035); }
+    .segmented button { color: #737d81; box-shadow: none; }
+    .segmented button.active { background: #fffefa; color: #59442f; box-shadow: 0 3px 10px rgba(45,51,54,.08), inset 0 -2px 0 #a9783c; }
+
+    .workspace { gap: 12px; padding: 2px 0 4px; }
+    .view {
+      border-color: rgba(39,49,58,.13);
+      background-color: #f8f5ee;
+      box-shadow: 0 20px 50px rgba(45,51,54,.11), inset 0 0 0 1px rgba(255,255,255,.44);
+    }
+    .view-label {
+      border-color: rgba(255,255,255,.72);
+      background: rgba(247,249,246,.66);
+      color: #6d5237;
+      box-shadow: 0 7px 20px rgba(43,50,54,.08), inset 0 1px 0 rgba(255,255,255,.68);
+      -webkit-backdrop-filter: blur(17px) saturate(1.16);
+      backdrop-filter: blur(17px) saturate(1.16);
+    }
+    #threeCanvasContainer { background: #efeee9; }
+    .three-message { color: #6f797d; }
+
+    .status-bar { color: #737d80; }
+    .metric { border-color: rgba(255,255,255,.70); background: rgba(248,249,246,.72); color: #768084; box-shadow: 0 7px 20px rgba(43,50,54,.055), inset 0 1px 0 rgba(255,255,255,.70); -webkit-backdrop-filter: blur(16px) saturate(1.12); backdrop-filter: blur(16px) saturate(1.12); }
+    .metric b, .num { color: #354148; }
+
+    .start-overlay, .modal { background: rgba(49,57,61,.42); -webkit-backdrop-filter: blur(20px) saturate(.95); backdrop-filter: blur(20px) saturate(.95); }
+    .start-card, .modal-content { border-color: rgba(255,255,255,.72); background-color: rgba(249,247,241,.93); box-shadow: 0 28px 70px rgba(35,42,46,.22), inset 0 1px 0 rgba(255,255,255,.75); }
+    .start-card h1 { color: #303b42; }
+    .start-card p { color: #697478; box-shadow: none; }
+    .mode-btn { background: rgba(255,255,252,.82); color: #3d494f; }
+    .mobile-access { border-color: rgba(39,49,58,.09); background: #f5f2eb; }
+    .mobile-url { border-color: rgba(39,49,58,.10); background: #fffefa; }
+    .button-link { border-color: #53656d; background: #53656d; }
+
+    .mobile-scroll-rail { border-color: rgba(255,255,255,.72); background: rgba(244,247,245,.68); box-shadow: 0 12px 30px rgba(43,50,54,.13), inset 0 1px 0 rgba(255,255,255,.70); -webkit-backdrop-filter: blur(20px) saturate(1.16); backdrop-filter: blur(20px) saturate(1.16); }
+    .mobile-scroll-rail button { border-color: rgba(39,49,58,.10); background: rgba(255,255,252,.76); color: #765637; }
+    .mobile-scroll-track::before { background: #b7c0c1; }
+    .mobile-scroll-thumb { border-color: #c4a37c; background: #a9783c; box-shadow: 0 3px 9px rgba(83,66,48,.18); }
+
+    @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+      .toolbar, .view-label, .metric, .mobile-scroll-rail { background: rgba(249,250,247,.98); }
+    }
+
+    @media (max-width: 560px) {
+      .app { padding: 7px; gap: 8px; }
+      .toolbar { padding: 9px; border-radius: 8px; }
+      .view { box-shadow: 0 12px 30px rgba(45,51,54,.10); }
+      .status-bar { gap: 5px; }
+      .metric { min-height: 40px; }
+    }
   </style>
 </head>
 <body>
@@ -3659,26 +3784,43 @@
       container.innerHTML = "";
 
       three.scene = new THREE.Scene();
-      three.scene.background = new THREE.Color(0x121820);
+      three.scene.background = new THREE.Color(0xefeee9);
+      three.scene.fog = new THREE.Fog(0xefeee9, 11000, 26000);
       three.camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 1, 90000);
       three.camera.position.set(2600, 2600, 3800);
 
       three.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
       three.renderer.setPixelRatio(window.devicePixelRatio || 1);
       three.renderer.setSize(container.offsetWidth, container.offsetHeight);
+      three.renderer.shadowMap.enabled = true;
+      three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      three.renderer.toneMappingExposure = 1.05;
+      if ("outputEncoding" in three.renderer) three.renderer.outputEncoding = THREE.sRGBEncoding;
       container.appendChild(three.renderer.domElement);
 
-      three.scene.add(new THREE.AmbientLight(0xffffff, 0.72));
-      const hemi = new THREE.HemisphereLight(0xffffff, 0x253040, 0.42);
+      three.scene.add(new THREE.AmbientLight(0xfffdf8, 0.68));
+      const hemi = new THREE.HemisphereLight(0xfffdf8, 0x879394, 0.62);
       three.scene.add(hemi);
-      const light = new THREE.DirectionalLight(0xffe0a3, 0.65);
+      const light = new THREE.DirectionalLight(0xffedcf, 1.08);
       light.position.set(1800, 4200, 2600);
+      light.castShadow = true;
+      light.shadow.mapSize.set(2048, 2048);
+      light.shadow.bias = -0.00025;
       three.scene.add(light);
+      const fillLight = new THREE.DirectionalLight(0xdde8ea, 0.38);
+      fillLight.position.set(-2600, 1900, 1700);
+      three.scene.add(fillLight);
 
       three.group = new THREE.Group();
       three.scene.add(three.group);
 
       build3DWalls();
+      three.group.traverse((object) => {
+        if (!object.isMesh) return;
+        object.castShadow = true;
+        object.receiveShadow = true;
+      });
       if (previousCamera) {
         three.target = previousCamera.target;
         three.orbitAzimuth = previousCamera.orbitAzimuth;
@@ -3714,7 +3856,7 @@
 
       const context = canvas.getContext("2d");
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.fillStyle = "#121820";
+      context.fillStyle = "#efeee9";
       context.fillRect(0, 0, width, height);
 
       if (!state.walls.length) return;
