@@ -1376,6 +1376,10 @@
       .metric { min-height: 40px; }
     }
   </style>
+  <style>
+    /* 暖木精品工作台 V2 */
+    :root{--bg:#111312;--bg-2:#181a19;--panel:rgba(245,239,231,.88);--panel-2:#35332f;--panel-3:#1b1d1c;--line:rgba(235,220,202,.14);--line-soft:rgba(235,220,202,.08);--text:#eee7dd;--muted:#aaa39a;--paper:#f3ecdf;--paper-2:#e8ddcd;--paper-line:#d1bea5;--ink:#292c2a;--accent:#b27e46;--accent-2:#d0a16d;--green:#758f78;--red:#a86f69;--blue:#859398}body{background:radial-gradient(circle at 58% 0,rgba(172,128,87,.14),transparent 30%),linear-gradient(145deg,#101211,#191816 58%,#111312);color:var(--text)}.app{background:transparent}.toolbar{border-color:rgba(255,255,255,.22);background:linear-gradient(100deg,rgba(251,248,241,.96),rgba(198,181,164,.87) 53%,rgba(38,40,39,.91));box-shadow:0 16px 42px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.62);-webkit-backdrop-filter:blur(22px) saturate(1.16);backdrop-filter:blur(22px) saturate(1.16)}.brand strong{color:#171918;font-size:20px}.brand span{color:#4d4f4c}.brand img{border-color:rgba(255,255,255,.18);background:#191b1a}.select-style,.field,.measure-field,.toggle-control,.global-style-control{border-color:rgba(255,255,255,.14);background:rgba(31,33,32,.48);color:#eee7dd;box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}.measure-field input{color:#fff9f0}.global-style-control select{border-color:rgba(255,255,255,.12);background:#292b29;color:#eee7dd}.segmented{border-color:rgba(255,255,255,.12);background:rgba(28,30,29,.52)}.segmented button{color:#c0b7ac}.segmented button.active{background:linear-gradient(145deg,#b68961,#8d6647);color:#fff7ed;box-shadow:0 5px 16px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.15)}button{border-color:rgba(255,255,255,.11);background:rgba(47,48,45,.68);color:#ddd5cb;box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}button:hover:not(:disabled){border-color:rgba(208,161,109,.36);background:rgba(117,82,53,.40);color:#f4e2cf}button.primary{border-color:#aa7748;background:linear-gradient(145deg,#bc8b5f,#946743);color:#fff9f1}button.success{border-color:#758f78;background:#758f78}button.danger{border-color:rgba(168,111,105,.30);background:rgba(119,66,62,.48);color:#f1d7d4}.workspace{scrollbar-color:#6f5945 #1b1d1c}.view{border-color:rgba(255,255,255,.12);background-color:#f2ebdf;box-shadow:0 24px 60px rgba(0,0,0,.36),inset 0 0 0 1px rgba(255,255,255,.30)}.view-label{border-color:rgba(255,255,255,.11);background:rgba(44,43,40,.70);color:#ebc49b;box-shadow:0 9px 24px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06);-webkit-backdrop-filter:blur(17px) saturate(1.12);backdrop-filter:blur(17px) saturate(1.12)}#threeCanvasContainer{background:#39322c}.status-bar{color:#aaa39a}.metric{border-color:rgba(255,255,255,.10);background:rgba(45,44,41,.68);color:#aaa39a;box-shadow:0 8px 22px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.05);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}.metric b,.num{color:#eee5da}.start-overlay,.modal{background:rgba(16,18,17,.68);-webkit-backdrop-filter:blur(20px) saturate(.9);backdrop-filter:blur(20px) saturate(.9)}.start-card,.modal-content{border-color:rgba(255,255,255,.18);background-color:rgba(236,225,211,.96);box-shadow:0 30px 80px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.60)}.start-card h1{color:#292c2a}.start-card p{color:#64645f}.mobile-scroll-rail{border-color:rgba(255,255,255,.12);background:rgba(43,43,40,.72);box-shadow:0 12px 30px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.06)}.mobile-scroll-rail button{border-color:rgba(255,255,255,.10);background:rgba(57,55,51,.82);color:#e0b88e}.mobile-scroll-track::before{background:#665d54}.mobile-scroll-thumb{border-color:#d1aa80;background:#ad7d54}@media(max-width:560px){.toolbar{background:linear-gradient(120deg,rgba(248,245,238,.96),rgba(174,155,136,.89) 66%,rgba(43,44,42,.93))}.brand strong{font-size:17px}.select-style,.field,.measure-field,.toggle-control,.global-style-control{background:rgba(29,31,30,.60)}}
+  </style>
 </head>
 <body>
   <a href="./" aria-label="返回模式選擇" title="返回模式選擇" style="position:fixed;right:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:120;display:grid;place-items:center;width:44px;height:44px;border:1px solid #596674;border-radius:50%;background:#202833;color:#e2b45d;text-decoration:none;box-shadow:0 8px 22px rgba(0,0,0,.28);font-size:20px">⌂</a>
@@ -3784,8 +3788,8 @@
       container.innerHTML = "";
 
       three.scene = new THREE.Scene();
-      three.scene.background = new THREE.Color(0xefeee9);
-      three.scene.fog = new THREE.Fog(0xefeee9, 11000, 26000);
+      three.scene.background = new THREE.Color(0x443a32);
+      three.scene.fog = new THREE.Fog(0x443a32, 12000, 27000);
       three.camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 1, 90000);
       three.camera.position.set(2600, 2600, 3800);
 
@@ -3795,14 +3799,14 @@
       three.renderer.shadowMap.enabled = true;
       three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      three.renderer.toneMappingExposure = 1.05;
+      three.renderer.toneMappingExposure = 0.94;
       if ("outputEncoding" in three.renderer) three.renderer.outputEncoding = THREE.sRGBEncoding;
       container.appendChild(three.renderer.domElement);
 
-      three.scene.add(new THREE.AmbientLight(0xfffdf8, 0.68));
-      const hemi = new THREE.HemisphereLight(0xfffdf8, 0x879394, 0.62);
+      three.scene.add(new THREE.AmbientLight(0xfff3df, 0.58));
+      const hemi = new THREE.HemisphereLight(0xffe9cc, 0x3b4140, 0.58);
       three.scene.add(hemi);
-      const light = new THREE.DirectionalLight(0xffedcf, 1.08);
+      const light = new THREE.DirectionalLight(0xffd7a6, 1.02);
       light.position.set(1800, 4200, 2600);
       light.castShadow = true;
       light.shadow.mapSize.set(2048, 2048);
@@ -3856,7 +3860,7 @@
 
       const context = canvas.getContext("2d");
       context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.fillStyle = "#efeee9";
+      context.fillStyle = "#443a32";
       context.fillRect(0, 0, width, height);
 
       if (!state.walls.length) return;
