@@ -1,0 +1,284 @@
+(function (global) {
+  "use strict";
+
+  const SCHEMA_VERSION = 1;
+  const PROJECT_INDEX_KEY = "modudraft:projects:v1";
+  const PROJECT_KEY_PREFIX = "modudraft:project:v1:";
+
+  const MATERIALS = [
+    { id: "door-mist-white", name: "霧面暖白", category: "door", color: "#e8e5df", roughness: 0.78, metalness: 0, price: 1380, note: "柔霧門板" },
+    { id: "door-cream", name: "奶油米", category: "door", color: "#d9cdbd", roughness: 0.75, metalness: 0, price: 1480, note: "低飽和奶油色" },
+    { id: "body-oak", name: "淺橡木", category: "body", color: "#b99a76", roughness: 0.72, metalness: 0, price: 1280, note: "自然木質櫃身" },
+    { id: "body-walnut", name: "煙燻胡桃", category: "body", color: "#5c4637", roughness: 0.7, metalness: 0, price: 1680, note: "深色精品木紋" },
+    { id: "counter-quartz", name: "雲霧石英", category: "countertop", color: "#d9d5cd", roughness: 0.42, metalness: 0, price: 6200, note: "淺色人造石" },
+    { id: "counter-charcoal", name: "炭灰岩板", category: "countertop", color: "#474744", roughness: 0.55, metalness: 0, price: 7600, note: "深色霧面檯面" },
+    { id: "handle-champagne", name: "香檳金", category: "handle", color: "#9c7b58", roughness: 0.28, metalness: 0.72, price: 420, note: "金屬把手" },
+    { id: "handle-graphite", name: "石墨灰", category: "handle", color: "#373a3b", roughness: 0.35, metalness: 0.65, price: 360, note: "低調深色五金" },
+    { id: "wall-warm", name: "暖灰牆面", category: "wall", color: "#d1cbc1", roughness: 0.88, metalness: 0, price: 0, note: "展示空間牆面" },
+    { id: "floor-oak", name: "自然木地板", category: "floor", color: "#9a8065", roughness: 0.76, metalness: 0, price: 0, note: "暖木地坪" }
+  ];
+
+  const STYLE_PRESETS = [
+    { id: "modern", name: "現代白灰", description: "暖白門板、雲霧石英與石墨五金", door: "door-mist-white", body: "door-mist-white", countertop: "counter-quartz", handle: "handle-graphite", wall: "wall-warm", floor: "floor-oak" },
+    { id: "cream", name: "奶油風", description: "奶油米門板與香檳金細節", door: "door-cream", body: "door-cream", countertop: "counter-quartz", handle: "handle-champagne", wall: "wall-warm", floor: "floor-oak" },
+    { id: "nordic", name: "木質北歐", description: "淺橡木與霧面暖白的明亮組合", door: "body-oak", body: "door-mist-white", countertop: "counter-quartz", handle: "handle-graphite", wall: "wall-warm", floor: "floor-oak" },
+    { id: "dark", name: "深色高級感", description: "煙燻胡桃、炭灰岩板與香檳金", door: "body-walnut", body: "body-walnut", countertop: "counter-charcoal", handle: "handle-champagne", wall: "wall-warm", floor: "floor-oak" },
+    { id: "japanese", name: "日式簡約", description: "淺木色、暖白與低對比材質", door: "body-oak", body: "door-mist-white", countertop: "counter-quartz", handle: "handle-graphite", wall: "wall-warm", floor: "floor-oak" },
+    { id: "industrial", name: "工業風", description: "深胡桃、炭灰與石墨五金", door: "body-walnut", body: "body-walnut", countertop: "counter-charcoal", handle: "handle-graphite", wall: "wall-warm", floor: "floor-oak" }
+  ];
+
+  function uid(prefix) {
+    const random = Math.random().toString(36).slice(2, 8);
+    return `${prefix || "item"}-${Date.now().toString(36)}-${random}`;
+  }
+
+  function finiteNumber(value, fallback, min, max) {
+    const parsed = Number(value);
+    const safe = Number.isFinite(parsed) ? parsed : fallback;
+    return Math.min(max == null ? Number.MAX_SAFE_INTEGER : max, Math.max(min == null ? 0 : min, safe));
+  }
+
+  function cleanData(value) {
+    if (Array.isArray(value)) return value.map(cleanData);
+    if (!value || typeof value !== "object") {
+      return typeof value === "number" && !Number.isFinite(value) ? 0 : value;
+    }
+    return Object.keys(value).reduce((result, key) => {
+      if (typeof value[key] !== "function" && value[key] !== undefined) result[key] = cleanData(value[key]);
+      return result;
+    }, {});
+  }
+
+  function createProject(input) {
+    const source = input || {};
+    const now = new Date().toISOString();
+    return {
+      schemaVersion: SCHEMA_VERSION,
+      id: source.id || uid("project"),
+      name: source.name || (source.type === "cabinet" ? "未命名系統櫃" : "未命名廚具"),
+      type: ["kitchen", "cabinet", "fullInterior"].includes(source.type) ? source.type : "kitchen",
+      createdAt: source.createdAt || now,
+      updatedAt: now,
+      thumbnail: source.thumbnail || "",
+      unit: "mm",
+      rooms: Array.isArray(source.rooms) ? source.rooms : [],
+      walls: Array.isArray(source.walls) ? source.walls : [],
+      openings: Array.isArray(source.openings) ? source.openings : [],
+      cabinets: Array.isArray(source.cabinets) ? source.cabinets : [],
+      appliances: Array.isArray(source.appliances) ? source.appliances : [],
+      materials: Array.isArray(source.materials) ? source.materials : MATERIALS.slice(),
+      materialAssignments: source.materialAssignments || {},
+      stylePreset: source.stylePreset || "modern",
+      cameras: Array.isArray(source.cameras) ? source.cameras : [],
+      renderSettings: Object.assign({ ratio: "4:3", resolution: "1920x1440", lighting: "自然柔光", style: "現代簡約" }, source.renderSettings || {}),
+      exportSettings: Object.assign({ format: "jpg", includeDimensions: true, includeNotes: true }, source.exportSettings || {}),
+      quotationItems: Array.isArray(source.quotationItems) ? source.quotationItems : [],
+      sourceState: cleanData(source.sourceState || {})
+    };
+  }
+
+  function migrateProject(raw, fallbackType) {
+    if (!raw || typeof raw !== "object") return createProject({ type: fallbackType });
+    if (raw.schemaVersion === SCHEMA_VERSION) return createProject(raw);
+    if (raw.project && typeof raw.project === "object") return createProject(raw.project);
+    return createProject({
+      id: raw.id,
+      name: raw.name,
+      type: fallbackType || raw.type,
+      walls: raw.walls,
+      sourceState: raw
+    });
+  }
+
+  function normalizeWall(wall, index) {
+    const source = wall || {};
+    const width = finiteNumber(source.width, 3000, 300, 30000);
+    const height = finiteNumber(source.height, 2500, 300, 10000);
+    return Object.assign({}, source, {
+      id: source.id || uid("wall"),
+      name: source.name || `${String.fromCharCode(65 + (index || 0))}牆`,
+      width,
+      height,
+      thickness: finiteNumber(source.thickness, 120, 20, 1000),
+      angle: finiteNumber(source.angle, 0, -360, 360),
+      alignment: ["left", "center", "right"].includes(source.alignment || source.align) ? (source.alignment || source.align) : "left",
+      openings: Array.isArray(source.openings) ? source.openings : []
+    });
+  }
+
+  function normalizeCabinet(cabinet) {
+    const source = cabinet || {};
+    return Object.assign({}, source, {
+      id: source.id || uid("cabinet"),
+      name: source.name || "未命名櫃體",
+      category: source.category || "tall",
+      usage: source.usage || source.cabinetKind || "storage",
+      width: finiteNumber(source.width, 600, 50, 5000),
+      height: finiteNumber(source.height == null ? source.bodyHeight : source.height, 2400, 50, 5000),
+      depth: finiteNumber(source.depth, 600, 50, 1500),
+      x: finiteNumber(source.x, 0, -30000, 30000),
+      y: finiteNumber(source.y, 0, -30000, 30000),
+      z: finiteNumber(source.z, 0, -30000, 30000),
+      shelves: Array.isArray(source.shelves) ? source.shelves : [],
+      doors: Array.isArray(source.doors) ? source.doors : [],
+      drawers: Array.isArray(source.drawers) ? source.drawers : [],
+      accessories: Array.isArray(source.accessories) ? source.accessories : []
+    });
+  }
+
+  function issue(code, level, message, target) {
+    return { id: uid("issue"), code, level, message, target: target || null };
+  }
+
+  function validateWall(wall) {
+    const result = [];
+    if (!wall || !Number.isFinite(Number(wall.width)) || Number(wall.width) <= 0) result.push(issue("wall-width", "error", "牆面寬度必須大於 0 mm", wall && wall.id));
+    if (!wall || !Number.isFinite(Number(wall.height)) || Number(wall.height) <= 0) result.push(issue("wall-height", "error", "牆面高度必須大於 0 mm", wall && wall.id));
+    return result;
+  }
+
+  function validateCabinet(cabinet, wall) {
+    const result = [];
+    const normalized = normalizeCabinet(cabinet);
+    if (normalized.width < 200 && normalized.usage !== "filler") result.push(issue("cabinet-narrow", "warning", `${normalized.name} 寬度過窄，請確認施工可行性`, normalized.id));
+    if (normalized.height > finiteNumber(wall && wall.height, 10000, 0, 10000)) result.push(issue("cabinet-ceiling", "error", `${normalized.name} 高度超過天花`, normalized.id));
+    if (normalized.doorSystem === "sliding" && normalized.usage === "wardrobe" && normalized.depth < 650) result.push(issue("sliding-depth", "warning", `${normalized.name} 為衣櫃推拉門，建議深度至少 650 mm`, normalized.id));
+    if (normalized.width > 1100 && normalized.usage !== "filler") result.push(issue("door-wide", "warning", `${normalized.name} 寬度較大，建議加入中立板或分櫃`, normalized.id));
+    return result;
+  }
+
+  function validateProject(project) {
+    const normalized = migrateProject(project, project && project.type);
+    const result = [];
+    normalized.walls.forEach((wall, index) => {
+      result.push(...validateWall(wall));
+      const wallCabinets = normalized.cabinets.filter((cabinet) => !cabinet.wallId || cabinet.wallId === wall.id);
+      const layerWidths = wallCabinets.reduce((groups, cabinet) => {
+        const layer = cabinet.runLayer || "default";
+        groups[layer] = (groups[layer] || 0) + finiteNumber(cabinet.width, 0, 0, 30000);
+        return groups;
+      }, {});
+      const used = Math.max(0, ...Object.values(layerWidths));
+      if (index === 0 && used > finiteNumber(wall.width, 0, 0, 30000)) result.push(issue("wall-overflow", "error", `${wall.name || "牆面"} 的櫃體總寬超出 ${Math.round(used - wall.width)} mm`, wall.id));
+      wallCabinets.forEach((cabinet) => result.push(...validateCabinet(cabinet, wall)));
+    });
+    return result;
+  }
+
+  function storageGet(key, fallback) {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw == null ? fallback : JSON.parse(raw);
+    } catch (error) {
+      console.warn("MODUDRAFT 儲存讀取失敗", error);
+      return fallback;
+    }
+  }
+
+  function storageSet(key, value) {
+    try {
+      localStorage.setItem(key, JSON.stringify(cleanData(value)));
+      return true;
+    } catch (error) {
+      console.warn("MODUDRAFT 儲存寫入失敗", error);
+      return false;
+    }
+  }
+
+  function saveProject(project) {
+    const normalized = migrateProject(project, project && project.type);
+    normalized.updatedAt = new Date().toISOString();
+    if (!storageSet(PROJECT_KEY_PREFIX + normalized.id, normalized)) return false;
+    const index = storageGet(PROJECT_INDEX_KEY, []).filter((item) => item.id !== normalized.id);
+    index.unshift({ id: normalized.id, name: normalized.name, type: normalized.type, updatedAt: normalized.updatedAt, thumbnail: normalized.thumbnail || "" });
+    storageSet(PROJECT_INDEX_KEY, index.slice(0, 24));
+    return normalized;
+  }
+
+  function listProjects() {
+    return storageGet(PROJECT_INDEX_KEY, []).filter((item) => item && item.id);
+  }
+
+  function loadProject(id) {
+    const raw = storageGet(PROJECT_KEY_PREFIX + id, null);
+    return raw ? migrateProject(raw, raw.type) : null;
+  }
+
+  function deleteProject(id) {
+    try { localStorage.removeItem(PROJECT_KEY_PREFIX + id); } catch (error) { console.warn(error); }
+    storageSet(PROJECT_INDEX_KEY, listProjects().filter((item) => item.id !== id));
+  }
+
+  function downloadJson(project) {
+    const normalized = migrateProject(project, project && project.type);
+    const blob = new Blob([JSON.stringify(normalized, null, 2)], { type: "application/json;charset=utf-8" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${(normalized.name || "MODUDRAFT-專案").replace(/[\\/:*?\"<>|]/g, "-")}.json`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+  }
+
+  function importJson(file, fallbackType) {
+    return new Promise((resolve, reject) => {
+      if (!file) return reject(new Error("尚未選擇 JSON 專案檔"));
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error("無法讀取專案檔"));
+      reader.onload = () => {
+        try { resolve(migrateProject(JSON.parse(reader.result), fallbackType)); }
+        catch (error) { reject(new Error("JSON 專案檔格式不正確")); }
+      };
+      reader.readAsText(file, "utf-8");
+    });
+  }
+
+  function materialById(id) {
+    return MATERIALS.find((item) => item.id === id) || null;
+  }
+
+  function generateAiPrompt(project, options) {
+    const normalized = migrateProject(project, project && project.type);
+    const settings = Object.assign({}, normalized.renderSettings, options || {});
+    const preset = STYLE_PRESETS.find((item) => item.id === normalized.stylePreset);
+    const assignments = normalized.materialAssignments || {};
+    const names = [assignments.door, assignments.body, assignments.countertop, assignments.handle]
+      .map(materialById).filter(Boolean).map((item) => item.name);
+    const roomType = normalized.type === "kitchen" ? "廚房廚具" : normalized.type === "cabinet" ? "系統櫃收納空間" : "室內空間";
+    return [
+      `請將這張 MODUDRAFT ${roomType}配置截圖渲染成高品質、寫實的室內設計提案圖。`,
+      `設計風格：${settings.style || (preset && preset.name) || "現代簡約"}；光線：${settings.lighting || "自然柔光"}。`,
+      names.length ? `主要材質：${names.join("、")}。` : "材質請維持低飽和、耐看的室內設計質感。",
+      `請嚴格保留原圖的牆面、櫃體尺寸比例、櫃體數量、門片分割、設備位置與目前相機視角。`,
+      `不得任意新增或刪除櫃體，不得改變水槽、爐台、吊櫃、層板、抽屜或吊衣桿的位置。`,
+      `請補上合理的牆面、地板、柔和陰影與真實材質細節，輸出比例 ${settings.ratio || "4:3"}，解析度 ${settings.resolution || "1920x1440"}。`
+    ].join("\n");
+  }
+
+  global.MODUDRAFTCore = Object.freeze({
+    SCHEMA_VERSION,
+    MATERIALS,
+    STYLE_PRESETS,
+    uid,
+    finiteNumber,
+    cleanData,
+    createProject,
+    migrateProject,
+    normalizeWall,
+    normalizeCabinet,
+    validateWall,
+    validateCabinet,
+    validateProject,
+    saveProject,
+    listProjects,
+    loadProject,
+    deleteProject,
+    downloadJson,
+    importJson,
+    generateAiPrompt,
+    materialById,
+    storageGet,
+    storageSet
+  });
+})(window);

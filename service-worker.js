@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v23";
+const CACHE_NAME = "modudraft-pwa-v24";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,12 @@ const APP_ASSETS = [
   "./system-cabinet-prototype/index.html",
   "./system-cabinet-prototype/styles.css",
   "./system-cabinet-prototype/app.js",
+  "./shared/modudraft-core.js",
+  "./shared/product-suite.js",
+  "./shared/design-system.css",
+  "./shared/product-suite.css",
+  "./assets/kitchen-workbench.png",
+  "./assets/system-workbench.png",
   "./manifest.webmanifest",
   "./icons/modudraft-logo-refined.png",
   "./icons/modudraft-192-refined.png",

@@ -3,28 +3,145 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#28313b">
-  <title>MODUDRAFT 室內設計草圖工作台</title>
+  <meta name="theme-color" content="#1b1d1c">
+  <title>MODUDRAFT 專案工作區</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/modudraft-192-refined.png">
+  <link rel="stylesheet" href="./shared/design-system.css">
+  <link rel="stylesheet" href="./shared/product-suite.css">
   <style>
-    :root{font-family:Inter,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;color:#27313a;background:#e9e7e1;letter-spacing:0}*{box-sizing:border-box}body{min-height:100vh;margin:0;background:linear-gradient(180deg,#29333e 0 37%,#e9e7e1 37%);color:#29323a}.shell{width:min(1080px,calc(100% - 32px));margin:0 auto;padding:24px 0 40px}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;color:#f3f0e8}.brand{display:flex;align-items:center;gap:12px}.brand img{width:54px;height:54px;border:1px solid #52606d;border-radius:7px;background:#18212a;object-fit:cover}.brand b{display:block;color:#e1b55f;font-size:21px}.brand span{display:block;margin-top:5px;color:#c4ccd2;font-size:12px}.status{padding:8px 11px;border:1px solid #53616d;border-radius:6px;color:#c9d0d5;font-size:11px}.intro{max-width:720px;padding:62px 0 34px;color:#f5f2ea}.intro p{margin:0 0 8px;color:#e0b45d;font-size:12px;font-weight:800}.intro h1{margin:0;font-size:clamp(27px,5vw,45px);line-height:1.18}.intro small{display:block;margin-top:13px;color:#bdc6cc;font-size:14px;line-height:1.7}.modes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.mode{position:relative;display:grid;grid-template-rows:230px auto;overflow:hidden;border:1px solid #cbc8c0;border-radius:8px;background:#f8f6f0;color:inherit;text-decoration:none;box-shadow:0 14px 35px rgba(28,35,42,.14);transition:transform 220ms ease,box-shadow 220ms ease,border-color 220ms ease}.mode:hover,.mode:focus-visible{transform:translateY(-3px);border-color:#ba8b3d;box-shadow:0 18px 42px rgba(28,35,42,.2);outline:0}.preview{position:relative;overflow:hidden;background-color:#eee8dc;background-image:linear-gradient(rgba(115,91,57,.11) 1px,transparent 1px),linear-gradient(90deg,rgba(115,91,57,.11) 1px,transparent 1px);background-size:24px 24px}.preview::before,.preview::after{position:absolute;content:"";border:2px solid #56616a;background:rgba(250,248,242,.82)}.kitchen .preview::before{left:12%;right:12%;bottom:22%;height:31%}.kitchen .preview::after{left:17%;right:17%;bottom:53%;height:21%;background:rgba(232,227,217,.9)}.cabinet .preview::before{left:24%;width:22%;bottom:13%;height:70%}.cabinet .preview::after{left:49%;width:27%;bottom:13%;height:70%}.preview b{position:absolute;right:18px;top:16px;padding:6px 9px;border-radius:4px;background:#28323c;color:#e0b45d;font-size:10px}.mode-body{display:grid;grid-template-columns:1fr auto;align-items:end;gap:20px;padding:20px}.mode-body span{color:#9b702e;font-size:10px;font-weight:900}.mode-body h2{margin:5px 0 7px;font-size:22px}.mode-body p{margin:0;color:#69737a;font-size:12px;line-height:1.65}.arrow{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#2c3741;color:#e4b65e;font-size:22px}.note{margin:18px 0 0;color:#737c82;font-size:11px;text-align:center}@media(max-width:700px){body{background:linear-gradient(180deg,#29333e 0 31%,#e9e7e1 31%)}.shell{width:min(100% - 20px,520px);padding-top:12px}.brand img{width:44px;height:44px}.brand b{font-size:17px}.status{display:none}.intro{padding:36px 4px 23px}.intro h1{font-size:28px}.intro small{font-size:12px}.modes{grid-template-columns:1fr;gap:12px}.mode{grid-template-columns:116px 1fr;grid-template-rows:auto;min-height:148px}.preview{min-height:148px}.preview b{top:9px;right:8px}.mode-body{padding:15px;gap:8px}.mode-body h2{font-size:18px}.mode-body p{font-size:10px}.arrow{width:34px;height:34px;font-size:18px}}
-  </style>
-  <style>
-    /* 暖木精品主視覺 V2 */
-    :root{color:#eee7dd;background:#111312}body{background:radial-gradient(circle at 60% 0,rgba(177,135,94,.16),transparent 34%),linear-gradient(145deg,#101211,#191816 58%,#111312);color:#eee7dd}.shell{width:min(1180px,calc(100% - 28px));padding-top:12px}.topbar{min-height:62px;padding:0 18px;border:1px solid rgba(255,255,255,.26);border-radius:8px;background:linear-gradient(100deg,rgba(250,247,240,.96),rgba(198,181,164,.86) 53%,rgba(43,45,44,.88));box-shadow:0 16px 42px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.62);color:#191b1a;-webkit-backdrop-filter:blur(22px) saturate(1.16);backdrop-filter:blur(22px) saturate(1.16)}.brand img{width:44px;height:44px;border-color:rgba(255,255,255,.22);background:#1a1c1b}.brand b{color:#171918;font-size:21px}.brand span{color:#4f504d}.status{border-color:rgba(255,255,255,.18);background:rgba(35,37,36,.34);color:#eee7dd}.intro{padding:48px 16px 28px}.intro p{color:#c9a477}.intro h1{color:#f6f1e9;font-size:clamp(30px,5vw,48px)}.intro small{color:#aca69e}.modes{gap:14px}.mode{grid-template-rows:270px auto;border-color:rgba(255,255,255,.12);border-radius:8px;background:linear-gradient(145deg,rgba(46,44,40,.94),rgba(25,27,26,.97));color:#f4eee5;box-shadow:0 22px 55px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.05)}.mode:hover,.mode:focus-visible{border-color:rgba(205,163,118,.52);box-shadow:0 25px 65px rgba(0,0,0,.38),0 0 0 1px rgba(205,163,118,.12)}.preview{background-color:#252623;background-image:linear-gradient(rgba(214,194,169,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(214,194,169,.07) 1px,transparent 1px),radial-gradient(circle at 50% 20%,rgba(189,146,103,.22),transparent 58%)}.preview::before,.preview::after{border-color:#b3a18e;background:linear-gradient(135deg,rgba(211,201,188,.82),rgba(118,102,87,.78));box-shadow:inset 0 0 0 2px rgba(255,255,255,.08),0 16px 34px rgba(0,0,0,.22)}.cabinet .preview::after{background:linear-gradient(180deg,rgba(89,66,46,.88),rgba(39,34,29,.94));box-shadow:inset 0 0 26px rgba(226,177,115,.2)}.preview b{background:rgba(24,25,24,.68);color:#d6b389;border:1px solid rgba(255,255,255,.12);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}.mode-body{border-top:1px solid rgba(255,255,255,.07)}.mode-body span{color:#c9a477}.mode-body h2{color:#f4eee5}.mode-body p{color:#aaa59e}.arrow{background:linear-gradient(145deg,#b88c60,#8e6847);color:#fff8ef;box-shadow:0 8px 20px rgba(0,0,0,.22)}.note{color:#8f8a84}@media(max-width:700px){body{background:radial-gradient(circle at 60% 0,rgba(177,135,94,.15),transparent 30%),#131513}.shell{width:min(100% - 16px,520px)}.topbar{padding:0 11px}.brand b{font-size:17px}.intro{padding:32px 6px 20px}.mode{grid-template-columns:122px 1fr;grid-template-rows:auto;min-height:154px}.preview{min-height:154px}}
+    :root {
+      font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+      color: #f3eee7;
+      background: #151716;
+      letter-spacing: 0;
+      --home-panel: rgba(43, 42, 39, .82);
+      --home-line: rgba(255,255,255,.1);
+      --home-muted: #aaa49c;
+      --home-accent: #c29a73;
+    }
+    * { box-sizing: border-box; }
+    button, input { font: inherit; }
+    body { min-width: 320px; min-height: 100vh; margin: 0; overflow-x: hidden; background: #151716; }
+    body::before { position: fixed; z-index: -2; inset: 0; content: ""; background: linear-gradient(105deg, #121413 0 23%, #25231f 62%, #171918); }
+    body::after { position: fixed; z-index: -1; inset: 0; content: ""; opacity: .26; background-image: linear-gradient(rgba(255,255,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.028) 1px,transparent 1px); background-size: 30px 30px; }
+    .app { width: min(1500px, calc(100% - 24px)); min-height: calc(100vh - 24px); margin: 12px auto; overflow: hidden; border: 1px solid rgba(255,255,255,.13); border-radius: 18px; background: rgba(25,27,26,.88); box-shadow: 0 30px 80px rgba(0,0,0,.38); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 72px; padding: 10px 22px; border-bottom: 1px solid var(--home-line); background: linear-gradient(100deg,rgba(250,247,241,.96),rgba(195,179,163,.89) 55%,rgba(44,46,45,.92)); color: #1e201f; }
+    .brand { display: flex; align-items: center; gap: 13px; min-width: 0; color: inherit; text-decoration: none; }
+    .brand img { width: 44px; height: 44px; border-radius: 8px; object-fit: cover; box-shadow: 0 8px 18px rgba(0,0,0,.18); }
+    .brand b { display: block; font-size: 22px; line-height: 1; }
+    .brand span { display: block; margin-top: 6px; color: #5c5a56; font-size: 11px; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .top-actions button { min-height: 40px; border: 1px solid rgba(255,255,255,.16); border-radius: 10px; background: rgba(31,33,32,.34); color: #f5f0e9; padding: 0 14px; cursor: pointer; }
+    .top-actions .primary { border-color: transparent; background: #272927; }
+    .content { display: grid; grid-template-columns: minmax(0, 1fr) 330px; min-height: calc(100vh - 97px); }
+    .main { min-width: 0; padding: 32px; }
+    .side { padding: 24px; border-left: 1px solid var(--home-line); background: rgba(14,16,15,.36); }
+    .welcome { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+    .eyebrow { display: block; margin-bottom: 8px; color: #c7a27e; font-size: 10px; font-weight: 800; letter-spacing: .08em; }
+    h1 { max-width: 760px; margin: 0; font-size: clamp(27px, 3.2vw, 46px); line-height: 1.16; font-weight: 650; }
+    .welcome p { max-width: 520px; margin: 12px 0 0; color: var(--home-muted); font-size: 13px; line-height: 1.7; }
+    .device-pill { flex: 0 0 auto; padding: 10px 12px; border: 1px solid var(--home-line); border-radius: 10px; background: rgba(255,255,255,.045); color: #cbc5bd; font-size: 10px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+    .section-head h2 { margin: 0; font-size: 14px; }
+    .section-head span { color: var(--home-muted); font-size: 10px; }
+    .modes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .mode { position: relative; min-height: 330px; overflow: hidden; border: 1px solid var(--home-line); border-radius: 14px; color: inherit; text-decoration: none; background: #242522; box-shadow: 0 18px 40px rgba(0,0,0,.2); transition: border-color 220ms ease, transform 220ms ease, box-shadow 220ms ease; }
+    .mode:hover, .mode:focus-visible { transform: translateY(-3px); border-color: rgba(202,159,118,.56); box-shadow: 0 24px 48px rgba(0,0,0,.3); outline: 0; }
+    .mode-media { position: absolute; inset: 0; }
+    .mode-media img { width: 100%; height: 100%; object-fit: cover; object-position: top center; filter: saturate(.72) brightness(.66); transform: scale(1.015); transition: transform 450ms ease, filter 250ms ease; }
+    .mode:hover .mode-media img { filter: saturate(.86) brightness(.72); transform: scale(1.035); }
+    .mode-media::after { position: absolute; inset: 0; content: ""; background: linear-gradient(180deg,rgba(13,15,14,.08),rgba(16,17,16,.22) 38%,rgba(16,17,16,.95)); }
+    .mode-body { position: absolute; z-index: 1; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 18px; padding: 22px; }
+    .mode-label { display: inline-flex; margin-bottom: 9px; padding: 5px 8px; border: 1px solid rgba(220,185,151,.28); border-radius: 7px; background: rgba(29,29,27,.5); color: #d9b591; font-size: 9px; font-weight: 800; }
+    .mode h3 { margin: 0 0 7px; font-size: 22px; }
+    .mode p { margin: 0; color: #bcb6ae; font-size: 11px; line-height: 1.6; }
+    .mode-arrow { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(145deg,#bd936c,#8d6848); color: white; font-size: 22px; }
+    .recent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
+    .recent-card { display: grid; min-height: 128px; padding: 14px; border: 1px solid var(--home-line); border-radius: 12px; background: rgba(255,255,255,.035); color: inherit; text-decoration: none; }
+    .recent-card:hover { border-color: rgba(202,159,118,.46); background: rgba(255,255,255,.055); }
+    .recent-card .type { align-self: start; color: var(--home-accent); font-size: 9px; font-weight: 800; }
+    .recent-card b { align-self: end; font-size: 13px; }
+    .recent-card time { color: var(--home-muted); font-size: 9px; }
+    .recent-empty { grid-column: 1 / -1; padding: 24px; border: 1px dashed rgba(255,255,255,.15); border-radius: 12px; color: var(--home-muted); text-align: center; font-size: 11px; line-height: 1.7; }
+    .side-card { margin-bottom: 12px; padding: 16px; border: 1px solid var(--home-line); border-radius: 13px; background: var(--home-panel); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+    .side-card h2 { margin: 0 0 10px; font-size: 14px; }
+    .side-card p { margin: 0; color: var(--home-muted); font-size: 10px; line-height: 1.75; }
+    .quick-list { display: grid; gap: 7px; }
+    .quick-list a,.quick-list button { display: flex; align-items: center; justify-content: space-between; min-height: 45px; border: 1px solid var(--home-line); border-radius: 10px; background: rgba(255,255,255,.045); color: #efe9e1; padding: 0 12px; text-decoration: none; cursor: pointer; font-size: 11px; }
+    .quick-list a:hover,.quick-list button:hover { background: rgba(255,255,255,.075); }
+    .storage-state { display: flex; align-items: center; gap: 9px; }
+    .storage-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #79917b; box-shadow: 0 0 0 4px rgba(121,145,123,.12); }
+    .guide { border: 0; border-top: 1px solid var(--home-line); margin-top: 12px; padding-top: 12px; }
+    .guide summary { cursor: pointer; color: #e9e2d9; font-size: 11px; font-weight: 700; }
+    .guide ol { margin: 12px 0 0; padding-left: 18px; color: var(--home-muted); font-size: 10px; line-height: 1.8; }
+    #projectImport { display: none; }
+    @media (max-width: 980px) { .content { grid-template-columns: 1fr; } .side { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; border-top: 1px solid var(--home-line); border-left: 0; } .side-card { margin: 0; } .side-card:last-child { grid-column: span 3; } }
+    @media (max-width: 700px) { .app { width: 100%; min-height: 100vh; margin: 0; border: 0; border-radius: 0; } .topbar { min-height: 64px; padding: 9px 12px; } .brand img { width: 39px; height: 39px; } .brand b { font-size: 18px; } .brand span { font-size: 9px; } .top-actions button { min-height: 38px; padding: 0 10px; font-size: 10px; } .top-actions button:first-child { display: none; } .content { min-height: calc(100vh - 64px); } .main { padding: 22px 12px; } .welcome { align-items: start; margin-bottom: 20px; } .welcome p { font-size: 11px; } .device-pill { display: none; } .modes { grid-template-columns: 1fr; } .mode { min-height: 250px; } .mode-body { padding: 17px; } .mode h3 { font-size: 19px; } .recent-grid { grid-template-columns: 1fr 1fr; } .side { grid-template-columns: 1fr; padding: 12px; } .side-card:last-child { grid-column: auto; } }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <header class="topbar"><div class="brand"><img src="./icons/modudraft-logo-refined.png" alt="MODUDRAFT 圖示"><div><b>MODUDRAFT</b><span>室內設計草圖工作台</span></div></div><div class="status">手機 · 平板 · 電腦</div></header>
-    <section class="intro"><p>選擇工作模式</p><h1>今天要配置哪一種空間？</h1><small>兩套工具共用同一個入口，各自保存設計資料；系統櫃仍可獨立測試與修改。</small></section>
-    <section class="modes" aria-label="工作模式">
-      <a class="mode kitchen" href="./modudraft_fixed.html"><div class="preview"><b>正式工作版</b></div><div class="mode-body"><div><span>廚具配置</span><h2>廚具設計</h2><p>建立牆面、下櫃、吊櫃、設備、工程圖與 3D 草圖。</p></div><div class="arrow">›</div></div></a>
-      <a class="mode cabinet" href="./system-cabinet-prototype/"><div class="preview"><b>搶先體驗</b></div><div class="mode-body"><div><span>收納配置</span><h2>系統櫃設計</h2><p>配置多面牆、高櫃、補板、層板、門片與內部配件。</p></div><div class="arrow">›</div></div></a>
-    </section>
-    <p class="note">設計內容只儲存在目前裝置的瀏覽器中。</p>
+  <main class="app">
+    <header class="topbar">
+      <a class="brand" href="./" aria-label="MODUDRAFT 專案首頁"><img src="./icons/modudraft-logo-refined.png" alt=""><span><b>MODUDRAFT</b><span>AI 室內設計與櫃體配置工作台</span></span></a>
+      <div class="top-actions"><button id="importTop" type="button">匯入專案</button><button id="newTop" class="primary" type="button">＋ 新建專案</button></div>
+    </header>
+    <div class="content">
+      <section class="main">
+        <header class="welcome"><div><span class="eyebrow">PROJECT WORKSPACE</span><h1>從丈量到配置，快速完成廚具與系統櫃 2D / 3D 設計</h1><p>建立牆面、配置櫃體、檢查尺寸、切換材質，再把目前視角交給 AI 製作客戶提案。</p></div><span class="device-pill">手機 · 平板 · 電腦</span></header>
+        <div class="section-head"><h2>選擇工作模式</h2><span>所有尺寸使用 mm</span></div>
+        <section class="modes" aria-label="工作模式">
+          <a class="mode" href="./modudraft_fixed.html"><div class="mode-media"><img src="./assets/kitchen-workbench.png" alt="廚具配置工作台預覽"></div><div class="mode-body"><div><span class="mode-label">KITCHEN PLANNER</span><h3>廚具配置</h3><p>牆面丈量、上下櫃、設備、工程圖、3D、匯出與 AI 渲染。</p></div><span class="mode-arrow">›</span></div></a>
+          <a class="mode" href="./system-cabinet-prototype/"><div class="mode-media"><img src="./assets/system-workbench.png" alt="系統櫃配置工作台預覽"></div><div class="mode-body"><div><span class="mode-label">SYSTEM CABINET</span><h3>系統櫃配置</h3><p>多面牆、高櫃、補板、分格、門片、配件與有門／無門預覽。</p></div><span class="mode-arrow">›</span></div></a>
+        </section>
+        <div class="section-head"><h2>最近專案</h2><span id="recentCount">0 個專案</span></div>
+        <section id="recentProjects" class="recent-grid" aria-live="polite"></section>
+      </section>
+      <aside class="side">
+        <section class="side-card"><h2>快速開始</h2><div class="quick-list"><a href="./modudraft_fixed.html">新增廚具配置 <span>›</span></a><a href="./system-cabinet-prototype/">新增系統櫃配置 <span>›</span></a><button id="importSide" type="button">匯入 JSON 專案 <span>＋</span></button></div></section>
+        <section class="side-card"><h2>範本專案</h2><p>目前先由兩套工具的自動配置建立範本；後續會加入一字型、L 型、衣櫃與玄關櫃範本庫。</p><div class="quick-list" style="margin-top:12px"><a href="./modudraft_fixed.html?template=kitchen">廚具快速配置 <span>›</span></a><a href="./system-cabinet-prototype/?template=wardrobe">衣櫃快速配置 <span>›</span></a></div></section>
+        <section class="side-card"><h2>資料與裝置</h2><p class="storage-state">專案先安全儲存在目前瀏覽器</p><p style="margin-top:10px">重要專案請定期匯出 JSON 備份。未來登入與雲端同步可直接沿用 Project Schema。</p></section>
+        <section class="side-card"><h2>軟體使用說明</h2><p>先建立牆面，再配置櫃體；於平面、立面與 3D 檢查後，進入專案中心套用材質、執行檢查與產生 AI 提示詞。</p><details class="guide"><summary>查看完整操作順序</summary><ol><li>選擇廚具或系統櫃模式。</li><li>輸入牆寬、天花高並建立配置。</li><li>點選櫃體修改尺寸、門片與配件。</li><li>在平面、立面與 3D 間交叉檢查。</li><li>開啟專案中心套材質、檢查、備份或分享。</li></ol></details></section>
+      </aside>
+    </div>
+    <input id="projectImport" type="file" accept="application/json,.json">
   </main>
-  <script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js"));}</script>
+  <script src="./shared/modudraft-core.js"></script>
+  <script>
+    (function () {
+      const core = window.MODUDRAFTCore;
+      const recent = document.getElementById("recentProjects");
+      const count = document.getElementById("recentCount");
+      const input = document.getElementById("projectImport");
+
+      function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
+      function renderRecent() {
+        const projects = core.listProjects().slice(0, 6);
+        count.textContent = `${projects.length} 個專案`;
+        recent.innerHTML = projects.length ? projects.map((project) => {
+          const href = project.type === "cabinet" ? "./system-cabinet-prototype/" : "./modudraft_fixed.html";
+          const date = project.updatedAt ? new Date(project.updatedAt).toLocaleDateString("zh-TW") : "";
+          return `<a class="recent-card" href="${href}?project=${encodeURIComponent(project.id)}"><span class="type">${project.type === "cabinet" ? "系統櫃" : "廚具配置"}</span><b>${escapeHtml(project.name)}</b><time>${escapeHtml(date)} 更新</time></a>`;
+        }).join("") : '<div class="recent-empty">尚無最近專案。進入任一工作台後，MODUDRAFT 會自動保存你的配置。</div>';
+      }
+      async function importProject() {
+        input.click();
+      }
+      input.addEventListener("change", async () => {
+        try {
+          const project = await core.importJson(input.files[0]);
+          core.saveProject(project);
+          const href = project.type === "cabinet" ? "./system-cabinet-prototype/" : "./modudraft_fixed.html";
+          location.href = `${href}?project=${encodeURIComponent(project.id)}`;
+        } catch (error) { window.alert(error.message || "專案匯入失敗"); }
+        input.value = "";
+      });
+      document.getElementById("importTop").onclick = importProject;
+      document.getElementById("importSide").onclick = importProject;
+      document.getElementById("newTop").onclick = () => document.querySelector(".modes").scrollIntoView({ behavior: "smooth", block: "center" });
+      renderRecent();
+      if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+    })();
+  </script>
 </body>
 </html>

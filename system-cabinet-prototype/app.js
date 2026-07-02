@@ -13,7 +13,7 @@ const state = {
   walls: [], activeWallId: null,
   selection: { wallId: null, itemId: null, cabinetId: null, compartmentId: null, objectType: "wall", objectId: null },
   view: "elevation", panel: "carcass", showDoors: true, zoom: 1,
-  manualDraft: [], hitRegions: [], three: null, drag: null
+  manualDraft: [], hitRegions: [], three: null, drag: null, materialPalette: null
 };
 const el = {};
 let idSeed = Date.now();
@@ -131,14 +131,17 @@ function loadState() {
     const current = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (current?.walls?.length) {
       state.walls = current.walls.map((w, wi) => ({ ...createWall(wi), ...w, items: (w.items || []).map((item, i) => item.type === "filler" ? { ...createFiller(w), ...item } : normalizeCabinet(item, i)) }));
-      state.activeWallId = current.activeWallId || state.walls[0].id; state.showDoors = current.showDoors !== false;
+      state.activeWallId = current.activeWallId || state.walls[0].id; state.showDoors = current.showDoors !== false; state.materialPalette = current.materialPalette || null;
     } else {
       const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY)); state.walls = legacy?.cabinets ? migrateLegacy(legacy) : [createWall(0)]; state.activeWallId = state.walls[0].id;
     }
   } catch { state.walls = [createWall(0)]; state.activeWallId = state.walls[0].id; }
   const first = activeWall().items.find(i => i.type === "cabinet") || activeWall().items[0]; selectItem(first?.id, first?.type || "wall", null, false);
 }
-function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ walls: state.walls, activeWallId: state.activeWallId, showDoors: state.showDoors })); }
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ walls: state.walls, activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette })); }
+  catch (error) { console.warn("系統櫃本機儲存失敗", error); }
+}
 
 function cacheElements() {
   document.querySelectorAll("[id]").forEach(node => el[node.id] = node);
@@ -205,7 +208,7 @@ function escapeHtml(value) { const div = document.createElement("div"); div.text
 function updateValidation() {
   const result = projectValidation(); el.validationStrip.classList.toggle("valid", result.valid); el.validationStrip.classList.toggle("invalid", !result.valid); el.validationStrip.querySelector("span").textContent = result.valid ? `牆面尚餘 ${formatMm(result.remaining)} mm` : `超出牆面 ${formatMm(-result.remaining)} mm`;
 }
-function renderAll() { renderWallSelector(); renderSidebar(); updateValidation(); updateDerivedLabels(); if (state.view === "three") render3D(); else { dispose3D(); render2D(); } saveState(); }
+function renderAll() { renderWallSelector(); renderSidebar(); updateValidation(); updateDerivedLabels(); if (state.view === "three") render3D(); else { dispose3D(); render2D(); } saveState(); scheduleSystemProjectAutosave(); }
 
 function addWall() { const wall = createWall(state.walls.length); state.walls.push(wall); state.activeWallId = wall.id; selectItem(wall.items[0].id); showToast("已新增牆面"); }
 function deleteWall() { if (state.walls.length === 1) return showToast("至少保留一面牆"); const index = state.walls.findIndex(w => w.id === state.activeWallId); state.walls.splice(index, 1); state.activeWallId = state.walls[Math.max(0, index - 1)].id; selectItem(activeWall().items[0]?.id); }
@@ -310,13 +313,14 @@ function drawWallCaption(ctx,w,wall){ctx.font="700 12px sans-serif";ctx.textAlig
 
 function dispose3D(){if(!state.three)return;cancelAnimationFrame(state.three.raf);state.three.renderer?.dispose();el.threeStage.innerHTML="";state.three=null;}
 function mat(color,rough=.72,metal=.01){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
+function projectColor(role,fallback){const id=state.materialPalette?.[role],hex=window.MODUDRAFTCore?.materialById(id)?.color;return hex?Number.parseInt(hex.slice(1),16):fallback;}
 function box(group,w,h,d,x,y,z,material,userData={}){const mesh=new THREE.Mesh(new THREE.BoxGeometry(Math.max(.5,w),Math.max(.5,h),Math.max(.5,d)),material);mesh.position.set(x,y,z);mesh.userData=userData;mesh.castShadow=true;mesh.receiveShadow=true;group.add(mesh);return mesh;}
-function render3D(){if(!window.THREE)return;dispose3D();const rect=el.threeStage.getBoundingClientRect(),renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(Math.max(1,rect.width),Math.max(1,rect.height));renderer.setClearColor(0x443a32);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.96;if("outputEncoding" in renderer)renderer.outputEncoding=THREE.sRGBEncoding;el.threeStage.appendChild(renderer.domElement);const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,rect.width/rect.height,1,50000);scene.fog=new THREE.Fog(0x443a32,9000,19000);scene.add(new THREE.HemisphereLight(0xffedd4,0x3b4140,1.08));const key=new THREE.DirectionalLight(0xffd5a2,1.38);key.position.set(-2200,4300,3400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6500;key.shadow.camera.right=6500;key.shadow.camera.top=5500;key.shadow.camera.bottom=-1800;key.shadow.bias=-.00025;scene.add(key);const fill=new THREE.DirectionalLight(0xc8d2d1,.34);fill.position.set(3600,2100,1800);scene.add(fill);const wall=activeWall(),layout=calculateLayout(wall),group=new THREE.Group();scene.add(group);const carcass=mat(0xd8ccbd,.80),edge=mat(0x746b61,.84),door=mat(0xcfc3b4,.70),filler=mat(0xa57d5a,.78),metal=mat(0x817d77,.24,.72);
+function render3D(){if(!window.THREE)return;dispose3D();const rect=el.threeStage.getBoundingClientRect(),renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(Math.max(1,rect.width),Math.max(1,rect.height));renderer.setClearColor(0x443a32);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.96;if("outputEncoding" in renderer)renderer.outputEncoding=THREE.sRGBEncoding;el.threeStage.appendChild(renderer.domElement);const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,Math.max(1,rect.width)/Math.max(1,rect.height),1,50000);scene.fog=new THREE.Fog(0x443a32,9000,19000);scene.add(new THREE.HemisphereLight(0xffedd4,0x3b4140,1.08));const key=new THREE.DirectionalLight(0xffd5a2,1.38);key.position.set(-2200,4300,3400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6500;key.shadow.camera.right=6500;key.shadow.camera.top=5500;key.shadow.camera.bottom=-1800;key.shadow.bias=-.00025;scene.add(key);const fill=new THREE.DirectionalLight(0xc8d2d1,.34);fill.position.set(3600,2100,1800);scene.add(fill);const wall=activeWall(),layout=calculateLayout(wall),group=new THREE.Group();scene.add(group);const carcass=mat(projectColor("body",0xd8ccbd),.80),edge=mat(0x746b61,.84),door=mat(projectColor("door",0xcfc3b4),.70),filler=mat(projectColor("door",0xa57d5a),.78),metal=mat(projectColor("handle",0x817d77),.24,.72);
   layout.forEach(row=>{const i=row.item;if(i.type==="filler"){box(group,i.width,i.height,i.depth,row.x+i.width/2,i.height/2,i.depth/2,filler,{itemId:i.id,type:"filler"});return;}const c=i,left=c.leftFinishedEnd?STANDARD.finishedEnd:0,x=row.x+left,t=c.boardThickness,d=c.depth,base=c.plinthHeight,top=base+c.bodyHeight;box(group,t,c.bodyHeight,d,x+t/2,base+c.bodyHeight/2,d/2,carcass);box(group,t,c.bodyHeight,d,x+c.width-t/2,base+c.bodyHeight/2,d/2,carcass);box(group,c.width-2*t,t,d,x+c.width/2,base+t/2,d/2,carcass);box(group,c.width-2*t,t,d,x+c.width/2,top-t/2,d/2,carcass);box(group,c.width-2*t,c.bodyHeight-2*t,STANDARD.back,x+c.width/2,base+c.bodyHeight/2,STANDARD.back/2,edge);
     let cy=base+t;resolveCompartments(c).slice(0,-1).forEach(cell=>{cy+=cell.height;box(group,c.width-2*t,t,d-STANDARD.back-3,x+c.width/2,cy,d/2+STANDARD.back/2+1,carcass,{itemId:c.id,type:"shelf",compartmentId:cell.id});});let cellBottom=base+t;resolveCompartments(c).forEach(cell=>{if(cell.accessory==="rod"&&cell.height>100){const y=cellBottom+cell.height-STANDARD.rodOffset;const geom=new THREE.CylinderGeometry(8,8,c.width-2*t-60,16);geom.rotateZ(Math.PI/2);const rod=new THREE.Mesh(geom,metal);rod.position.set(x+c.width/2,y,d*.58);rod.userData={itemId:c.id,type:"rod",compartmentId:cell.id};group.add(rod);}if(cell.accessory==="drawers"){const count=Math.min(cell.drawerCount||3,Math.max(1,Math.floor(cell.height/(cell.drawerHeight||180))));for(let n=0;n<count;n++){const dh=Math.min(cell.drawerHeight||180,cell.height/count);box(group,c.width-2*t-8,dh-4,18,x+c.width/2,cellBottom+dh*(n+.5),d-10,door,{itemId:c.id,type:"drawers",compartmentId:cell.id});}}cellBottom+=cell.height;});
     if(c.leftFinishedEnd)box(group,STANDARD.finishedEnd,c.bodyHeight+c.plinthHeight,d+STANDARD.door,x-STANDARD.finishedEnd/2,(top)/2,(d+STANDARD.door)/2,door);if(c.rightFinishedEnd)box(group,STANDARD.finishedEnd,c.bodyHeight+c.plinthHeight,d+STANDARD.door,x+c.width+STANDARD.finishedEnd/2,top/2,(d+STANDARD.door)/2,door);
     if(state.showDoors)generateDoorData(c).forEach(front=>{const z=d+STANDARD.door/2+(c.doorSystem==="sliding"?STANDARD.track+front.lane*4:1);box(group,front.width-2,front.height-2,STANDARD.door,x+front.x+front.width/2,base+front.y+front.height/2,z,door,{itemId:c.id,type:"door",compartmentId:front.compartmentId});});});
-  const used=Math.max(wall.width,projectValidation(wall).used),height=wall.height,roomDepth=Math.max(1500,...wall.items.map(i=>i.type==="filler"?i.depth:cabinetTotalDepth(i)))+500;const floor=box(group,used+700,24,roomDepth,used/2,-12,roomDepth/2-180,mat(0x756452,.90),{type:"room"});floor.castShadow=false;const backWall=box(group,used+700,height+500,24,used/2,(height+500)/2,-22,mat(0x8f7f70,.95),{type:"room"});backWall.castShadow=false;const sideWall=box(group,24,height+500,roomDepth*.72,-338,(height+500)/2,roomDepth*.36-25,mat(0x6e6359,.95),{type:"room"});sideWall.castShadow=false;camera.position.set(used*.68,height*.58,Math.max(2850,used*.9));camera.lookAt(used/2,height*.43,260);state.three={renderer,scene,camera,group,raf:0,orbit:{yaw:0,pitch:0,targetX:used/2,targetY:height*.43,distance:camera.position.z}};bindThreeControls(renderer.domElement);const loop=()=>{state.three.raf=requestAnimationFrame(loop);renderer.render(scene,camera);};loop();}
+  const used=Math.max(wall.width,projectValidation(wall).used),height=wall.height,roomDepth=Math.max(1500,...wall.items.map(i=>i.type==="filler"?i.depth:cabinetTotalDepth(i)))+500;const floor=box(group,used+700,24,roomDepth,used/2,-12,roomDepth/2-180,mat(projectColor("floor",0x756452),.90),{type:"room"});floor.castShadow=false;const backWall=box(group,used+700,height+500,24,used/2,(height+500)/2,-22,mat(projectColor("wall",0x8f7f70),.95),{type:"room"});backWall.castShadow=false;const sideWall=box(group,24,height+500,roomDepth*.72,-338,(height+500)/2,roomDepth*.36-25,mat(projectColor("wall",0x6e6359),.95),{type:"room"});sideWall.castShadow=false;camera.position.set(used*.68,height*.58,Math.max(2850,used*.9));camera.lookAt(used/2,height*.43,260);state.three={renderer,scene,camera,group,raf:0,orbit:{yaw:0,pitch:0,targetX:used/2,targetY:height*.43,distance:camera.position.z}};bindThreeControls(renderer.domElement);const loop=()=>{state.three.raf=requestAnimationFrame(loop);renderer.render(scene,camera);};loop();}
 function bindThreeControls(canvas){let down=false,lastX=0,lastY=0,startX=0,startY=0,mode="orbit";canvas.onpointerdown=e=>{down=true;lastX=startX=e.clientX;lastY=startY=e.clientY;mode=e.button===1||e.shiftKey?"pan":"orbit";canvas.setPointerCapture(e.pointerId);};canvas.onpointerup=e=>{down=false;if(Math.hypot(e.clientX-startX,e.clientY-startY)>5)return;const rect=canvas.getBoundingClientRect(),pointer=new THREE.Vector2((e.clientX-rect.left)/rect.width*2-1,-(e.clientY-rect.top)/rect.height*2+1),ray=new THREE.Raycaster();ray.setFromCamera(pointer,state.three.camera);const target=ray.intersectObjects(state.three.group.children,true).find(hit=>hit.object.userData?.itemId);if(target){const data=target.object.userData;selectItem(data.itemId,data.type,data.compartmentId||null);}};canvas.onpointermove=e=>{if(!down||!state.three)return;const dx=e.clientX-lastX,dy=e.clientY-lastY,last=state.three.camera.position.clone();if(mode==="pan"){state.three.camera.position.x-=dx*3;state.three.camera.position.y+=dy*3;}else{const target=new THREE.Vector3(activeWall().width/2,activeWall().height*.45,250),offset=last.sub(target),spherical=new THREE.Spherical().setFromVector3(offset);spherical.theta-=dx*.008;spherical.phi=clamp(spherical.phi+dy*.008,.22,Math.PI/2.05,1);state.three.camera.position.copy(target.clone().add(new THREE.Vector3().setFromSpherical(spherical)));state.three.camera.lookAt(target);}lastX=e.clientX;lastY=e.clientY;};canvas.onwheel=e=>{e.preventDefault();const target=new THREE.Vector3(activeWall().width/2,activeWall().height*.45,250),offset=state.three.camera.position.clone().sub(target).multiplyScalar(e.deltaY>0?1.1:.9);state.three.camera.position.copy(target.clone().add(offset));state.three.camera.lookAt(target);};}
 
 function bindEvents(){
@@ -335,5 +339,122 @@ function bindEvents(){
   el.resetBtn.onclick=()=>{if(!confirm("確定重設系統櫃原型？"))return;localStorage.removeItem(STORAGE_KEY);state.walls=[createWall(0)];state.activeWallId=state.walls[0].id;selectItem(state.walls[0].items[0].id);};window.addEventListener("resize",()=>state.view==="three"?render3D():render2D());
 }
 function showToast(message){el.toast.textContent=message;el.toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>el.toast.classList.remove("show"),2200);}
-function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view);if(window.lucide)window.lucide.createIcons();}
+
+let systemProductProject = null;
+let systemProductAutosaveTimer = 0;
+
+function systemProjectSnapshot() {
+  const core = window.MODUDRAFTCore;
+  if (!core) return null;
+  if (!systemProductProject) {
+    const activeId = core.storageGet("modudraft:system:active-project", "");
+    systemProductProject = core.createProject({ id: activeId || undefined, name: "我的系統櫃配置", type: "cabinet" });
+  }
+  const walls = state.walls.map((wall, index) => core.normalizeWall({ id: wall.id, name: wall.name, width: wall.width, height: wall.height, thickness: 120, alignment: wall.align }, index));
+  const cabinets = [];
+  state.walls.forEach((wall) => {
+    calculateLayout(wall).forEach(({ item, x }) => {
+      if (item.type === "filler") {
+        cabinets.push(core.normalizeCabinet({ id: item.id, name: item.name, category: "filler", usage: "filler", wallId: wall.id, runLayer: "full", x, width: item.width, height: item.height, depth: item.depth }));
+        return;
+      }
+      cabinets.push(core.normalizeCabinet({
+        id: item.id, name: item.name, category: "tall", usage: item.cabinetKind, wallId: wall.id, runLayer: "full", x,
+        width: itemWidth(item), height: item.bodyHeight + item.plinthHeight, depth: cabinetTotalDepth(item),
+        doorStyle: `${item.doorSystem}-${item.doorPosition}-${item.doorLayout}`,
+        sidePanel: { left: item.leftFinishedEnd, right: item.rightFinishedEnd },
+        shelves: item.compartments.map((cell) => ({ id: cell.id, height: cell.height, kind: item.shelfKind, autoFill: cell.autoFill })),
+        doors: item.doors,
+        drawers: item.compartments.filter((cell) => cell.accessory === "drawers").map((cell) => ({ compartmentId: cell.id, count: cell.drawerCount, height: cell.drawerHeight })),
+        accessories: item.compartments.filter((cell) => cell.accessory !== "open").map((cell) => ({ compartmentId: cell.id, type: cell.accessory, rodOffset: cell.rodOffset }))
+      }));
+    });
+  });
+  return core.createProject({
+    ...systemProductProject,
+    type: "cabinet",
+    walls,
+    cabinets,
+    stylePreset: state.projectStyle || systemProductProject.stylePreset,
+    materialAssignments: state.materialPalette || systemProductProject.materialAssignments,
+    sourceState: { system: { walls: core.cleanData(state.walls), activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette } }
+  });
+}
+
+function scheduleSystemProjectAutosave() {
+  if (!window.MODUDRAFTCore || !state.walls.length) return;
+  clearTimeout(systemProductAutosaveTimer);
+  systemProductAutosaveTimer = setTimeout(() => {
+    const snapshot = systemProjectSnapshot();
+    if (!snapshot) return;
+    systemProductProject = window.MODUDRAFTCore.saveProject(snapshot) || snapshot;
+    window.MODUDRAFTCore.storageSet("modudraft:system:active-project", snapshot.id);
+  }, 900);
+}
+
+function importSystemProject(project) {
+  const core = window.MODUDRAFTCore;
+  const source = project?.sourceState?.system;
+  if (!core || !source?.walls?.length) throw new Error("此專案缺少可編輯的系統櫃配置資料");
+  state.walls = core.cleanData(source.walls).map((wall, wallIndex) => ({
+    ...createWall(wallIndex),
+    ...wall,
+    align: ["left", "center", "right"].includes(wall.align) ? wall.align : "left",
+    items: (wall.items || []).map((item, itemIndex) => item.type === "filler" ? { ...createFiller(wall), ...item } : normalizeCabinet(item, itemIndex))
+  }));
+  state.activeWallId = state.walls.some((wall) => wall.id === source.activeWallId) ? source.activeWallId : state.walls[0].id;
+  state.showDoors = source.showDoors !== false;
+  state.materialPalette = source.materialPalette || project.materialAssignments || null;
+  state.projectStyle = project.stylePreset || "modern";
+  systemProductProject = core.createProject(project);
+  core.storageSet("modudraft:system:active-project", systemProductProject.id);
+  const wall = activeWall();
+  const first = wall.items.find((item) => item.type === "cabinet") || wall.items[0];
+  selectItem(first?.id, first?.type || "wall", null, false);
+  updateForms();
+  renderAll();
+  saveState();
+}
+
+function applySystemStyle(preset, assignments) {
+  state.materialPalette = assignments;
+  state.projectStyle = preset.id;
+  document.documentElement.dataset.projectStyle = preset.id;
+  saveState();
+  renderAll();
+}
+
+function systemExtraValidation() {
+  const issues = [];
+  state.walls.forEach((wall) => {
+    const validation = projectValidation(wall);
+    if (!validation.valid) issues.push({ id: `overflow-${wall.id}`, code: "wall-overflow", level: "error", message: `${wall.name} 的配置超出牆面 ${formatMm(Math.abs(validation.remaining))} mm`, target: wall.id });
+    wall.items.filter((item) => item.type === "cabinet").forEach((cabinet) => {
+      const total = resolveCompartments(cabinet).reduce((sum, cell) => sum + Number(cell.height || 0), 0);
+      if (Math.abs(total - configurableHeight(cabinet)) > 2) issues.push({ id: `cells-${cabinet.id}`, code: "compartment-total", level: "error", message: `${cabinet.name} 的分格合計與可配置高度不一致`, target: cabinet.id });
+    });
+  });
+  return issues;
+}
+
+function setSystemReadOnly(readOnly) {
+  if (!readOnly) return;
+  document.querySelectorAll("input, select, textarea").forEach((node) => { if (!node.closest(".md-suite-panel")) node.disabled = true; });
+  document.querySelectorAll("button").forEach((node) => {
+    if (!node.closest(".md-suite-panel") && !node.matches("[data-view], #showDoorsBtn, #zoomInBtn, #zoomOutBtn, #fitViewBtn")) node.disabled = true;
+  });
+  showToast("客戶展示模式：僅供檢視");
+}
+
+function initializeSystemProductSuite() {
+  if (!window.MODUDRAFTCore || !window.MODUDRAFTSuite) return;
+  const requestedId = new URLSearchParams(location.search).get("project");
+  if (requestedId) {
+    const stored = window.MODUDRAFTCore.loadProject(requestedId);
+    if (stored?.type === "cabinet") importSystemProject(stored);
+  }
+  window.MODUDRAFTSuite.mount({ type: "cabinet", buttonTarget: ".header-actions", getProject: systemProjectSnapshot, importProject: importSystemProject, applyStyle: applySystemStyle, extraValidation: systemExtraValidation, setReadOnly: setSystemReadOnly });
+}
+
+function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view);if(window.lucide)window.lucide.createIcons();initializeSystemProductSuite();}
 document.addEventListener("DOMContentLoaded",initialize);

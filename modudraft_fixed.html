@@ -11,6 +11,8 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/modudraft-192-refined.png" sizes="192x192">
   <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
+  <link rel="stylesheet" href="./shared/design-system.css">
+  <link rel="stylesheet" href="./shared/product-suite.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1788,6 +1790,8 @@
     </section>
   </div>
 
+  <script src="./shared/modudraft-core.js"></script>
+  <script src="./shared/product-suite.js"></script>
   <script>
     const state = {
       walls: [],
@@ -2924,6 +2928,7 @@
         void render3D();
       }
       window.requestAnimationFrame(updateMobileScrollRail);
+      scheduleKitchenAutosave();
     }
 
     function fitCanvas(canvas, context) {
@@ -3997,6 +4002,13 @@
       three.orbitElevation = 0.52;
     }
 
+    function projectMaterialColor(role, fallback) {
+      const core = window.MODUDRAFTCore;
+      const materialId = state.materialPalette?.[role];
+      const color = core?.materialById(materialId)?.color;
+      return color ? Number.parseInt(color.slice(1), 16) : fallback;
+    }
+
     function build3DWalls() {
       const totalWidth = state.walls.reduce((sum, wall) => sum + wall.width, 0);
       const maxHeight = Math.max(...state.walls.map((wall) => wall.height), 2300);
@@ -4005,7 +4017,7 @@
         const wallGroup = new THREE.Group();
         const wallGeometry = new THREE.BoxGeometry(wall.width, wall.height, sizes.wallThickness);
         const wallMaterial = new THREE.MeshStandardMaterial({
-          color: 0xd8d2c7,
+          color: projectMaterialColor("wall", 0xd8d2c7),
           roughness: 0.88,
           metalness: 0
         });
@@ -4060,7 +4072,7 @@
             sizes.counterThickness,
             sizes.counterDepth
           );
-          const counterMaterial = new THREE.MeshStandardMaterial({ color: 0xe6e0d7, roughness: 0.42 });
+          const counterMaterial = new THREE.MeshStandardMaterial({ color: projectMaterialColor("countertop", 0xe6e0d7), roughness: 0.42 });
           const counter = new THREE.Mesh(counterGeometry, counterMaterial);
           counter.position.set(
             lowerSpan.start + lowerUsed / 2,
@@ -4098,7 +4110,7 @@
         if (fillHeight > 0 && upperUsed > 0) {
           const fillerDepth = upperFinishedDepth();
           const fillerGeometry = new THREE.BoxGeometry(upperUsed, fillHeight, fillerDepth);
-          const fillerMaterial = new THREE.MeshStandardMaterial({ color: 0xd9d5ce, roughness: 0.46 });
+          const fillerMaterial = new THREE.MeshStandardMaterial({ color: projectMaterialColor("door", 0xd9d5ce), roughness: 0.46 });
           const filler = new THREE.Mesh(fillerGeometry, fillerMaterial);
           filler.position.set(
             upperSpan.start + upperUsed / 2,
@@ -4118,7 +4130,7 @@
 
       const floorSize = Math.max(1800, totalWidth + 900, maxHeight);
       const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
-      const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2230, roughness: 0.96 });
+      const floorMaterial = new THREE.MeshStandardMaterial({ color: projectMaterialColor("floor", 0x756452), roughness: 0.9 });
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(totalWidth / 4, -2, floorSize / 4);
@@ -4147,7 +4159,7 @@
         : upperBottom() + height / 2;
       const bodyGeometry = new THREE.BoxGeometry(cabinet.width, height, depth);
       const bodyMaterial = new THREE.MeshStandardMaterial({
-        color: isLower ? 0xfffdf9 : 0xeef2f6,
+        color: projectMaterialColor("body", isLower ? 0xfffdf9 : 0xeef2f6),
         roughness: 0.36,
         metalness: 0.02
       });
@@ -4177,7 +4189,7 @@
     function addCabinetFront3D(parent, cabinet, face, depth) {
       if (cabinet.frontStyle === "open") return;
       const panelMaterial = new THREE.MeshStandardMaterial({
-        color: cabinet.frontStyle === "appliance" ? 0x35404a : 0xf5f4f0,
+        color: cabinet.frontStyle === "appliance" ? 0x35404a : projectMaterialColor("door", 0xf5f4f0),
         roughness: 0.32,
         metalness: cabinet.frontStyle === "appliance" ? 0.22 : 0.02
       });
@@ -4205,7 +4217,7 @@
       const handleStyle = cabinet.handleStyle;
       if (handleStyle === "none" || panel.width < 40 || panel.height < 40) return;
       const material = new THREE.MeshStandardMaterial({
-        color: handleStyle === "bevel" ? 0x8d9499 : (handleStyle === "bar" ? 0x9ba2a8 : 0x30383f),
+        color: projectMaterialColor("handle", handleStyle === "bevel" ? 0x8d9499 : (handleStyle === "bar" ? 0x9ba2a8 : 0x30383f)),
         roughness: handleStyle === "bevel" ? 0.42 : 0.26,
         metalness: handleStyle === "bevel" ? 0.24 : 0.62
       });
@@ -5213,7 +5225,176 @@
       });
     }
 
+    let kitchenProductProject = null;
+    let kitchenAutosaveTimer = 0;
+
+    function kitchenWallId(wall, index) {
+      return `kitchen-wall-${wall?.id ?? index}`;
+    }
+
+    function kitchenProjectSnapshot() {
+      const core = window.MODUDRAFTCore;
+      if (!core) return null;
+      calculatePositions();
+      if (!kitchenProductProject) {
+        const activeId = core.storageGet("modudraft:kitchen:active-project", "");
+        kitchenProductProject = core.createProject({ id: activeId || undefined, name: "我的廚具配置", type: "kitchen" });
+      }
+      const walls = state.walls.map((wall, index) => core.normalizeWall({
+        id: kitchenWallId(wall, index),
+        name: `牆 ${index + 1}`,
+        width: wall.width,
+        height: wall.height,
+        thickness: sizes.wallThickness,
+        alignment: wall.alignment
+      }, index));
+      const cabinets = [];
+      state.walls.forEach((wall, wallIndex) => {
+        wall.cabinets.forEach((cabinet) => {
+          const isUpper = cabinet.type === "upper";
+          cabinets.push(core.normalizeCabinet({
+            id: cabinet.id,
+            name: cabinet.name,
+            category: cabinet.purpose === "filler" ? "filler" : (isUpper ? "wall" : "base"),
+            usage: cabinet.purpose,
+            wallId: kitchenWallId(wall, wallIndex),
+            runLayer: isUpper ? "upper" : "lower",
+            x: cabinet.x || 0,
+            y: 0,
+            z: isUpper ? upperBottom() : sizes.toeKickHeight,
+            width: cabinet.width,
+            height: cabinetHeight(cabinet, wall),
+            depth: isUpper ? sizes.upperDepth : sizes.lowerDepth,
+            doorStyle: cabinet.frontStyle,
+            handleStyle: cabinet.handleStyle,
+            sidePanel: cabinet.sideTreatment,
+            toeKick: !isUpper,
+            countertop: !isUpper
+          }));
+        });
+      });
+      return core.createProject(Object.assign({}, kitchenProductProject, {
+        type: "kitchen",
+        walls,
+        cabinets,
+        stylePreset: state.projectStyle || kitchenProductProject.stylePreset,
+        materialAssignments: state.materialPalette || kitchenProductProject.materialAssignments,
+        sourceState: {
+          kitchen: {
+            walls: core.cleanData(state.walls),
+            activeWallIndex: state.activeWallIndex,
+            currentLayer: state.currentLayer,
+            showWalls: state.showWalls,
+            showTopFiller: state.showTopFiller,
+            globalHandleStyle: state.globalHandleStyle,
+            materialPalette: state.materialPalette || null,
+            sizes: core.cleanData(sizes)
+          }
+        }
+      }));
+    }
+
+    function importKitchenProject(project) {
+      const core = window.MODUDRAFTCore;
+      if (!core || !project) return;
+      const source = project.sourceState?.kitchen;
+      if (!source?.walls?.length) throw new Error("此專案缺少可編輯的廚具配置資料");
+      state.walls = core.cleanData(source.walls).map((wall, index) => {
+        const restored = createWall(
+          clampNumber(wall.width, 300, 12000, 2300),
+          clampNumber(wall.height, 1600, 4200, 2300),
+          wall.id ?? index
+        );
+        restored.alignment = wall.alignment === "right" ? "right" : "left";
+        restored.cabinets = (wall.cabinets || []).map((cabinet) => normalizeCabinet(core.cleanData(cabinet)));
+        return restored;
+      });
+      state.activeWallIndex = clampNumber(source.activeWallIndex, 0, state.walls.length - 1, 0);
+      state.currentLayer = source.currentLayer === "upper" ? "upper" : "lower";
+      state.showWalls = source.showWalls !== false;
+      state.showTopFiller = source.showTopFiller !== false;
+      state.globalHandleStyle = source.globalHandleStyle || "none";
+      state.materialPalette = source.materialPalette || project.materialAssignments || null;
+      state.projectStyle = project.stylePreset || "modern";
+      Object.assign(sizes, source.sizes || {});
+      kitchenProductProject = core.createProject(project);
+      core.storageSet("modudraft:kitchen:active-project", kitchenProductProject.id);
+      el.startOverlay.style.display = "none";
+      el.wallVisibilityToggle.checked = state.showWalls;
+      el.topFillerVisibilityToggle.checked = state.showTopFiller;
+      el.globalHandleStyle.value = state.globalHandleStyle;
+      rebuildWallSelect();
+      resetViews();
+      renderAll();
+    }
+
+    function applyKitchenStyle(preset, assignments) {
+      state.materialPalette = assignments;
+      state.projectStyle = preset.id;
+      document.documentElement.style.setProperty("--project-door", window.MODUDRAFTCore.materialById(assignments.door)?.color || "#ded8cf");
+      document.documentElement.style.setProperty("--project-body", window.MODUDRAFTCore.materialById(assignments.body)?.color || "#c8b8a5");
+      document.documentElement.style.setProperty("--project-counter", window.MODUDRAFTCore.materialById(assignments.countertop)?.color || "#d7d2c9");
+      document.documentElement.dataset.projectStyle = preset.id;
+      renderAll();
+    }
+
+    function kitchenExtraValidation() {
+      const issues = [];
+      state.walls.forEach((wall, wallIndex) => {
+        const lower = wall.cabinets.filter((cabinet) => cabinet.type === "lower");
+        const sink = lower.find((cabinet) => cabinet.purpose === "sink");
+        const stove = lower.find((cabinet) => cabinet.purpose === "stove");
+        if (sink && stove) {
+          const gap = Math.max(0, Math.max(sink.x, stove.x) - Math.min(sink.x + sink.width, stove.x + stove.width));
+          if (gap < 300) issues.push({ id: `kitchen-gap-${wallIndex}`, code: "sink-stove-gap", level: "warning", message: `牆 ${wallIndex + 1} 的水槽與爐台工作距離少於 300 mm`, target: sink.id });
+        }
+      });
+      return issues;
+    }
+
+    function setKitchenReadOnly(readOnly) {
+      if (!readOnly) return;
+      document.querySelectorAll("input, select, textarea").forEach((node) => {
+        if (!node.closest(".md-suite-panel")) node.disabled = true;
+      });
+      const allowed = new Set(["viewFloor", "viewElevation", "viewThree", "exportBtn", "renderViewBtn", "resetViewBtn", "installAppBtn"]);
+      document.querySelectorAll("button").forEach((node) => {
+        if (!node.closest(".md-suite-panel") && !allowed.has(node.id)) node.disabled = true;
+      });
+      document.body.classList.add("client-view");
+    }
+
+    function scheduleKitchenAutosave() {
+      if (!window.MODUDRAFTCore || !state.walls.length || el.startOverlay.style.display !== "none") return;
+      clearTimeout(kitchenAutosaveTimer);
+      kitchenAutosaveTimer = window.setTimeout(() => {
+        const snapshot = kitchenProjectSnapshot();
+        if (!snapshot) return;
+        kitchenProductProject = window.MODUDRAFTCore.saveProject(snapshot) || snapshot;
+        window.MODUDRAFTCore.storageSet("modudraft:kitchen:active-project", snapshot.id);
+      }, 900);
+    }
+
+    function initializeKitchenProductSuite() {
+      if (!window.MODUDRAFTCore || !window.MODUDRAFTSuite) return;
+      const requestedId = new URLSearchParams(location.search).get("project");
+      if (requestedId) {
+        const stored = window.MODUDRAFTCore.loadProject(requestedId);
+        if (stored?.type === "kitchen") importKitchenProject(stored);
+      }
+      window.MODUDRAFTSuite.mount({
+        type: "kitchen",
+        buttonTarget: ".toolbar .actions",
+        getProject: kitchenProjectSnapshot,
+        importProject: importKitchenProject,
+        applyStyle: applyKitchenStyle,
+        extraValidation: kitchenExtraValidation,
+        setReadOnly: setKitchenReadOnly
+      });
+    }
+
     bindEvents();
+    initializeKitchenProductSuite();
   </script>
 </body>
 </html>

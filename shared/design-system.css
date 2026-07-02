@@ -1,0 +1,53 @@
+:root {
+  --mds-canvas: #171918;
+  --mds-canvas-soft: #22231f;
+  --mds-paper: #f3eee6;
+  --mds-paper-warm: #e4ddd3;
+  --mds-graphite: #252725;
+  --mds-muted: #7d7973;
+  --mds-accent: #b68b62;
+  --mds-accent-soft: #d8c2aa;
+  --mds-line-dark: rgba(255, 255, 255, .1);
+  --mds-line-light: rgba(37, 39, 37, .1);
+  --mds-success: #758f79;
+  --mds-warning: #c49a5d;
+  --mds-danger: #a96d66;
+  --mds-radius-control: 9px;
+  --mds-radius-panel: 14px;
+  --mds-duration: 220ms;
+  font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+button, input, select, textarea { font-family: inherit; letter-spacing: 0; }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid rgba(196, 153, 111, .86); outline-offset: 2px; }
+button, a, input, select { transition: color var(--mds-duration) ease, background-color var(--mds-duration) ease, border-color var(--mds-duration) ease, opacity var(--mds-duration) ease, transform var(--mds-duration) ease; }
+button:disabled, input:disabled, select:disabled, textarea:disabled { cursor: not-allowed !important; opacity: .48; }
+::selection { background: rgba(182, 139, 98, .34); }
+* { scrollbar-color: rgba(182, 139, 98, .5) rgba(255,255,255,.04); scrollbar-width: thin; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: rgba(255,255,255,.035); }
+*::-webkit-scrollbar-thumb { border: 2px solid transparent; border-radius: 8px; background: rgba(182, 139, 98, .5); background-clip: padding-box; }
+
+html[data-client-view="true"]::before {
+  position: fixed;
+  z-index: 1200;
+  top: 10px;
+  left: 50%;
+  content: "客戶展示模式 · 唯讀";
+  padding: 8px 12px;
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 9px;
+  background: rgba(44, 55, 46, .9);
+  color: #f1f5ef;
+  box-shadow: 0 10px 28px rgba(0,0,0,.22);
+  transform: translateX(-50%);
+  font-size: 10px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
