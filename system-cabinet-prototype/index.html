@@ -8,6 +8,17 @@
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
+  <aside class="brand-rail" aria-label="主要導覽">
+    <a class="rail-brand" href="../" aria-label="返回 MODUDRAFT 首頁"><img src="../icons/modudraft-192-refined.png" alt=""></a>
+    <nav class="rail-nav">
+      <a href="../" title="首頁"><i data-lucide="layout-grid"></i><span>首頁</span></a>
+      <button type="button" data-view="floor" title="平面圖"><i data-lucide="scan"></i><span>平面</span></button>
+      <button type="button" data-view="elevation" class="active" title="立面圖"><i data-lucide="panels-top-left"></i><span>立面</span></button>
+      <button type="button" data-view="configuration" title="立面配置"><i data-lucide="layout-panel-left"></i><span>配置</span></button>
+      <button type="button" data-view="three" title="3D 預覽"><i data-lucide="box"></i><span>3D</span></button>
+    </nav>
+    <a class="rail-bottom" href="../" title="切換工作模式"><i data-lucide="chevrons-left"></i></a>
+  </aside>
   <header class="app-header">
     <div class="brand-block">
       <img src="../icons/modudraft-logo-refined.png" alt="MODUDRAFT">
@@ -33,11 +44,14 @@
     </div>
   </header>
 
-  <nav class="view-tabs" aria-label="視圖切換">
+  <nav class="view-tabs bottom-dock" aria-label="視圖切換">
+    <button type="button" id="dockAddCabinet" class="dock-command"><i data-lucide="panel-top"></i><span>新增櫃體</span></button>
+    <button type="button" id="dockAddFiller" class="dock-command"><i data-lucide="panel-left"></i><span>新增補板</span></button>
     <button type="button" data-view="floor"><i data-lucide="scan"></i><span>平面圖</span></button>
     <button type="button" data-view="elevation" class="active"><i data-lucide="panels-top-left"></i><span>立面圖</span></button>
     <button type="button" data-view="configuration"><i data-lucide="layout-panel-left"></i><span>立面配置</span></button>
     <button type="button" data-view="three"><i data-lucide="box"></i><span>3D</span></button>
+    <button type="button" class="dock-command" id="dockExportHint"><i data-lucide="share"></i><span>匯出方案</span></button>
   </nav>
 
   <main class="app-shell">
