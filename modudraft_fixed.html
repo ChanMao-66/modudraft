@@ -11,8 +11,9 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/modudraft-192-refined.png" sizes="192x192">
   <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
-  <link rel="stylesheet" href="./shared/design-system.css">
-  <link rel="stylesheet" href="./shared/product-suite.css">
+  <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
+  <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
+  <link rel="stylesheet" href="./shared/help-system.css?v=20260703-v5">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1790,8 +1791,9 @@
     </section>
   </div>
 
-  <script src="./shared/modudraft-core.js"></script>
-  <script src="./shared/product-suite.js"></script>
+  <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
+  <script src="./shared/product-suite.js?v=20260703-v4"></script>
+  <script src="./shared/help-system.js?v=20260703-v4"></script>
   <script>
     const state = {
       walls: [],
@@ -3846,20 +3848,20 @@
       three.renderer.shadowMap.enabled = true;
       three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      three.renderer.toneMappingExposure = 0.94;
+      three.renderer.toneMappingExposure = 0.78;
       if ("outputEncoding" in three.renderer) three.renderer.outputEncoding = THREE.sRGBEncoding;
       container.appendChild(three.renderer.domElement);
 
-      three.scene.add(new THREE.AmbientLight(0xfff3df, 0.58));
-      const hemi = new THREE.HemisphereLight(0xffe9cc, 0x3b4140, 0.58);
+      three.scene.add(new THREE.AmbientLight(0xfff3df, 0.34));
+      const hemi = new THREE.HemisphereLight(0xffe9cc, 0x303534, 0.46);
       three.scene.add(hemi);
-      const light = new THREE.DirectionalLight(0xffd7a6, 1.02);
+      const light = new THREE.DirectionalLight(0xffd7a6, 0.9);
       light.position.set(1800, 4200, 2600);
       light.castShadow = true;
       light.shadow.mapSize.set(2048, 2048);
       light.shadow.bias = -0.00025;
       three.scene.add(light);
-      const fillLight = new THREE.DirectionalLight(0xdde8ea, 0.38);
+      const fillLight = new THREE.DirectionalLight(0xdde8ea, 0.2);
       fillLight.position.set(-2600, 1900, 1700);
       three.scene.add(fillLight);
 
@@ -4009,6 +4011,10 @@
       return color ? Number.parseInt(color.slice(1), 16) : fallback;
     }
 
+    function shadeThreeColor(color, amount = 0.86) {
+      return new THREE.Color(color).multiplyScalar(amount);
+    }
+
     function build3DWalls() {
       const totalWidth = state.walls.reduce((sum, wall) => sum + wall.width, 0);
       const maxHeight = Math.max(...state.walls.map((wall) => wall.height), 2300);
@@ -4017,7 +4023,7 @@
         const wallGroup = new THREE.Group();
         const wallGeometry = new THREE.BoxGeometry(wall.width, wall.height, sizes.wallThickness);
         const wallMaterial = new THREE.MeshStandardMaterial({
-          color: projectMaterialColor("wall", 0xd8d2c7),
+          color: shadeThreeColor(projectMaterialColor("wall", 0xd8d2c7), 0.72),
           roughness: 0.88,
           metalness: 0
         });
@@ -4128,9 +4134,9 @@
         three.group.add(wallGroup);
       });
 
-      const floorSize = Math.max(1800, totalWidth + 900, maxHeight);
+      const floorSize = Math.max(18000, (totalWidth + 900) * 5, maxHeight * 6);
       const floorGeometry = new THREE.PlaneGeometry(floorSize, floorSize);
-      const floorMaterial = new THREE.MeshStandardMaterial({ color: projectMaterialColor("floor", 0x756452), roughness: 0.9 });
+       const floorMaterial = new THREE.MeshStandardMaterial({ color: shadeThreeColor(projectMaterialColor("floor", 0x756452), 0.7), roughness: 0.94 });
       const floor = new THREE.Mesh(floorGeometry, floorMaterial);
       floor.rotation.x = -Math.PI / 2;
       floor.position.set(totalWidth / 4, -2, floorSize / 4);
@@ -4159,8 +4165,8 @@
         : upperBottom() + height / 2;
       const bodyGeometry = new THREE.BoxGeometry(cabinet.width, height, depth);
       const bodyMaterial = new THREE.MeshStandardMaterial({
-        color: projectMaterialColor("body", isLower ? 0xfffdf9 : 0xeef2f6),
-        roughness: 0.36,
+          color: shadeThreeColor(projectMaterialColor("body", isLower ? 0xfffdf9 : 0xeef2f6), 0.76),
+          roughness: 0.74,
         metalness: 0.02
       });
       const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -4189,8 +4195,8 @@
     function addCabinetFront3D(parent, cabinet, face, depth) {
       if (cabinet.frontStyle === "open") return;
       const panelMaterial = new THREE.MeshStandardMaterial({
-        color: cabinet.frontStyle === "appliance" ? 0x35404a : projectMaterialColor("door", 0xf5f4f0),
-        roughness: 0.32,
+          color: cabinet.frontStyle === "appliance" ? 0x35404a : shadeThreeColor(projectMaterialColor("door", 0xf5f4f0), 0.84),
+          roughness: 0.68,
         metalness: cabinet.frontStyle === "appliance" ? 0.22 : 0.02
       });
       const panels = frontPanelRects(cabinet, face).map((panel) => ({
@@ -4484,11 +4490,11 @@
       const center = box.getCenter(new THREE.Vector3());
       const size = box.getSize(new THREE.Vector3());
       const maxSize = Math.max(size.x, size.y, size.z, 1000);
-      const distance = maxSize * 2.05;
+      const distance = maxSize * 2.22;
 
       three.target = center.clone();
-      three.orbitAzimuth = Math.PI / 4;
-      three.orbitElevation = 0.52;
+      three.orbitAzimuth = state.walls.length > 1 ? -Math.PI * 0.75 : -Math.PI / 2 + 0.18;
+      three.orbitElevation = 0.34;
       applyOrbit3D(distance);
     }
 
@@ -5395,6 +5401,7 @@
 
     bindEvents();
     initializeKitchenProductSuite();
+    window.MODUDRAFTHelp?.mount({ mode: "kitchen", assetBase: "./", buttonTarget: ".toolbar .actions" });
   </script>
 </body>
 </html>

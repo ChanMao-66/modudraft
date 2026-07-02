@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#202833">
   <title>MODUDRAFT 系統櫃設計工作台</title>
-  <link rel="stylesheet" href="../shared/design-system.css">
-  <link rel="stylesheet" href="../shared/product-suite.css">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="../shared/design-system.css?v=20260703-v7">
+  <link rel="stylesheet" href="../shared/product-suite.css?v=20260703-v7">
+  <link rel="stylesheet" href="../shared/help-system.css?v=20260703-v7">
+  <link rel="stylesheet" href="./styles.css?v=20260703-v8">
 </head>
 <body>
   <aside class="brand-rail" aria-label="主要導覽">
@@ -120,6 +121,12 @@
     </aside>
 
     <section class="workspace" aria-label="設計視圖">
+      <nav class="task-flow" aria-label="系統櫃設計流程">
+        <button type="button" data-flow-step="0" class="active"><span>1</span><b>設定牆面</b><small>尺寸與方向</small></button>
+        <button type="button" data-flow-step="1"><span>2</span><b>排列櫃體</b><small>櫃體與補板</small></button>
+        <button type="button" data-flow-step="2"><span>3</span><b>內部配置</b><small>層板門片配件</small></button>
+        <button type="button" data-flow-step="3"><span>4</span><b>預覽交付</b><small>3D 材質匯出</small></button>
+      </nav>
       <div class="workspace-bar">
         <div>
           <span id="viewIndex" class="view-index">02</span>
@@ -141,6 +148,17 @@
         <div class="scale-stamp"><span id="viewScaleLabel">比例 1:20</span><b>單位 mm</b></div>
       </div>
 
+      <div class="flow-action-bar">
+        <button id="flowPreviousBtn" type="button" class="flow-nav-button" aria-label="上一步"><i data-lucide="arrow-left"></i></button>
+        <div class="flow-message"><span id="flowStepLabel">步驟 1／4</span><strong id="flowHint">先確認牆寬、天花高與排列基準。</strong></div>
+        <div class="quick-add">
+          <select id="quickAddKind" aria-label="快速新增櫃體用途"><option value="wardrobe">衣櫃</option><option value="shoe">鞋櫃</option><option value="book">書櫃</option><option value="storage">儲藏櫃</option></select>
+          <button id="quickAddBtn" type="button"><i data-lucide="plus"></i><span>新增到牆面</span></button>
+        </div>
+        <button id="mobileEditSelectionBtn" type="button" class="mobile-edit-button"><i data-lucide="sliders-horizontal"></i><span>編輯選取</span></button>
+        <button id="flowNextBtn" type="button" class="flow-next-button"><span>下一步</span><i data-lucide="arrow-right"></i></button>
+      </div>
+
       <div class="workspace-footer">
         <div class="selection-readout"><span>目前選取</span><strong id="selectedReadout">系統高櫃 01</strong></div>
         <div id="validationStrip" class="validation-strip valid"><i data-lucide="circle-check"></i><span>尺寸可製作</span></div>
@@ -149,7 +167,8 @@
     </section>
 
     <aside class="property-panel" aria-label="櫃體屬性">
-      <div class="inspector-context"><span>目前選取</span><strong id="inspectorSelection">A 牆 / 系統高櫃 01</strong></div>
+      <div class="mobile-sheet-grip" aria-hidden="true"></div>
+      <div class="inspector-context"><div><span>目前選取</span><strong id="inspectorSelection">A 牆 / 系統高櫃 01</strong></div><div class="inspector-actions"><button id="toggleAdvancedBtn" type="button">顯示進階</button><button id="closeInspectorBtn" type="button" aria-label="關閉屬性面板"><i data-lucide="x"></i></button></div></div>
       <div class="property-tabs" role="tablist">
         <button type="button" data-panel="carcass" class="active">櫃體</button>
         <button type="button" data-panel="shelves">層板</button>
@@ -174,13 +193,13 @@
 
           <div class="toggle-row"><div><b>頂天花</b><small id="totalHeightHint">總高 2,500 mm</small></div><label class="switch"><input id="toCeiling" type="checkbox" checked><span></span></label></div>
 
-          <div class="subsection">
+          <div class="subsection advanced-setting">
             <div class="subsection-heading"><h3>中立板</h3><span id="baySummary">單一 1,200 mm 櫃格</span></div>
             <label class="select-row">分櫃方式<select id="partitionMode"><option value="none">不加中立板</option><option value="auto">自動分櫃</option><option value="custom">自訂櫃格數</option></select></label>
             <label id="bayCountField" class="select-row hidden">櫃格數<span class="unit-input"><input id="bayCount" type="number" min="2" max="8" step="1"><b>格</b></span></label>
           </div>
 
-          <div class="subsection">
+          <div class="subsection advanced-setting">
             <div class="subsection-heading"><h3>牆側處理</h3><span>補板改由牆面獨立插入</span></div>
             <label class="select-row">靠牆位置<select id="wallRelation"><option value="none">不靠牆</option><option value="left">左側靠牆</option><option value="right">右側靠牆</option><option value="both">左右靠牆</option></select></label>
             <div class="legacy-filler-controls hidden"><label class="select-row">補邊位置<select id="fillerMode"><option value="none">無補邊</option><option value="left">左補邊</option><option value="right">右補邊</option><option value="both">雙側補邊</option></select></label>
@@ -287,8 +306,9 @@
 
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="../shared/modudraft-core.js"></script>
-  <script src="../shared/product-suite.js"></script>
-  <script src="./app.js"></script>
+  <script src="../shared/modudraft-core.js?v=20260703-v7"></script>
+  <script src="../shared/product-suite.js?v=20260703-v7"></script>
+  <script src="../shared/help-system.js?v=20260703-v7"></script>
+  <script src="./app.js?v=20260703-v8"></script>
 </body>
 </html>

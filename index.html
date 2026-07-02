@@ -7,8 +7,9 @@
   <title>MODUDRAFT 專案工作區</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/modudraft-192-refined.png">
-  <link rel="stylesheet" href="./shared/design-system.css">
-  <link rel="stylesheet" href="./shared/product-suite.css">
+  <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
+  <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
+  <link rel="stylesheet" href="./shared/help-system.css?v=20260703-v4">
   <style>
     :root {
       font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
@@ -106,7 +107,8 @@
     </div>
     <input id="projectImport" type="file" accept="application/json,.json">
   </main>
-  <script src="./shared/modudraft-core.js"></script>
+  <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
+  <script src="./shared/help-system.js?v=20260703-v4"></script>
   <script>
     (function () {
       const core = window.MODUDRAFTCore;
@@ -140,6 +142,7 @@
       document.getElementById("importSide").onclick = importProject;
       document.getElementById("newTop").onclick = () => document.querySelector(".modes").scrollIntoView({ behavior: "smooth", block: "center" });
       renderRecent();
+      window.MODUDRAFTHelp?.mount({ mode: "home", assetBase: "./", buttonTarget: ".top-actions" });
       if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
     })();
   </script>
