@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../shared/design-system.css?v=20260703-v7">
   <link rel="stylesheet" href="../shared/product-suite.css?v=20260703-v7">
   <link rel="stylesheet" href="../shared/help-system.css?v=20260703-v7">
+  <link rel="stylesheet" href="../shared/render-workflow.css?v=20260704-v1">
   <link rel="stylesheet" href="./styles.css?v=20260703-v8">
 </head>
 <body>
@@ -43,6 +44,8 @@
     <div class="header-actions">
       <a class="icon-command home-command" href="../" title="返回模式選擇" aria-label="返回模式選擇"><i data-lucide="house"></i></a>
       <button id="addCabinetBtn" class="primary-command" type="button"><i data-lucide="panel-top"></i><span>新增櫃體</span></button>
+      <button id="normalRenderBtn" class="render-command" type="button"><i data-lucide="palette"></i><span>普通渲染</span></button>
+      <button id="advancedAiRenderBtn" class="ai-render-command" type="button"><i data-lucide="sparkles"></i><span>AI 進階</span></button>
       <button id="resetBtn" class="icon-command" type="button" title="重設原型" aria-label="重設原型"><i data-lucide="rotate-ccw"></i></button>
     </div>
   </header>
@@ -54,6 +57,8 @@
     <button type="button" data-view="elevation" class="active"><i data-lucide="panels-top-left"></i><span>立面圖</span></button>
     <button type="button" data-view="configuration"><i data-lucide="layout-panel-left"></i><span>立面配置</span></button>
     <button type="button" data-view="three"><i data-lucide="box"></i><span>3D</span></button>
+    <button type="button" class="dock-command" id="dockNormalRender"><i data-lucide="palette"></i><span>普通渲染</span></button>
+    <button type="button" class="dock-command" id="dockAdvancedAi"><i data-lucide="sparkles"></i><span>AI 進階</span></button>
     <button type="button" class="dock-command" id="dockExportHint"><i data-lucide="share"></i><span>匯出方案</span></button>
   </nav>
 
@@ -309,6 +314,7 @@
   <script src="../shared/modudraft-core.js?v=20260703-v7"></script>
   <script src="../shared/product-suite.js?v=20260703-v7"></script>
   <script src="../shared/help-system.js?v=20260703-v7"></script>
-  <script src="./app.js?v=20260703-v8"></script>
+  <script src="../shared/render-workflow.js?v=20260704-v1"></script>
+  <script src="./app.js?v=20260704-v1"></script>
 </body>
 </html>

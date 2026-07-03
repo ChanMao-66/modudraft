@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
   <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
   <link rel="stylesheet" href="./shared/help-system.css?v=20260703-v5">
+  <link rel="stylesheet" href="./shared/render-workflow.css?v=20260704-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1396,10 +1397,10 @@
     .workspace{padding-bottom:148px}
     .status-bar{bottom:92px;width:min(720px,calc(100vw - 820px));min-width:520px;padding:5px;background:rgba(43,42,39,.66);box-shadow:0 10px 26px rgba(0,0,0,.22)}
     .status-bar .metric{padding:5px 7px;border-color:transparent;font-size:10px}
-    .design-dock{position:fixed;z-index:14;left:calc(96px + 50%);bottom:18px;display:grid;grid-template-columns:repeat(7,minmax(72px,1fr));width:min(790px,calc(100vw - 700px));min-width:590px;padding:7px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:linear-gradient(145deg,rgba(81,70,60,.78),rgba(37,38,35,.86));box-shadow:0 18px 42px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);-webkit-backdrop-filter:blur(22px) saturate(1.12);backdrop-filter:blur(22px) saturate(1.12);transform:translateX(-50%)}
+    .design-dock{position:fixed;z-index:14;left:calc(96px + 50%);bottom:18px;display:grid;grid-template-columns:repeat(8,minmax(72px,1fr));width:min(880px,calc(100vw - 620px));min-width:660px;padding:7px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:linear-gradient(145deg,rgba(81,70,60,.78),rgba(37,38,35,.86));box-shadow:0 18px 42px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);-webkit-backdrop-filter:blur(22px) saturate(1.12);backdrop-filter:blur(22px) saturate(1.12);transform:translateX(-50%)}
     .design-dock button{display:grid;place-items:center;gap:2px;min-height:58px;border-color:transparent;background:transparent;color:#d9c2aa;box-shadow:none}.design-dock button:hover{border-color:rgba(211,168,122,.20);background:rgba(160,112,74,.27);color:#f1d1ad}.design-dock span{font-size:20px;line-height:1}.design-dock b{font-size:9px}
-    @media(max-width:1120px){.status-bar,.design-dock{left:calc(78px + 50%)}.design-dock{width:min(700px,calc(100vw - 480px));min-width:540px}.status-bar{width:min(650px,calc(100vw - 520px));min-width:480px}}
-    @media(max-width:760px){.workspace{padding-bottom:144px}.design-dock{left:50%;bottom:8px;width:calc(100vw - 16px);min-width:0;grid-template-columns:repeat(7,minmax(64px,1fr));overflow-x:auto}.design-dock button{min-width:64px}.status-bar{left:50%;bottom:80px;width:calc(100vw - 24px);min-width:0}}
+    @media(max-width:1120px){.status-bar,.design-dock{left:calc(78px + 50%)}.design-dock{width:min(760px,calc(100vw - 420px));min-width:600px}.status-bar{width:min(650px,calc(100vw - 520px));min-width:480px}}
+    @media(max-width:760px){.workspace{padding-bottom:144px}.design-dock{left:50%;bottom:8px;width:calc(100vw - 16px);min-width:0;grid-template-columns:repeat(8,minmax(64px,1fr));overflow-x:auto}.design-dock button{min-width:64px}.status-bar{left:50%;bottom:80px;width:calc(100vw - 24px);min-width:0}}
   </style>
 </head>
 <body>
@@ -1456,7 +1457,7 @@
           <ol>
             <li>3D 可旋轉、縮放與平移，並能開關牆面及吊櫃頂部補板。</li>
             <li>匯出可選平面、立面、3D 或全部合併，圖片採橫向 4:3，最高 2560 × 1920。</li>
-            <li>AI 渲染視圖會先截取目前畫面，再交給 Gemini 或 ChatGPT 進一步渲染。</li>
+            <li>普通材質渲染會直接套用內建材質並產圖；AI 進階渲染可選白模或材質圖，再交給 Gemini 或 ChatGPT。</li>
           </ol>
         </section>
         <section class="tutorial-step">
@@ -1549,7 +1550,8 @@
       <div class="actions" aria-label="操作">
         <button class="primary" id="addCabinetBtn" type="button">新增櫃體</button>
         <button class="success" id="autoLayoutBtn" type="button">自動配置</button>
-        <button id="renderViewBtn" type="button">AI 渲染視圖</button>
+        <button id="materialRenderBtn" class="render-command" type="button">普通材質渲染</button>
+        <button id="renderViewBtn" class="ai-render-command" type="button">AI 進階渲染</button>
         <button id="exportBtn" type="button">匯出</button>
         <button id="resetViewBtn" type="button">重設視圖</button>
         <button id="installAppBtn" type="button">分享</button>
@@ -1588,7 +1590,8 @@
       <button type="button" onclick="document.getElementById('viewFloor').click()"><span>⌗</span><b>平面圖</b></button>
       <button type="button" onclick="document.getElementById('viewElevation').click()"><span>▤</span><b>立面圖</b></button>
       <button type="button" onclick="document.getElementById('viewThree').click()"><span>◇</span><b>3D</b></button>
-      <button type="button" onclick="document.getElementById('renderViewBtn').click()"><span>✦</span><b>AI 渲染</b></button>
+      <button type="button" onclick="document.getElementById('materialRenderBtn').click()"><span>◉</span><b>普通渲染</b></button>
+      <button type="button" onclick="document.getElementById('renderViewBtn').click()"><span>✦</span><b>AI 進階</b></button>
       <button type="button" onclick="document.getElementById('exportBtn').click()"><span>⇧</span><b>匯出方案</b></button>
     </nav>
 
@@ -1757,8 +1760,8 @@
 
   <div id="aiRenderModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="aiRenderTitle">
     <section class="modal-content install-content">
-      <h2 id="aiRenderTitle">AI 渲染視圖</h2>
-      <p class="dialog-note">請先把設計視圖截圖下載，再開啟 Gemini 或 ChatGPT 上傳圖片進行渲染。</p>
+      <h2 id="aiRenderTitle">AI 進階渲染</h2>
+      <p class="dialog-note">可用白模讓 AI 自由設計材質，也可用普通材質圖要求 AI 保留目前配色與配置。</p>
       <div class="choice-grid">
         <label>
           截圖視圖
@@ -1777,6 +1780,13 @@
           </select>
         </label>
       </div>
+      <label class="ai-source-field">
+        3D 圖像來源
+        <select id="aiRenderSource">
+          <option value="white">白模（讓 AI 自由設計材質）</option>
+          <option value="material">普通材質（保留目前配色）</option>
+        </select>
+      </label>
       <img id="aiScreenshotPreview" class="preview-frame" alt="設計視圖截圖預覽">
       <p id="aiRenderStatus" class="install-status">第一步：下載目前設計截圖。</p>
       <button type="button" class="primary" id="captureAiScreenshotBtn">先截圖並下載</button>
@@ -1794,6 +1804,7 @@
   <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/help-system.js?v=20260703-v4"></script>
+  <script src="./shared/render-workflow.js?v=20260704-v1"></script>
   <script>
     const state = {
       walls: [],
@@ -1803,6 +1814,8 @@
       showWalls: true,
       showTopFiller: true,
       globalHandleStyle: "none",
+      renderMode: "white",
+      renderStyle: "nordic",
       view: {
         floor: true,
         elevation: true,
@@ -1891,6 +1904,7 @@
       exportHint: document.getElementById("exportHint"),
       aiRenderModal: document.getElementById("aiRenderModal"),
       aiRenderView: document.getElementById("aiRenderView"),
+      aiRenderSource: document.getElementById("aiRenderSource"),
       aiScreenshotPreview: document.getElementById("aiScreenshotPreview"),
       aiRenderStatus: document.getElementById("aiRenderStatus"),
       openGeminiBtn: document.getElementById("openGeminiBtn"),
@@ -2896,6 +2910,12 @@
       el.aiRenderStatus.textContent = "正在產生設計截圖...";
 
       try {
+        if (el.aiRenderView.value === "three") {
+          state.renderMode = el.aiRenderSource.value === "material" ? "material" : "white";
+          document.getElementById("materialRenderBtn").classList.toggle("active", state.renderMode === "material");
+          renderAll();
+          await new Promise((resolve) => window.setTimeout(resolve, 140));
+        }
         aiScreenshotDataUrl = await captureViewImage(el.aiRenderView.value, true, 1920);
         el.aiScreenshotPreview.src = aiScreenshotDataUrl;
         el.aiScreenshotPreview.classList.add("visible");
@@ -4005,6 +4025,10 @@
     }
 
     function projectMaterialColor(role, fallback) {
+      if (state.renderMode === "white") {
+        const whiteModel = { door: 0xe4e1db, body: 0xc8c4bc, countertop: 0xd8d5cf, handle: 0x666a69, wall: 0x817b73, floor: 0x685c50 };
+        return whiteModel[role] ?? fallback;
+      }
       const core = window.MODUDRAFTCore;
       const materialId = state.materialPalette?.[role];
       const color = core?.materialById(materialId)?.color;
@@ -5233,6 +5257,7 @@
 
     let kitchenProductProject = null;
     let kitchenAutosaveTimer = 0;
+    let kitchenRenderHub = null;
 
     function kitchenWallId(wall, index) {
       return `kitchen-wall-${wall?.id ?? index}`;
@@ -5294,6 +5319,8 @@
             showTopFiller: state.showTopFiller,
             globalHandleStyle: state.globalHandleStyle,
             materialPalette: state.materialPalette || null,
+            renderMode: state.renderMode,
+            renderStyle: state.renderStyle,
             sizes: core.cleanData(sizes)
           }
         }
@@ -5322,6 +5349,8 @@
       state.globalHandleStyle = source.globalHandleStyle || "none";
       state.materialPalette = source.materialPalette || project.materialAssignments || null;
       state.projectStyle = project.stylePreset || "modern";
+      state.renderMode = source.renderMode === "material" ? "material" : "white";
+      state.renderStyle = source.renderStyle || state.projectStyle || "nordic";
       Object.assign(sizes, source.sizes || {});
       kitchenProductProject = core.createProject(project);
       core.storageSet("modudraft:kitchen:active-project", kitchenProductProject.id);
@@ -5337,10 +5366,13 @@
     function applyKitchenStyle(preset, assignments) {
       state.materialPalette = assignments;
       state.projectStyle = preset.id;
+      state.renderStyle = preset.id;
+      state.renderMode = "material";
       document.documentElement.style.setProperty("--project-door", window.MODUDRAFTCore.materialById(assignments.door)?.color || "#ded8cf");
       document.documentElement.style.setProperty("--project-body", window.MODUDRAFTCore.materialById(assignments.body)?.color || "#c8b8a5");
       document.documentElement.style.setProperty("--project-counter", window.MODUDRAFTCore.materialById(assignments.countertop)?.color || "#d7d2c9");
       document.documentElement.dataset.projectStyle = preset.id;
+      document.getElementById("materialRenderBtn").classList.add("active");
       renderAll();
     }
 
@@ -5363,7 +5395,7 @@
       document.querySelectorAll("input, select, textarea").forEach((node) => {
         if (!node.closest(".md-suite-panel")) node.disabled = true;
       });
-      const allowed = new Set(["viewFloor", "viewElevation", "viewThree", "exportBtn", "renderViewBtn", "resetViewBtn", "installAppBtn"]);
+      const allowed = new Set(["viewFloor", "viewElevation", "viewThree", "exportBtn", "materialRenderBtn", "renderViewBtn", "resetViewBtn", "installAppBtn"]);
       document.querySelectorAll("button").forEach((node) => {
         if (!node.closest(".md-suite-panel") && !allowed.has(node.id)) node.disabled = true;
       });
@@ -5394,13 +5426,50 @@
         getProject: kitchenProjectSnapshot,
         importProject: importKitchenProject,
         applyStyle: applyKitchenStyle,
+        getRenderMode: () => state.renderMode,
+        setRenderMode: (mode) => {
+          state.renderMode = mode === "material" ? "material" : "white";
+          document.getElementById("materialRenderBtn").classList.toggle("active", state.renderMode === "material");
+          renderAll();
+        },
         extraValidation: kitchenExtraValidation,
         setReadOnly: setKitchenReadOnly
       });
     }
 
+    function ensureKitchenThreeView() {
+      if (!state.view.three) applyViewState({ ...state.view, three: true });
+      renderAll();
+      window.setTimeout(() => el.threeView.scrollIntoView({ behavior: "smooth", block: "center" }), 90);
+    }
+
+    function initializeKitchenRenderWorkflow() {
+      if (!window.MODUDRAFTRender) return;
+      kitchenRenderHub = window.MODUDRAFTRender.mount({
+        mode: "kitchen",
+        getStyle: () => state.renderStyle || state.projectStyle || "nordic",
+        applyStyle: applyKitchenStyle,
+        setMode: (mode, styleId) => {
+          state.renderMode = mode === "material" ? "material" : "white";
+          if (styleId) state.renderStyle = styleId;
+          document.body.dataset.renderMode = state.renderMode;
+          document.getElementById("materialRenderBtn").classList.toggle("active", state.renderMode === "material");
+          renderAll();
+        },
+        preview: ensureKitchenThreeView,
+        exportImage: async () => {
+          ensureKitchenThreeView();
+          await new Promise((resolve) => window.setTimeout(resolve, 180));
+          await captureViewImage("three", true, 1920);
+        }
+      });
+      document.getElementById("materialRenderBtn").addEventListener("click", () => kitchenRenderHub.openMaterial());
+      document.getElementById("materialRenderBtn").classList.toggle("active", state.renderMode === "material");
+    }
+
     bindEvents();
     initializeKitchenProductSuite();
+    initializeKitchenRenderWorkflow();
     window.MODUDRAFTHelp?.mount({ mode: "kitchen", assetBase: "./", buttonTarget: ".toolbar .actions" });
   </script>
 </body>

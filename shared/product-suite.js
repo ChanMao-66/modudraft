@@ -47,6 +47,8 @@
       getProject: () => core.createProject({ type: "kitchen" }),
       importProject: null,
       applyStyle: null,
+      getRenderMode: () => "white",
+      setRenderMode: null,
       extraValidation: null,
       setReadOnly: null
     }, options || {});
@@ -226,7 +228,10 @@
     function renderAi() {
       const project = snapshot();
       const prompt = core.generateAiPrompt(project);
-      aiView.innerHTML = `<div class="md-section"><div class="md-section-title"><h3>AI 渲染提示詞</h3><span>依目前專案生成</span></div><label class="md-field">渲染用途<textarea id="mdAiPrompt">${escapeHtml(prompt)}</textarea></label><div class="md-actions"><button type="button" class="md-action primary" data-ai="copy">複製提示詞</button><button type="button" class="md-action" data-ai="refresh">重新生成</button><button type="button" class="md-action" data-ai="chatgpt">開啟 ChatGPT</button><button type="button" class="md-action" data-ai="gemini">開啟 Gemini</button></div></div><div class="md-section"><div class="md-section-title"><h3>使用順序</h3><span>保留原配置</span></div><div class="md-empty">先在原本的「AI 渲染視圖」截取目前視角，再複製提示詞並上傳截圖。</div></div>`;
+      aiView.innerHTML = `<div class="md-section"><div class="md-section-title"><h3>AI 進階渲染提示詞</h3><span>依目前專案生成</span></div><label class="md-field">3D 圖像來源<select id="mdAiSource"><option value="white">白模（讓 AI 自由設計材質）</option><option value="material">普通材質（保留目前配色）</option></select></label><label class="md-field">渲染用途<textarea id="mdAiPrompt">${escapeHtml(prompt)}</textarea></label><div class="md-actions"><button type="button" class="md-action primary" data-ai="copy">複製提示詞</button><button type="button" class="md-action" data-ai="refresh">重新生成</button><button type="button" class="md-action" data-ai="chatgpt">開啟 ChatGPT</button><button type="button" class="md-action" data-ai="gemini">開啟 Gemini</button></div></div><div class="md-section"><div class="md-section-title"><h3>使用順序</h3><span>保留原配置</span></div><div class="md-empty">白模適合讓 AI 自由發揮；普通材質圖適合要求 AI 保留目前門片、櫃身與五金配色。</div></div>`;
+      const source = aiView.querySelector("#mdAiSource");
+      source.value = adapter.getRenderMode() === "material" ? "material" : "white";
+      source.onchange = async () => { if (adapter.setRenderMode) await adapter.setRenderMode(source.value); showToast(source.value === "material" ? "AI 將使用普通材質圖" : "AI 將使用白模圖"); };
       aiView.querySelector('[data-ai="copy"]').onclick = async () => { await copyText(aiView.querySelector("#mdAiPrompt").value); showToast("AI 提示詞已複製"); };
       aiView.querySelector('[data-ai="refresh"]').onclick = () => { aiView.querySelector("#mdAiPrompt").value = core.generateAiPrompt(snapshot()); showToast("提示詞已依目前設計更新"); };
       aiView.querySelector('[data-ai="chatgpt"]').onclick = () => global.open("https://chatgpt.com/", "_blank", "noopener");

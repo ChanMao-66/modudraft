@@ -13,7 +13,7 @@ const state = {
   walls: [], activeWallId: null,
   selection: { wallId: null, itemId: null, cabinetId: null, compartmentId: null, objectType: "wall", objectId: null },
   view: "elevation", panel: "carcass", showDoors: true, zoom: 1, flowStep: 0, showAdvanced: false,
-  manualDraft: [], hitRegions: [], three: null, drag: null, materialPalette: null
+  manualDraft: [], hitRegions: [], three: null, drag: null, materialPalette: null, renderMode: "white", renderStyle: "nordic"
 };
 const el = {};
 let idSeed = Date.now();
@@ -137,7 +137,7 @@ function loadState() {
     const current = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (current?.walls?.length) {
       state.walls = current.walls.map((w, wi) => ({ ...createWall(wi), ...w, items: (w.items || []).map((item, i) => item.type === "filler" ? { ...createFiller(w), ...item } : normalizeCabinet(item, i)) }));
-      state.activeWallId = current.activeWallId || state.walls[0].id; state.showDoors = current.showDoors !== false; state.materialPalette = current.materialPalette || null;
+      state.activeWallId = current.activeWallId || state.walls[0].id; state.showDoors = current.showDoors !== false; state.materialPalette = current.materialPalette || null; state.renderMode = current.renderMode === "material" ? "material" : "white"; state.renderStyle = current.renderStyle || "nordic";
     } else {
       const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY)); state.walls = legacy?.cabinets ? migrateLegacy(legacy) : [createWall(0)]; state.activeWallId = state.walls[0].id;
     }
@@ -145,7 +145,7 @@ function loadState() {
   const first = activeWall().items.find(i => i.type === "cabinet") || activeWall().items[0]; selectItem(first?.id, first?.type || "wall", null, false);
 }
 function saveState() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ walls: state.walls, activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette })); }
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ walls: state.walls, activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette, renderMode: state.renderMode, renderStyle: state.renderStyle })); }
   catch (error) { console.warn("系統櫃本機儲存失敗", error); }
 }
 
@@ -355,7 +355,7 @@ function drawWallCaption(ctx,w,wall){ctx.font="700 12px sans-serif";ctx.textAlig
 function dispose3D(){if(!state.three)return;cancelAnimationFrame(state.three.raf);state.three.renderer?.dispose();el.threeStage.innerHTML="";state.three=null;}
 function mat(color,rough=.72,metal=.01){return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});}
 function shadeColor(color,amount=.86){const c=new THREE.Color(color);c.multiplyScalar(amount);return c;}
-function projectColor(role,fallback){const id=state.materialPalette?.[role],hex=window.MODUDRAFTCore?.materialById(id)?.color;return hex?Number.parseInt(hex.slice(1),16):fallback;}
+function projectColor(role,fallback){if(state.renderMode==="white"){const white={door:0xe4e1db,body:0xc8c4bc,countertop:0xd8d5cf,handle:0x666a69,wall:0x817b73,floor:0x685c50};return white[role]??fallback;}const id=state.materialPalette?.[role],hex=window.MODUDRAFTCore?.materialById(id)?.color;return hex?Number.parseInt(hex.slice(1),16):fallback;}
 function box(group,w,h,d,x,y,z,material,userData={}){const geometry=new THREE.BoxGeometry(Math.max(.5,w),Math.max(.5,h),Math.max(.5,d)),mesh=new THREE.Mesh(geometry,material);mesh.position.set(x,y,z);mesh.userData=userData;mesh.castShadow=true;mesh.receiveShadow=true;if(userData.type!=="room"){const lines=new THREE.LineSegments(new THREE.EdgesGeometry(geometry,24),new THREE.LineBasicMaterial({color:0x514a43,transparent:true,opacity:.34}));lines.raycast=()=>{};mesh.add(lines);}group.add(mesh);return mesh;}
 function render3D(){if(!window.THREE)return;dispose3D();const rect=el.threeStage.getBoundingClientRect(),renderer=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});renderer.setPixelRatio(Math.min(2,devicePixelRatio||1));renderer.setSize(Math.max(1,rect.width),Math.max(1,rect.height));renderer.setClearColor(0x393531);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.72;if("outputEncoding" in renderer)renderer.outputEncoding=THREE.sRGBEncoding;el.threeStage.appendChild(renderer.domElement);const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(40,Math.max(1,rect.width)/Math.max(1,rect.height),1,50000);scene.fog=new THREE.Fog(0x393531,14000,30000);scene.add(new THREE.HemisphereLight(0xffead0,0x292c2b,.52));const key=new THREE.DirectionalLight(0xffd5a2,.92);key.position.set(-2200,4300,3400);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6500;key.shadow.camera.right=6500;key.shadow.camera.top=5500;key.shadow.camera.bottom=-1800;key.shadow.bias=-.00025;scene.add(key);const fill=new THREE.DirectionalLight(0xbec9c9,.16);fill.position.set(3600,2100,1800);scene.add(fill);const wall=activeWall(),layout=calculateLayout(wall),group=new THREE.Group();scene.add(group);const bodyColor=projectColor("body",0xb9aa98),doorColor=projectColor("door",0xd2c7b9),carcass=mat(shadeColor(bodyColor,.74),.84),edge=mat(0x4b4641,.88),door=mat(shadeColor(doorColor,.82),.78),filler=mat(shadeColor(doorColor,.68),.82),metal=mat(projectColor("handle",0x817d77),.24,.72);
   layout.forEach(row=>{const i=row.item;if(i.type==="filler"){box(group,i.width,i.height,i.depth,row.x+i.width/2,i.height/2,i.depth/2,filler,{itemId:i.id,type:"filler"});return;}const c=i,left=c.leftFinishedEnd?STANDARD.finishedEnd:0,x=row.x+left,t=c.boardThickness,d=c.depth,base=c.plinthHeight,top=base+c.bodyHeight;box(group,t,c.bodyHeight,d,x+t/2,base+c.bodyHeight/2,d/2,carcass);box(group,t,c.bodyHeight,d,x+c.width-t/2,base+c.bodyHeight/2,d/2,carcass);box(group,c.width-2*t,t,d,x+c.width/2,base+t/2,d/2,carcass);box(group,c.width-2*t,t,d,x+c.width/2,top-t/2,d/2,carcass);box(group,c.width-2*t,c.bodyHeight-2*t,STANDARD.back,x+c.width/2,base+c.bodyHeight/2,STANDARD.back/2,edge);
@@ -397,12 +397,14 @@ function bindEvents(){
   el.showDoorsBtn.onclick=()=>{state.showDoors=!state.showDoors;el.showDoorsBtn.classList.toggle("active",state.showDoors);el.showDoorsBtn.innerHTML=`<i data-lucide="${state.showDoors?"eye":"eye-off"}"></i>`;if(window.lucide)lucide.createIcons();renderAll();};
   el.zoomInBtn.onclick=()=>{state.zoom=clamp(state.zoom+.1,.5,2,1);el.zoomValue.textContent=`${Math.round(state.zoom*100)}%`;renderAll();};el.zoomOutBtn.onclick=()=>{state.zoom=clamp(state.zoom-.1,.5,2,1);el.zoomValue.textContent=`${Math.round(state.zoom*100)}%`;renderAll();};el.fitViewBtn.onclick=()=>{state.zoom=1;el.zoomValue.textContent="100%";renderAll();};
   el.draftCanvas.onclick=e=>{const rect=el.draftCanvas.getBoundingClientRect(),x=e.clientX-rect.left,y=e.clientY-rect.top,region=[...state.hitRegions].reverse().find(r=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h);if(region){selectItem(region.itemId,region.type,region.compartmentId,false);if(region.compartmentId){state.panel=region.type==="door"?"doors":region.type==="rod"||region.type==="drawers"?"accessories":"shelves";switchPropertyPanel(state.panel);}updateForms();renderAll();openMobileInspector();}};
-  el.resetBtn.onclick=()=>{if(!confirm("確定重設系統櫃原型？"))return;localStorage.removeItem(STORAGE_KEY);state.walls=[createWall(0)];state.activeWallId=state.walls[0].id;state.flowStep=0;state.showAdvanced=false;selectItem(state.walls[0].items[0].id);};window.addEventListener("resize",()=>{if(window.innerWidth>700)closeMobileInspector();state.view==="three"?render3D():render2D();});
+  el.resetBtn.onclick=()=>{if(!confirm("確定重設系統櫃原型？"))return;localStorage.removeItem(STORAGE_KEY);state.walls=[createWall(0)];state.activeWallId=state.walls[0].id;state.flowStep=0;state.showAdvanced=false;state.renderMode="white";state.renderStyle="nordic";selectItem(state.walls[0].items[0].id);};window.addEventListener("resize",()=>{if(window.innerWidth>700)closeMobileInspector();state.view==="three"?render3D():render2D();});
 }
 function showToast(message){el.toast.textContent=message;el.toast.classList.add("show");clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>el.toast.classList.remove("show"),2200);}
 
 let systemProductProject = null;
 let systemProductAutosaveTimer = 0;
+let systemProductSuite = null;
+let systemRenderHub = null;
 
 function systemProjectSnapshot() {
   const core = window.MODUDRAFTCore;
@@ -438,7 +440,7 @@ function systemProjectSnapshot() {
     cabinets,
     stylePreset: state.projectStyle || systemProductProject.stylePreset,
     materialAssignments: state.materialPalette || systemProductProject.materialAssignments,
-    sourceState: { system: { walls: core.cleanData(state.walls), activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette } }
+    sourceState: { system: { walls: core.cleanData(state.walls), activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette, renderMode: state.renderMode, renderStyle: state.renderStyle } }
   });
 }
 
@@ -467,6 +469,8 @@ function importSystemProject(project) {
   state.showDoors = source.showDoors !== false;
   state.materialPalette = source.materialPalette || project.materialAssignments || null;
   state.projectStyle = project.stylePreset || "modern";
+  state.renderMode = source.renderMode === "material" ? "material" : "white";
+  state.renderStyle = source.renderStyle || state.projectStyle || "nordic";
   systemProductProject = core.createProject(project);
   core.storageSet("modudraft:system:active-project", systemProductProject.id);
   const wall = activeWall();
@@ -480,7 +484,10 @@ function importSystemProject(project) {
 function applySystemStyle(preset, assignments) {
   state.materialPalette = assignments;
   state.projectStyle = preset.id;
+  state.renderStyle = preset.id;
+  state.renderMode = "material";
   document.documentElement.dataset.projectStyle = preset.id;
+  el.normalRenderBtn?.classList.add("active");
   saveState();
   renderAll();
 }
@@ -502,7 +509,7 @@ function setSystemReadOnly(readOnly) {
   if (!readOnly) return;
   document.querySelectorAll("input, select, textarea").forEach((node) => { if (!node.closest(".md-suite-panel")) node.disabled = true; });
   document.querySelectorAll("button").forEach((node) => {
-    if (!node.closest(".md-suite-panel") && !node.matches("[data-view], #showDoorsBtn, #zoomInBtn, #zoomOutBtn, #fitViewBtn")) node.disabled = true;
+    if (!node.closest(".md-suite-panel") && !node.matches("[data-view], #showDoorsBtn, #zoomInBtn, #zoomOutBtn, #fitViewBtn, #normalRenderBtn, #advancedAiRenderBtn, #dockNormalRender, #dockAdvancedAi")) node.disabled = true;
   });
   showToast("客戶展示模式：僅供檢視");
 }
@@ -514,8 +521,41 @@ function initializeSystemProductSuite() {
     const stored = window.MODUDRAFTCore.loadProject(requestedId);
     if (stored?.type === "cabinet") importSystemProject(stored);
   }
-  window.MODUDRAFTSuite.mount({ type: "cabinet", buttonTarget: ".header-actions", getProject: systemProjectSnapshot, importProject: importSystemProject, applyStyle: applySystemStyle, extraValidation: systemExtraValidation, setReadOnly: setSystemReadOnly });
+  systemProductSuite = window.MODUDRAFTSuite.mount({ type: "cabinet", buttonTarget: ".header-actions", getProject: systemProjectSnapshot, importProject: importSystemProject, applyStyle: applySystemStyle, getRenderMode: () => state.renderMode, setRenderMode: setSystemRenderMode, extraValidation: systemExtraValidation, setReadOnly: setSystemReadOnly });
 }
 
-function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view,true);updateFlowUI();if(window.lucide)window.lucide.createIcons();initializeSystemProductSuite();window.MODUDRAFTHelp?.mount({mode:"cabinet",assetBase:"../",buttonTarget:".header-actions"});}
+function setSystemRenderMode(mode, styleId) {
+  state.renderMode = mode === "material" ? "material" : "white";
+  if (styleId) state.renderStyle = styleId;
+  document.body.dataset.renderMode = state.renderMode;
+  el.normalRenderBtn?.classList.toggle("active", state.renderMode === "material");
+  saveState();
+  renderAll();
+}
+
+function previewSystemRender() {
+  switchView("three");
+  renderAll();
+}
+
+function initializeSystemRenderWorkflow() {
+  if (!window.MODUDRAFTRender) return;
+  systemRenderHub = window.MODUDRAFTRender.mount({
+    mode: "cabinet",
+    getStyle: () => state.renderStyle || state.projectStyle || "nordic",
+    applyStyle: applySystemStyle,
+    setMode: setSystemRenderMode,
+    preview: previewSystemRender,
+    exportImage: async () => { previewSystemRender(); await new Promise((resolve) => setTimeout(resolve, 160)); exportSystemView(); }
+  });
+  const openNormal = () => systemRenderHub.openMaterial();
+  const openAi = () => { systemProductSuite?.setTab("ai"); systemProductSuite?.open(); };
+  el.normalRenderBtn.onclick = openNormal;
+  el.dockNormalRender.onclick = openNormal;
+  el.advancedAiRenderBtn.onclick = openAi;
+  el.dockAdvancedAi.onclick = openAi;
+  el.normalRenderBtn.classList.toggle("active", state.renderMode === "material");
+}
+
+function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view,true);updateFlowUI();if(window.lucide)window.lucide.createIcons();initializeSystemProductSuite();initializeSystemRenderWorkflow();window.MODUDRAFTHelp?.mount({mode:"cabinet",assetBase:"../",buttonTarget:".header-actions"});}
 document.addEventListener("DOMContentLoaded",initialize);
