@@ -13,8 +13,10 @@
   <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
   <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
   <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
-  <link rel="stylesheet" href="./shared/help-system.css?v=20260703-v5">
+  <link rel="stylesheet" href="./shared/help-system.css?v=20260704-mobilehelp-v2">
   <link rel="stylesheet" href="./shared/render-workflow.css?v=20260704-v1">
+  <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
+  <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260704-v3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1397,10 +1399,10 @@
     .workspace{padding-bottom:148px}
     .status-bar{bottom:92px;width:min(720px,calc(100vw - 820px));min-width:520px;padding:5px;background:rgba(43,42,39,.66);box-shadow:0 10px 26px rgba(0,0,0,.22)}
     .status-bar .metric{padding:5px 7px;border-color:transparent;font-size:10px}
-    .design-dock{position:fixed;z-index:14;left:calc(96px + 50%);bottom:18px;display:grid;grid-template-columns:repeat(8,minmax(72px,1fr));width:min(880px,calc(100vw - 620px));min-width:660px;padding:7px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:linear-gradient(145deg,rgba(81,70,60,.78),rgba(37,38,35,.86));box-shadow:0 18px 42px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);-webkit-backdrop-filter:blur(22px) saturate(1.12);backdrop-filter:blur(22px) saturate(1.12);transform:translateX(-50%)}
+    .design-dock{position:fixed;z-index:14;left:calc(96px + 50%);bottom:18px;display:grid;grid-template-columns:repeat(10,minmax(62px,1fr));width:min(980px,calc(100vw - 520px));min-width:720px;padding:7px;border:1px solid rgba(255,255,255,.10);border-radius:8px;background:linear-gradient(145deg,rgba(81,70,60,.78),rgba(37,38,35,.86));box-shadow:0 18px 42px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.08);-webkit-backdrop-filter:blur(22px) saturate(1.12);backdrop-filter:blur(22px) saturate(1.12);transform:translateX(-50%)}
     .design-dock button{display:grid;place-items:center;gap:2px;min-height:58px;border-color:transparent;background:transparent;color:#d9c2aa;box-shadow:none}.design-dock button:hover{border-color:rgba(211,168,122,.20);background:rgba(160,112,74,.27);color:#f1d1ad}.design-dock span{font-size:20px;line-height:1}.design-dock b{font-size:9px}
     @media(max-width:1120px){.status-bar,.design-dock{left:calc(78px + 50%)}.design-dock{width:min(760px,calc(100vw - 420px));min-width:600px}.status-bar{width:min(650px,calc(100vw - 520px));min-width:480px}}
-    @media(max-width:760px){.workspace{padding-bottom:144px}.design-dock{left:50%;bottom:8px;width:calc(100vw - 16px);min-width:0;grid-template-columns:repeat(8,minmax(64px,1fr));overflow-x:auto}.design-dock button{min-width:64px}.status-bar{left:50%;bottom:80px;width:calc(100vw - 24px);min-width:0}}
+    @media(max-width:760px){.workspace{padding-bottom:144px}.design-dock{left:50%;bottom:8px;width:calc(100vw - 16px);min-width:0;grid-template-columns:repeat(10,minmax(64px,1fr));overflow-x:auto}.design-dock button{min-width:64px}.status-bar{left:50%;bottom:80px;width:calc(100vw - 24px);min-width:0}}
   </style>
 </head>
 <body>
@@ -1550,6 +1552,12 @@
       <div class="actions" aria-label="操作">
         <button class="primary" id="addCabinetBtn" type="button">新增櫃體</button>
         <button class="success" id="autoLayoutBtn" type="button">自動配置</button>
+        <button class="assist-action" id="aiAssistBtn" type="button" title="分析目前選取層的剩餘空間，提供櫃體與補板建議">AI 輔助構圖</button>
+        <button class="assist-action" id="equalizeBtn" type="button" title="依序選取連續櫃體，再重新平均分配總寬度">輔助等分</button>
+        <span class="history-actions" aria-label="操作歷史">
+          <button id="undoKitchenBtn" type="button" title="復原上一步" aria-label="復原上一步" disabled>↶</button>
+          <button id="redoKitchenBtn" type="button" title="重做上一步" aria-label="重做上一步" disabled>↷</button>
+        </span>
         <button id="materialRenderBtn" class="render-command" type="button">普通材質渲染</button>
         <button id="renderViewBtn" class="ai-render-command" type="button">AI 進階渲染</button>
         <button id="exportBtn" type="button">匯出</button>
@@ -1559,14 +1567,26 @@
       </div>
     </section>
 
+    <section id="layerContextBar" class="layer-context-bar" data-layer="lower" aria-label="目前編輯層">
+      <div class="layer-context-copy">
+        <span>目前正在配置</span>
+        <strong id="layerContextTitle">下櫃</strong>
+        <small id="layerContextHint">新增、點選與 AI 建議會套用在落地的下櫃。</small>
+      </div>
+      <div class="layer-context-switch" role="group" aria-label="切換櫃體層">
+        <button id="layerContextLower" class="active" type="button" title="切換到落地的下櫃配置"><span>▥</span>下櫃</button>
+        <button id="layerContextUpper" type="button" title="切換到牆面上方的吊櫃配置"><span>▤</span>吊櫃</button>
+      </div>
+    </section>
+
     <section class="workspace" id="workspace">
       <article id="floorView" class="view">
-        <div class="view-label">1. 平面圖 TOP VIEW（點選櫃體可編輯）</div>
+        <div class="view-label">1. 平面圖 TOP VIEW（點櫃體編輯，點尺寸直接修改）</div>
         <canvas id="floorCanvas" aria-label="平面圖畫布"></canvas>
       </article>
 
       <article id="elevationView" class="view">
-        <div class="view-label">2. 立面圖 FRONT VIEW（點選櫃體可編輯）</div>
+        <div class="view-label">2. 立面圖 FRONT VIEW（點櫃體編輯，點尺寸直接修改）</div>
         <canvas id="elevationCanvas" aria-label="立面圖畫布"></canvas>
       </article>
 
@@ -1590,6 +1610,8 @@
       <button type="button" onclick="document.getElementById('viewFloor').click()"><span>⌗</span><b>平面圖</b></button>
       <button type="button" onclick="document.getElementById('viewElevation').click()"><span>▤</span><b>立面圖</b></button>
       <button type="button" onclick="document.getElementById('viewThree').click()"><span>◇</span><b>3D</b></button>
+      <button type="button" onclick="document.getElementById('aiAssistBtn').click()"><span>✦</span><b>AI 構圖</b></button>
+      <button type="button" onclick="document.getElementById('equalizeBtn').click()"><span>⌘</span><b>輔助等分</b></button>
       <button type="button" onclick="document.getElementById('materialRenderBtn').click()"><span>◉</span><b>普通渲染</b></button>
       <button type="button" onclick="document.getElementById('renderViewBtn').click()"><span>✦</span><b>AI 進階</b></button>
       <button type="button" onclick="document.getElementById('exportBtn').click()"><span>⇧</span><b>匯出方案</b></button>
@@ -1604,30 +1626,131 @@
     </nav>
   </main>
 
+  <aside id="aiAssistPanel" class="kitchen-assist-panel" aria-labelledby="aiAssistTitle">
+    <header class="assist-panel-header">
+      <div>
+        <h2 id="aiAssistTitle">AI 輔助構圖建議</h2>
+        <p>只提供可行方案，按下加入後才會變更配置。</p>
+      </div>
+      <button id="closeAiAssistBtn" class="assist-close" type="button" aria-label="關閉 AI 輔助構圖">×</button>
+    </header>
+    <div class="assist-panel-body">
+      <div class="assist-summary-grid">
+        <div class="assist-summary-card"><span>目前牆寬</span><strong id="assistWallWidth">0 mm</strong></div>
+        <div class="assist-summary-card"><span>已使用</span><strong id="assistUsedWidth">0 mm</strong></div>
+        <div class="assist-summary-card"><span>剩餘寬度</span><strong id="assistRemainingWidth">0 mm</strong></div>
+      </div>
+      <div class="assist-control-row">
+        <label>建議櫃體層
+          <select id="aiAssistLayer">
+            <option value="lower">下櫃</option>
+            <option value="upper">吊櫃</option>
+          </select>
+        </label>
+        <label>目前牆面
+          <select id="aiAssistWall" disabled></select>
+        </label>
+      </div>
+      <div id="aiAssistResults" aria-live="polite"></div>
+    </div>
+  </aside>
+
+  <aside id="equalizePanel" class="kitchen-assist-panel" aria-labelledby="equalizeTitle">
+    <header class="assist-panel-header">
+      <div>
+        <h2 id="equalizeTitle">櫃體輔助等分</h2>
+        <p>在平面圖或立面圖依序點選同一排的連續櫃體。</p>
+      </div>
+      <button id="closeEqualizeBtn" class="assist-close" type="button" aria-label="取消輔助等分">×</button>
+    </header>
+    <div class="assist-panel-body">
+      <div class="equalize-mode-banner">請依序點選要重新等分的連續櫃體。再次點選可取消。</div>
+      <div class="assist-summary-grid" style="margin-top: 12px;">
+        <div class="assist-summary-card"><span>已選取</span><strong id="equalizeSelectedCount">0 個</strong></div>
+        <div class="assist-summary-card"><span>選取總寬</span><strong id="equalizeTotalWidth">0 mm</strong></div>
+        <div class="assist-summary-card"><span>所在層</span><strong id="equalizeLayerLabel">尚未選取</strong></div>
+      </div>
+      <div class="equalize-form">
+        <label>重新等分數量
+          <input id="equalizeTargetCount" type="number" min="1" max="12" step="1" inputmode="numeric" value="4">
+        </label>
+        <label>門片規則
+          <select id="equalizeStyleRule">
+            <option value="auto" selected>自動判斷門片</option>
+            <option value="storage">全部一般收納櫃</option>
+            <option value="drawer">全部抽屜櫃</option>
+            <option value="inherit">保留第一個櫃體樣式</option>
+          </select>
+        </label>
+        <div id="equalizePreview" class="equalize-preview">請先點選櫃體</div>
+        <div id="equalizeWarning" class="assist-warning" role="alert"></div>
+      </div>
+      <div class="assist-footer-actions">
+        <button id="cancelEqualizeBtn" type="button">取消</button>
+        <button id="applyEqualizeBtn" class="primary" type="button" disabled>套用等分</button>
+      </div>
+    </div>
+  </aside>
+
+  <section id="dimensionEditor" class="dimension-popover" role="dialog" aria-labelledby="dimensionEditorTitle">
+    <h3 id="dimensionEditorTitle">修改尺寸</h3>
+    <p id="dimensionTargetLabel" class="dimension-target-label">櫃體寬度</p>
+    <div class="dimension-input-wrap">
+      <input id="dimensionValueInput" type="text" inputmode="decimal" autocomplete="off" aria-label="新尺寸">
+      <span class="dimension-unit">mm</span>
+    </div>
+    <label id="dimensionDistributionField" class="hidden" style="margin-top: 9px; color: #b9b1a7; font-size: 11px;">分配方式
+      <select id="dimensionDistribution" style="width: 100%; margin-top: 5px; min-height: 40px;">
+        <option value="equal">平均分配</option>
+        <option value="proportional">等比例分配</option>
+      </select>
+    </label>
+    <p id="dimensionNote" class="dimension-note"></p>
+    <p id="dimensionError" class="dimension-error">請輸入有效尺寸</p>
+    <div class="dimension-actions">
+      <button id="cancelDimensionEditBtn" type="button">取消</button>
+      <button id="applyDimensionEditBtn" class="primary" type="button">套用</button>
+    </div>
+  </section>
+
+  <section id="gapActionPanel" class="gap-action-panel" role="dialog" aria-labelledby="gapActionTitle">
+    <h3 id="gapActionTitle">剩餘空間 0 mm</h3>
+    <p>此為計算結果，可加入櫃體、改為補板，或調整相鄰尺寸。</p>
+    <div class="gap-actions">
+      <button id="gapAiAssistBtn" class="primary" type="button">AI 推薦櫃體</button>
+      <button id="gapToFillerBtn" type="button">改成補板</button>
+      <button id="gapAdjustNeighborBtn" type="button">調整鄰近櫃體</button>
+      <button id="gapEditWallBtn" type="button">修改牆面總寬</button>
+      <button id="closeGapActionBtn" type="button" style="grid-column: 1 / -1;">關閉</button>
+    </div>
+  </section>
+
+  <div id="kitchenToastRegion" class="kitchen-toast-region" aria-live="polite" aria-atomic="true"></div>
+
   <div id="editModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <section class="modal-content">
       <h2 id="modalTitle">編輯櫃體</h2>
       <div class="form-grid">
-        <div class="order-actions">
+        <div class="order-actions" data-mobile-edit-tab="advanced">
           <button type="button" id="moveLeftBtn">櫃體往左</button>
           <button type="button" id="moveRightBtn">櫃體往右</button>
         </div>
-        <label>
+        <label data-mobile-edit-tab="basic">
           名稱
           <input id="editName" type="text" autocomplete="off">
         </label>
-        <label>
+        <label data-mobile-edit-tab="basic size">
           寬度 mm
-          <input id="editWidth" type="number" min="10" step="10">
+          <input id="editWidth" type="number" min="10" step="10" inputmode="numeric" pattern="[0-9]*">
         </label>
-        <label>
+        <label data-mobile-edit-tab="basic">
           類型
           <select id="editType">
             <option value="lower">下櫃</option>
             <option value="upper">吊櫃</option>
           </select>
         </label>
-        <label>
+        <label data-mobile-edit-tab="purpose">
           櫃體用途
           <select id="editPurpose">
             <option value="general">一般收納櫃</option>
@@ -1641,7 +1764,7 @@
             <option value="filler">補板／補邊</option>
           </select>
         </label>
-        <label>
+        <label data-mobile-edit-tab="door">
           門片形式
           <select id="editFrontStyle">
             <option value="double-door">對開門</option>
@@ -1654,7 +1777,7 @@
             <option value="panel">素面補板</option>
           </select>
         </label>
-        <label>
+        <label data-mobile-edit-tab="handle">
           把手形式
           <select id="editHandleStyle">
             <option value="none">無把手</option>
@@ -1663,14 +1786,14 @@
             <option value="bar">G 型／明把手</option>
           </select>
         </label>
-        <label id="editSideTreatmentField" class="hidden">
+        <label id="editSideTreatmentField" class="hidden" data-mobile-edit-tab="advanced">
           側邊處理
           <select id="editSideTreatment">
             <option value="wall-filler">靠牆補邊（90° 約 20 mm，斜牆可加寬）</option>
             <option value="finished-end">見光側封板（下櫃落地）</option>
           </select>
         </label>
-        <label id="editSinkMountField" class="hidden">
+        <label id="editSinkMountField" class="hidden" data-mobile-edit-tab="advanced">
           水槽安裝方式
           <select id="editSinkMount">
             <option value="undermount">下嵌式（推薦）</option>
@@ -1678,12 +1801,12 @@
             <option value="topmount">上裝式</option>
           </select>
         </label>
-        <button type="button" id="copyCabinetBtn">複製此櫃體</button>
+        <button type="button" id="copyCabinetBtn" data-mobile-edit-tab="advanced">複製此櫃體</button>
         <div class="modal-actions">
           <button type="button" class="muted-button" id="cancelEditBtn">取消</button>
           <button type="button" class="primary" id="saveCabinetBtn">儲存</button>
         </div>
-        <button type="button" class="danger" id="deleteCabinetBtn">刪除櫃體</button>
+        <button type="button" class="danger" id="deleteCabinetBtn" data-mobile-edit-tab="advanced">刪除櫃體</button>
       </div>
     </section>
   </div>
@@ -1803,8 +1926,10 @@
 
   <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
-  <script src="./shared/help-system.js?v=20260703-v4"></script>
+  <script src="./shared/help-system.js?v=20260704-mobilehelp-v1"></script>
   <script src="./shared/render-workflow.js?v=20260704-v1"></script>
+  <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
+  <script src="./shared/kitchen-mobile.js?v=20260704-v2"></script>
   <script>
     const state = {
       walls: [],
@@ -1824,6 +1949,11 @@
       zoom: {
         floor: { scale: 1, panX: 0, panY: 0 },
         elevation: { scale: 1, panX: 0, panY: 0 }
+      },
+      assist: {
+        equalizeActive: false,
+        equalizeSelectedIds: [],
+        hoverDimensionKey: null
       }
     };
 
@@ -1871,6 +2001,13 @@
         lower: document.getElementById("layerLower"),
         upper: document.getElementById("layerUpper")
       },
+      layerContextBar: document.getElementById("layerContextBar"),
+      layerContextTitle: document.getElementById("layerContextTitle"),
+      layerContextHint: document.getElementById("layerContextHint"),
+      layerContextButtons: {
+        lower: document.getElementById("layerContextLower"),
+        upper: document.getElementById("layerContextUpper")
+      },
       metricWallWidth: document.getElementById("metricWallWidth"),
       metricWallHeight: document.getElementById("metricWallHeight"),
       metricLower: document.getElementById("metricLower"),
@@ -1908,7 +2045,35 @@
       aiScreenshotPreview: document.getElementById("aiScreenshotPreview"),
       aiRenderStatus: document.getElementById("aiRenderStatus"),
       openGeminiBtn: document.getElementById("openGeminiBtn"),
-      openChatGptBtn: document.getElementById("openChatGptBtn")
+      openChatGptBtn: document.getElementById("openChatGptBtn"),
+      aiAssistPanel: document.getElementById("aiAssistPanel"),
+      aiAssistLayer: document.getElementById("aiAssistLayer"),
+      aiAssistWall: document.getElementById("aiAssistWall"),
+      aiAssistResults: document.getElementById("aiAssistResults"),
+      assistWallWidth: document.getElementById("assistWallWidth"),
+      assistUsedWidth: document.getElementById("assistUsedWidth"),
+      assistRemainingWidth: document.getElementById("assistRemainingWidth"),
+      equalizePanel: document.getElementById("equalizePanel"),
+      equalizeSelectedCount: document.getElementById("equalizeSelectedCount"),
+      equalizeTotalWidth: document.getElementById("equalizeTotalWidth"),
+      equalizeLayerLabel: document.getElementById("equalizeLayerLabel"),
+      equalizeTargetCount: document.getElementById("equalizeTargetCount"),
+      equalizeStyleRule: document.getElementById("equalizeStyleRule"),
+      equalizePreview: document.getElementById("equalizePreview"),
+      equalizeWarning: document.getElementById("equalizeWarning"),
+      applyEqualizeBtn: document.getElementById("applyEqualizeBtn"),
+      dimensionEditor: document.getElementById("dimensionEditor"),
+      dimensionTargetLabel: document.getElementById("dimensionTargetLabel"),
+      dimensionValueInput: document.getElementById("dimensionValueInput"),
+      dimensionNote: document.getElementById("dimensionNote"),
+      dimensionError: document.getElementById("dimensionError"),
+      dimensionDistributionField: document.getElementById("dimensionDistributionField"),
+      dimensionDistribution: document.getElementById("dimensionDistribution"),
+      gapActionPanel: document.getElementById("gapActionPanel"),
+      gapActionTitle: document.getElementById("gapActionTitle"),
+      kitchenToastRegion: document.getElementById("kitchenToastRegion"),
+      undoKitchenBtn: document.getElementById("undoKitchenBtn"),
+      redoKitchenBtn: document.getElementById("redoKitchenBtn")
     };
 
     const ctx = {
@@ -1945,6 +2110,14 @@
     let threeLoadPromise = null;
     let deferredInstallPrompt = null;
     let aiScreenshotDataUrl = null;
+    let lowPowerMobileMode = false;
+    let kitchenMobileController = null;
+    let kitchenHelpController = null;
+    let dimensionEditorTarget = null;
+    let activeGapTarget = null;
+    let focusedAssistSpaceId = null;
+    const dimensionHitRegions = { floor: [], elevation: [] };
+    const kitchenHistory = { undo: [], redo: [], limit: 60 };
     const defaultMobileAccessUrl = "https://chanmao-66.github.io/modudraft/";
 
     function currentMobileAccessUrl() {
@@ -1978,6 +2151,408 @@
       if (raw === null) return null;
       const normalized = raw.trim().replace(/[^\d.]/g, "");
       return clampNumber(normalized, min, max, fallback);
+    }
+
+    function cleanClone(value) {
+      if (window.structuredClone) return window.structuredClone(value);
+      return JSON.parse(JSON.stringify(value));
+    }
+
+    function captureKitchenHistoryState() {
+      return {
+        walls: cleanClone(state.walls),
+        activeWallIndex: state.activeWallIndex,
+        currentLayer: state.currentLayer,
+        selectedIndex: state.selectedIndex
+      };
+    }
+
+    function restoreKitchenHistoryState(snapshot) {
+      if (!snapshot?.walls?.length) return;
+      state.walls = cleanClone(snapshot.walls).map((wall, index) => {
+        const restored = createWall(wall.width, wall.height, wall.id ?? index);
+        restored.alignment = wall.alignment === "right" ? "right" : "left";
+        restored.cabinets = (wall.cabinets || []).map((cabinet) => normalizeCabinet(cabinet));
+        return restored;
+      });
+      state.activeWallIndex = Math.max(0, Math.min(state.walls.length - 1, Number(snapshot.activeWallIndex) || 0));
+      state.currentLayer = snapshot.currentLayer === "upper" ? "upper" : "lower";
+      state.selectedIndex = Number.isInteger(snapshot.selectedIndex) ? snapshot.selectedIndex : null;
+      state.assist.equalizeSelectedIds = [];
+      rebuildWallSelect();
+      renderAll();
+    }
+
+    function updateHistoryButtons() {
+      el.undoKitchenBtn.disabled = kitchenHistory.undo.length === 0;
+      el.redoKitchenBtn.disabled = kitchenHistory.redo.length === 0;
+      el.undoKitchenBtn.title = kitchenHistory.undo.length
+        ? `復原：${kitchenHistory.undo[kitchenHistory.undo.length - 1].label}`
+        : "沒有可復原的操作";
+      el.redoKitchenBtn.title = kitchenHistory.redo.length
+        ? `重做：${kitchenHistory.redo[kitchenHistory.redo.length - 1].label}`
+        : "沒有可重做的操作";
+    }
+
+    function commitKitchenMutation(label, action) {
+      const before = captureKitchenHistoryState();
+      const beforeText = JSON.stringify(before);
+      let result;
+      try {
+        result = action();
+      } catch (error) {
+        restoreKitchenHistoryState(before);
+        throw error;
+      }
+      const afterText = JSON.stringify(captureKitchenHistoryState());
+      if (result !== false && beforeText !== afterText) {
+        kitchenHistory.undo.push({ label, snapshot: before });
+        if (kitchenHistory.undo.length > kitchenHistory.limit) kitchenHistory.undo.shift();
+        kitchenHistory.redo = [];
+        updateHistoryButtons();
+      }
+      return result;
+    }
+
+    function undoKitchenAction() {
+      const entry = kitchenHistory.undo.pop();
+      if (!entry) return;
+      kitchenHistory.redo.push({ label: entry.label, snapshot: captureKitchenHistoryState() });
+      restoreKitchenHistoryState(entry.snapshot);
+      updateHistoryButtons();
+      showKitchenToast(`已復原：${entry.label}`);
+    }
+
+    function redoKitchenAction() {
+      const entry = kitchenHistory.redo.pop();
+      if (!entry) return;
+      kitchenHistory.undo.push({ label: entry.label, snapshot: captureKitchenHistoryState() });
+      restoreKitchenHistoryState(entry.snapshot);
+      updateHistoryButtons();
+      showKitchenToast(`已重做：${entry.label}`);
+    }
+
+    function showKitchenToast(message, tone = "info") {
+      const toast = document.createElement("div");
+      toast.className = `kitchen-toast ${tone === "warning" || tone === "error" ? tone : ""}`.trim();
+      toast.textContent = message;
+      el.kitchenToastRegion.appendChild(toast);
+      window.setTimeout(() => toast.remove(), 3000);
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function assistSpaces(layer = state.currentLayer) {
+      const wall = activeWall();
+      if (!wall || !window.MODUDRAFTKitchenAssist) return [];
+      calculatePositions();
+      return window.MODUDRAFTKitchenAssist.detectAvailableSpaces({
+        wall,
+        activeWallIndex: state.activeWallIndex,
+        layer,
+        lowerHeight: sizes.lowerHeight,
+        lowerDepth: sizes.lowerDepth,
+        upperHeight: wallUpperHeight(wall),
+        upperDepth: sizes.upperDepth
+      });
+    }
+
+    function physicalLayerCabinets(wall, layer) {
+      return wall.cabinets
+        .filter((cabinet) => cabinet.type === layer)
+        .sort((a, b) => a.x - b.x || String(a.id).localeCompare(String(b.id)));
+    }
+
+    function rebuildCabinetArrayFromPhysical(wall, replacementLayer = null, replacementPhysical = null) {
+      const physical = {
+        lower: replacementLayer === "lower" ? replacementPhysical : physicalLayerCabinets(wall, "lower"),
+        upper: replacementLayer === "upper" ? replacementPhysical : physicalLayerCabinets(wall, "upper")
+      };
+      const encounter = (layer) => wall.alignment === "right"
+        ? [...physical[layer]].reverse()
+        : [...physical[layer]];
+      wall.cabinets = [...encounter("lower"), ...encounter("upper")];
+    }
+
+    function cabinetNameForRecommendation(recommendation, index, count) {
+      if (count <= 1) return recommendation.name;
+      return `${recommendation.name} ${index + 1}`;
+    }
+
+    function createRecommendedCabinet(recommendation, width, index, count) {
+      const cabinet = makeCabinet(
+        cabinetNameForRecommendation(recommendation, index, count),
+        width,
+        recommendation.layer,
+        recommendation.purpose,
+        recommendation.frontStyle
+      );
+      if (recommendation.purpose === "filler") cabinet.sideTreatment = "wall-filler";
+      return normalizeCabinet(cabinet);
+    }
+
+    function applyRecommendation(spaceId, recommendationId, options = {}) {
+      const layer = options.layer || el.aiAssistLayer.value || state.currentLayer;
+      const wall = activeWall();
+      if (!wall) return false;
+      const space = assistSpaces(layer).find((item) => item.id === spaceId);
+      if (!space) {
+        showKitchenToast("剩餘空間已改變，請重新取得建議。", "warning");
+        renderAiAssistResults();
+        return false;
+      }
+      const recommendation = options.forceFiller
+        ? {
+          id: "forced-filler",
+          name: layer === "upper" ? "吊櫃補板" : "補板",
+          kind: "補板",
+          purpose: "filler",
+          frontStyle: "panel",
+          width: space.width,
+          layer,
+          spaceId: space.id
+        }
+        : window.MODUDRAFTKitchenAssist
+          .getCabinetRecommendations(space)
+          .find((item) => item.id === recommendationId);
+      if (!recommendation) return false;
+
+      const widths = recommendation.widths?.length
+        ? recommendation.widths
+        : [options.fillRemaining ? space.width : Math.min(space.width, recommendation.width)];
+      const validWidths = widths.map((width) => Math.round(Number(width))).filter((width) => Number.isFinite(width) && width > 0);
+      const total = validWidths.reduce((sum, width) => sum + width, 0);
+      if (!validWidths.length || total > space.width + 0.5) {
+        showKitchenToast("推薦尺寸已超出可用空間，未套用變更。", "error");
+        return false;
+      }
+
+      commitKitchenMutation(`加入${recommendation.name}`, () => {
+        calculatePositions();
+        const physical = physicalLayerCabinets(wall, layer);
+        const created = validWidths.map((width, index) => createRecommendedCabinet(recommendation, width, index, validWidths.length));
+        created.forEach((cabinet, index) => {
+          cabinet.x = space.startX + validWidths.slice(0, index).reduce((sum, width) => sum + width, 0);
+        });
+        const nextPhysical = [...physical, ...created]
+          .sort((a, b) => a.x - b.x || String(a.id).localeCompare(String(b.id)));
+        rebuildCabinetArrayFromPhysical(wall, layer, nextPhysical);
+      });
+      setCurrentLayer(layer, { syncAssist: false });
+      renderAll();
+      renderAiAssistResults();
+      showKitchenToast(`已加入${recommendation.name}，共 ${formatNumber(total)} mm`);
+      return true;
+    }
+
+    function openAiAssistPanel(layer = state.currentLayer, focusSpaceId = null) {
+      closeEqualizePanel();
+      focusedAssistSpaceId = focusSpaceId;
+      el.aiAssistLayer.value = layer === "upper" ? "upper" : "lower";
+      el.aiAssistPanel.classList.add("open");
+      kitchenMobileController?.showModeNotice("AI 輔助構圖：查看建議後，按加入才會變更配置。", 3600);
+      renderAiAssistResults();
+    }
+
+    function closeAiAssistPanel() {
+      el.aiAssistPanel.classList.remove("open");
+      focusedAssistSpaceId = null;
+    }
+
+    function renderAiAssistResults() {
+      if (!el.aiAssistPanel.classList.contains("open")) return;
+      const wall = activeWall();
+      if (!wall) return;
+      const layer = el.aiAssistLayer.value === "upper" ? "upper" : "lower";
+      const used = layerTotal(wall, layer);
+      const remaining = wall.width - used;
+      const spaces = assistSpaces(layer);
+      el.assistWallWidth.textContent = `${formatNumber(wall.width)} mm`;
+      el.assistUsedWidth.textContent = `${formatNumber(used)} mm`;
+      el.assistRemainingWidth.textContent = `${formatNumber(remaining)} mm`;
+      el.aiAssistWall.innerHTML = `<option>牆 ${state.activeWallIndex + 1}</option>`;
+
+      if (remaining < 0) {
+        el.aiAssistResults.innerHTML = `<div class="assist-empty">目前${layer === "upper" ? "吊櫃" : "下櫃"}總寬已超出牆面 ${formatNumber(Math.abs(remaining))} mm。請先修改櫃體尺寸或刪除部分櫃體。</div>`;
+        return;
+      }
+      if (!spaces.length) {
+        el.aiAssistResults.innerHTML = `<div class="assist-empty">目前沒有 20 mm 以上的可用空間，配置已填滿牆面。</div>`;
+        return;
+      }
+
+      el.aiAssistResults.innerHTML = spaces.map((space) => {
+        const recommendations = window.MODUDRAFTKitchenAssist.getCabinetRecommendations(space);
+        const sideLabel = space.position === "left" ? "左側" : (space.position === "right" ? "右側" : "中段");
+        return `
+          <section class="assist-space" data-space-id="${escapeHtml(space.id)}">
+            <div class="assist-space-title"><span>偵測到${sideLabel}可用空間</span><b>${formatNumber(space.width)} mm</b></div>
+            <div class="recommendation-list">
+              ${recommendations.map((item) => `
+                <article class="recommendation-card" data-suitability="${escapeHtml(item.suitability)}">
+                  <div class="recommendation-head"><strong>${escapeHtml(item.name)}</strong><span>適合度 ${escapeHtml(item.suitability)}</span></div>
+                  <div class="recommendation-meta">${escapeHtml(item.kind)} · 建議 ${escapeHtml(item.widths?.join(" + ") || item.width)} mm</div>
+                  <p class="recommendation-reason">${escapeHtml(item.reason)}</p>
+                  <div class="recommendation-actions">
+                    <button type="button" class="primary" data-assist-action="add" data-space-id="${escapeHtml(space.id)}" data-recommendation-id="${escapeHtml(item.id)}">加入此櫃體</button>
+                    <button type="button" data-assist-action="fill" data-space-id="${escapeHtml(space.id)}" data-recommendation-id="${escapeHtml(item.id)}">加入並補齊</button>
+                    <button type="button" data-assist-action="filler" data-space-id="${escapeHtml(space.id)}">改為補板</button>
+                  </div>
+                </article>
+              `).join("")}
+            </div>
+          </section>
+        `;
+      }).join("");
+
+      if (focusedAssistSpaceId) {
+        const target = [...el.aiAssistResults.querySelectorAll(".assist-space")]
+          .find((node) => node.dataset.spaceId === focusedAssistSpaceId);
+        if (target) target.scrollIntoView({ block: "nearest" });
+      }
+    }
+
+    function startEqualizeMode() {
+      closeAiAssistPanel();
+      closeDimensionEditor();
+      closeGapActionPanel();
+      state.assist.equalizeActive = true;
+      state.assist.equalizeSelectedIds = [];
+      state.selectedIndex = null;
+      document.body.classList.add("equalize-selecting");
+      el.equalizePanel.classList.add("open");
+      kitchenMobileController?.showModeNotice("輔助等分模式：請點選要重新等分的連續櫃體。", 0);
+      updateEqualizePanel();
+      render2D();
+    }
+
+    function closeEqualizePanel() {
+      state.assist.equalizeActive = false;
+      state.assist.equalizeSelectedIds = [];
+      document.body.classList.remove("equalize-selecting");
+      el.equalizePanel.classList.remove("open");
+      kitchenMobileController?.closeModeNotice();
+      render2D();
+    }
+
+    function toggleEqualizeSelection(index) {
+      const wall = activeWall();
+      const cabinet = wall?.cabinets[index];
+      if (!cabinet) return;
+      const selectedCabinets = wall.cabinets.filter((item) => state.assist.equalizeSelectedIds.includes(item.id));
+      if (selectedCabinets.length && selectedCabinets[0].type !== cabinet.type) {
+        showKitchenToast("下櫃與吊櫃不能混選。", "warning");
+        return;
+      }
+      const selectedIndex = state.assist.equalizeSelectedIds.indexOf(cabinet.id);
+      if (selectedIndex >= 0) state.assist.equalizeSelectedIds.splice(selectedIndex, 1);
+      else {
+        state.assist.equalizeSelectedIds.push(cabinet.id);
+        setCurrentLayer(cabinet.type, { syncAssist: false });
+      }
+      updateEqualizePanel();
+      render2D();
+    }
+
+    function updateEqualizePanel() {
+      const wall = activeWall();
+      const assist = window.MODUDRAFTKitchenAssist;
+      if (!wall || !assist) return;
+      calculatePositions();
+      const validation = assist.validateEqualizeSelection(wall.cabinets, state.assist.equalizeSelectedIds);
+      const selectedCount = state.assist.equalizeSelectedIds.length;
+      const total = validation.valid
+        ? validation.totalWidth
+        : wall.cabinets.filter((cabinet) => state.assist.equalizeSelectedIds.includes(cabinet.id)).reduce((sum, cabinet) => sum + cabinet.width, 0);
+      const targetCount = Math.max(1, Math.min(12, Math.floor(Number(el.equalizeTargetCount.value) || 0)));
+      const widths = total > 0 && targetCount > 0 ? assist.divideWidths(total, targetCount) : [];
+      const average = widths.length ? total / widths.length : 0;
+      let warning = validation.valid ? "" : validation.message;
+      if (validation.valid && validation.containsSpecial) warning = "選取區包含水槽、爐台或嵌入電器等特殊功能櫃；第一版預設會重新生成一般櫃體。";
+      if (validation.valid && average < 120) warning = "平均寬度過小，不建議製作櫃體，可改用補板。";
+      else if (validation.valid && average > 900) warning = "單櫃過寬，建議增加等分數量。";
+
+      el.equalizeSelectedCount.textContent = `${selectedCount} 個`;
+      el.equalizeTotalWidth.textContent = `${formatNumber(total)} mm`;
+      el.equalizeLayerLabel.textContent = validation.valid ? (validation.layer === "upper" ? "吊櫃" : "下櫃") : "待確認";
+      el.equalizePreview.textContent = widths.length ? widths.join(" + ") : "請先點選櫃體";
+      el.equalizeWarning.textContent = warning;
+      el.equalizeWarning.classList.toggle("visible", Boolean(warning));
+      el.applyEqualizeBtn.disabled = !validation.valid || targetCount < 1 || targetCount > 12 || average < 120;
+    }
+
+    function createEqualizedCabinet(template, width, index, rule, layer) {
+      if (rule === "inherit") {
+        return normalizeCabinet({
+          ...cleanClone(template),
+          id: uid(layer),
+          name: `${template.name} ${index + 1}`,
+          width,
+          type: layer
+        });
+      }
+      let purpose = rule === "drawer" ? "drawer" : "general";
+      let frontStyle = rule === "drawer" ? "two-small-one-large" : (width >= 600 ? "double-door" : "single-door");
+      let name = rule === "drawer" ? "等分抽屜櫃" : "等分收納櫃";
+      if (rule === "auto" && width < 250) {
+        purpose = "open";
+        frontStyle = "open";
+        name = "等分窄開放櫃";
+      } else if (rule === "auto" && width >= 400 && width < 600 && layer === "lower") {
+        purpose = "drawer";
+        frontStyle = "two-small-one-large";
+        name = "等分抽屜櫃";
+      }
+      return makeCabinet(`${name} ${index + 1}`, width, layer, purpose, frontStyle);
+    }
+
+    function applyEqualize() {
+      const wall = activeWall();
+      const assist = window.MODUDRAFTKitchenAssist;
+      if (!wall || !assist) return;
+      calculatePositions();
+      const validation = assist.validateEqualizeSelection(wall.cabinets, state.assist.equalizeSelectedIds);
+      if (!validation.valid) {
+        showKitchenToast(validation.message, "warning");
+        return;
+      }
+      const targetCount = Math.floor(Number(el.equalizeTargetCount.value));
+      if (!Number.isFinite(targetCount) || targetCount < 1 || targetCount > 12) {
+        showKitchenToast("等分數量需介於 1 至 12。", "error");
+        return;
+      }
+      const widths = assist.divideWidths(validation.totalWidth, targetCount);
+      if (!widths.length || widths.some((width) => width < 120)) {
+        showKitchenToast("平均寬度過小，不建議製作櫃體，可改用補板。", "warning");
+        return;
+      }
+      const selectedIds = new Set(state.assist.equalizeSelectedIds);
+      const physical = physicalLayerCabinets(wall, validation.layer);
+      const firstSelectedPhysicalIndex = physical.findIndex((cabinet) => selectedIds.has(cabinet.id));
+      const template = validation.selected[0];
+      const replacements = widths.map((width, index) => createEqualizedCabinet(
+        template,
+        width,
+        index,
+        el.equalizeStyleRule.value,
+        validation.layer
+      ));
+      commitKitchenMutation(`將 ${validation.selected.length} 個櫃體等分為 ${targetCount} 個`, () => {
+        const nextPhysical = physical.filter((cabinet) => !selectedIds.has(cabinet.id));
+        nextPhysical.splice(firstSelectedPhysicalIndex, 0, ...replacements);
+        rebuildCabinetArrayFromPhysical(wall, validation.layer, nextPhysical);
+      });
+      const oldCount = validation.selected.length;
+      closeEqualizePanel();
+      renderAll();
+      showKitchenToast(`已將 ${oldCount} 個櫃體重新等分為 ${targetCount} 個櫃體`);
     }
 
     function createWall(width, height = 2300, id = state.walls.length) {
@@ -2077,6 +2652,26 @@
       });
     }
 
+    function setCurrentLayer(layer, options = {}) {
+      const nextLayer = layer === "upper" ? "upper" : "lower";
+      state.currentLayer = nextLayer;
+      Object.entries(el.layerButtons).forEach(([name, button]) => {
+        button.classList.toggle("active", name === nextLayer);
+      });
+      Object.entries(el.layerContextButtons).forEach(([name, button]) => {
+        button.classList.toggle("active", name === nextLayer);
+      });
+      el.layerContextBar.dataset.layer = nextLayer;
+      el.layerContextTitle.textContent = nextLayer === "upper" ? "吊櫃" : "下櫃";
+      el.layerContextHint.textContent = nextLayer === "upper"
+        ? "新增、點選與 AI 建議會套用在牆面上方的吊櫃。"
+        : "新增、點選與 AI 建議會套用在落地的下櫃。";
+      if (options.syncAssist !== false && el.aiAssistPanel.classList.contains("open")) {
+        el.aiAssistLayer.value = nextLayer;
+        renderAiAssistResults();
+      }
+    }
+
     function applyGlobalHandleStyle() {
       state.globalHandleStyle = el.globalHandleStyle.value;
       state.walls.forEach((wall) => {
@@ -2113,6 +2708,7 @@
       state.walls = walls;
       state.activeWallIndex = mode === "multi" ? 1 : 0;
       state.selectedIndex = null;
+      setCurrentLayer("lower", { syncAssist: false });
       el.startOverlay.style.display = "none";
       rebuildWallSelect();
       autoGenerateKitchen();
@@ -2949,6 +3545,9 @@
       if (state.view.three) {
         void render3D();
       }
+      if (el.aiAssistPanel.classList.contains("open")) renderAiAssistResults();
+      if (el.equalizePanel.classList.contains("open")) updateEqualizePanel();
+      kitchenMobileController?.update();
       window.requestAnimationFrame(updateMobileScrollRail);
       scheduleKitchenAutosave();
     }
@@ -3062,12 +3661,27 @@
       context.restore();
     }
 
-    function drawDimension(context, x1, x2, y, text, color = "#29323d") {
+    function dimensionTargetKey(target) {
+      if (!target) return "";
+      return [target.type, target.wallId, target.targetId, target.layer].filter((value) => value !== undefined && value !== null).join(":");
+    }
+
+    function registerDimensionHit(viewName, region) {
+      if (!viewName || !dimensionHitRegions[viewName] || !region?.target) return;
+      dimensionHitRegions[viewName].push({
+        ...region,
+        key: dimensionTargetKey(region.target)
+      });
+    }
+
+    function drawDimension(context, x1, x2, y, text, color = "#29323d", target = null, viewName = null) {
       if (Math.abs(x2 - x1) < 3) return;
+      const key = dimensionTargetKey(target);
+      const highlighted = key && state.assist.hoverDimensionKey === key;
       context.save();
-      context.strokeStyle = color;
-      context.fillStyle = color;
-      context.lineWidth = 1;
+      context.strokeStyle = highlighted ? "#b66f18" : color;
+      context.fillStyle = highlighted ? "#b66f18" : color;
+      context.lineWidth = highlighted ? 2 : 1;
       context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
@@ -3083,19 +3697,37 @@
 
       const labelWidth = context.measureText(text).width + 10;
       const labelX = (x1 + x2) / 2;
-      context.fillStyle = "#f7efe1";
+      context.fillStyle = highlighted ? "#f1d4aa" : "#f7efe1";
       context.fillRect(labelX - labelWidth / 2, y - 9, labelWidth, 18);
-      context.fillStyle = color;
+      context.fillStyle = highlighted ? "#6d3c07" : color;
       context.fillText(text, labelX, y + 0.5);
       context.restore();
+      if (target) {
+        registerDimensionHit(viewName, {
+          orientation: "horizontal",
+          x1: Math.min(x1, x2),
+          x2: Math.max(x1, x2),
+          y1: y,
+          y2: y,
+          textBounds: {
+            left: labelX - labelWidth / 2,
+            right: labelX + labelWidth / 2,
+            top: y - 9,
+            bottom: y + 9
+          },
+          target
+        });
+      }
     }
 
-    function drawVerticalDimension(context, x, y1, y2, text, color = "#29323d") {
+    function drawVerticalDimension(context, x, y1, y2, text, color = "#29323d", target = null, viewName = null) {
       if (Math.abs(y2 - y1) < 3) return;
+      const key = dimensionTargetKey(target);
+      const highlighted = key && state.assist.hoverDimensionKey === key;
       context.save();
-      context.strokeStyle = color;
-      context.fillStyle = color;
-      context.lineWidth = 1;
+      context.strokeStyle = highlighted ? "#b66f18" : color;
+      context.fillStyle = highlighted ? "#b66f18" : color;
+      context.lineWidth = highlighted ? 2 : 1;
       context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
@@ -3113,11 +3745,28 @@
       context.translate(x - 12, midY);
       context.rotate(-Math.PI / 2);
       const labelWidth = context.measureText(text).width + 10;
-      context.fillStyle = "#f7efe1";
+      context.fillStyle = highlighted ? "#f1d4aa" : "#f7efe1";
       context.fillRect(-labelWidth / 2, -9, labelWidth, 18);
-      context.fillStyle = color;
+      context.fillStyle = highlighted ? "#6d3c07" : color;
       context.fillText(text, 0, 0.5);
       context.restore();
+      if (target) {
+        const midY = (y1 + y2) / 2;
+        registerDimensionHit(viewName, {
+          orientation: "vertical",
+          x1: x,
+          x2: x,
+          y1: Math.min(y1, y2),
+          y2: Math.max(y1, y2),
+          textBounds: {
+            left: x - 21,
+            right: x - 3,
+            top: midY - labelWidth / 2,
+            bottom: midY + labelWidth / 2
+          },
+          target
+        });
+      }
     }
 
     function drawCabinetLabel(context, text, x, y, width, height) {
@@ -3198,6 +3847,7 @@
     }
 
     function drawFloorplan(wall) {
+      dimensionHitRegions.floor = [];
       const rect = clearDraftCanvas(el.floorCanvas, ctx.floor);
       const z = state.zoom.floor;
 
@@ -3237,24 +3887,56 @@
           ? "#d9d2c8"
           : (cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)");
         ctx.floor.fillRect(x, y, width, depth);
-        ctx.floor.strokeStyle = cabinet.type === "lower" ? "#151a22" : "#6d7c8f";
-        ctx.floor.lineWidth = cabinet.type === "lower" ? 1.5 : 1;
+        const assistSelected = state.assist.equalizeSelectedIds.includes(cabinet.id);
+        ctx.floor.strokeStyle = assistSelected ? "#c77b22" : (cabinet.type === "lower" ? "#151a22" : "#6d7c8f");
+        ctx.floor.lineWidth = assistSelected ? 3 : (cabinet.type === "lower" ? 1.5 : 1);
         ctx.floor.strokeRect(x, y, width, depth);
 
         if (width > 36) drawCabinetLabel(ctx.floor, cabinet.name, x, y, width, depth);
-        drawDimension(ctx.floor, x, x + width, y - 13, `${cabinet.width}`, "#354151");
+        drawDimension(
+          ctx.floor,
+          x,
+          x + width,
+          y - 13,
+          `${cabinet.width}`,
+          "#354151",
+          {
+            type: "cabinet-width",
+            targetId: cabinet.id,
+            cabinetId: cabinet.id,
+            wallId: wall.id,
+            dimensionValue: cabinet.width,
+            editable: true,
+            label: "櫃體寬度",
+            unit: "mm",
+            layer: cabinet.type,
+            scopePriority: 0
+          },
+          "floor"
+        );
       });
 
       drawDimension(
         ctx.floor,
         offsetX,
         offsetX + wallWidth,
-        Math.max(24, wallY - planDepth - 32),
+        Math.max(24, wallY - planDepth - 60),
         `牆寬 ${wall.width}`,
-        "#151a22"
+        "#151a22",
+        {
+          type: "wall-width",
+          targetId: wall.id,
+          wallId: wall.id,
+          dimensionValue: wall.width,
+          editable: true,
+          label: "牆面總寬",
+          unit: "mm",
+          scopePriority: 3
+        },
+        "floor"
       );
       drawDimension(ctx.floor, offsetX, offsetX + sizes.lowerDepth * baseScale, wallY + visibleWallThickness + 18, `深 ${sizes.lowerDepth}`, "#6d4a20");
-      drawLayerRemainder(ctx.floor, wall, "lower", offsetX, baseScale, wallY + visibleWallThickness + 38);
+      drawLayerRemainder(ctx.floor, wall, "lower", offsetX, baseScale, Math.max(42, wallY - planDepth - 36), "floor");
       ctx.floor.restore();
     }
 
@@ -3275,20 +3957,36 @@
       return { side: "right", start: wall.width, end: used, label: `右側超出 ${overflow}`, remain };
     }
 
-    function drawLayerRemainder(context, wall, type, offsetX, baseScale, y) {
+    function drawLayerRemainder(context, wall, type, offsetX, baseScale, y, viewName = null) {
       const info = layerRemainderInfo(wall, type);
       if (!info) return;
+      const target = info.remain > 0 ? {
+        type: "gap-width",
+        targetId: `gap-${wall.id}-${type}-${info.side}`,
+        wallId: wall.id,
+        dimensionValue: info.remain,
+        editable: true,
+        label: "剩餘空間",
+        unit: "mm",
+        layer: type,
+        position: info.side,
+        startX: info.start,
+        scopePriority: 1
+      } : null;
       drawDimension(
         context,
         offsetX + info.start * baseScale,
         offsetX + info.end * baseScale,
         y,
         info.label,
-        "#d75b51"
+        "#d75b51",
+        target,
+        viewName
       );
     }
 
     function drawElevation(wall) {
+      dimensionHitRegions.elevation = [];
       const rect = clearDraftCanvas(el.elevationCanvas, ctx.elevation);
       const z = state.zoom.elevation;
 
@@ -3373,8 +4071,34 @@
 
       wall.cabinets.forEach((cabinet, index) => {
         const box = cabinetBox(cabinet, index, wall, rect);
-        drawCabinet(ctx.elevation, cabinet, box, index === state.selectedIndex, wall);
-        drawDimension(ctx.elevation, box.x, box.x + box.width, box.y + box.height + 16, `${cabinet.width}`, "#354151");
+        drawCabinet(
+          ctx.elevation,
+          cabinet,
+          box,
+          index === state.selectedIndex || state.assist.equalizeSelectedIds.includes(cabinet.id),
+          wall
+        );
+        drawDimension(
+          ctx.elevation,
+          box.x,
+          box.x + box.width,
+          box.y + box.height + 16,
+          `${cabinet.width}`,
+          "#354151",
+          {
+            type: "cabinet-width",
+            targetId: cabinet.id,
+            cabinetId: cabinet.id,
+            wallId: wall.id,
+            dimensionValue: cabinet.width,
+            editable: true,
+            label: "櫃體寬度",
+            unit: "mm",
+            layer: cabinet.type,
+            scopePriority: 0
+          },
+          "elevation"
+        );
       });
 
       drawElevationSideView(ctx.elevation, wall, {
@@ -3388,12 +4112,48 @@
         lowerTopY
       });
 
-      drawDimension(ctx.elevation, offsetX, offsetX + wallWidth, wallTopY - 14, `牆寬 ${wall.width}`, "#151a22");
-      drawVerticalDimension(ctx.elevation, offsetX - 14, wallTopY, baseY, `牆高 ${wall.height}`, "#151a22");
+      drawDimension(
+        ctx.elevation,
+        offsetX,
+        offsetX + wallWidth,
+        wallTopY - 14,
+        `牆寬 ${wall.width}`,
+        "#151a22",
+        {
+          type: "wall-width",
+          targetId: wall.id,
+          wallId: wall.id,
+          dimensionValue: wall.width,
+          editable: true,
+          label: "牆面總寬",
+          unit: "mm",
+          scopePriority: 3
+        },
+        "elevation"
+      );
+      drawVerticalDimension(
+        ctx.elevation,
+        offsetX - 14,
+        wallTopY,
+        baseY,
+        `牆高 ${wall.height}`,
+        "#151a22",
+        {
+          type: "wall-height",
+          targetId: wall.id,
+          wallId: wall.id,
+          dimensionValue: wall.height,
+          editable: true,
+          label: "牆面高度",
+          unit: "mm",
+          scopePriority: 3
+        },
+        "elevation"
+      );
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 12, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 28, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
       drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperCabinetTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
-      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 6);
+      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 38, "elevation");
       ctx.elevation.restore();
     }
 
@@ -3862,10 +4622,13 @@
       three.camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 1, 90000);
       three.camera.position.set(2600, 2600, 3800);
 
-      three.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-      three.renderer.setPixelRatio(window.devicePixelRatio || 1);
+      three.renderer = new THREE.WebGLRenderer({ antialias: !lowPowerMobileMode, preserveDrawingBuffer: true });
+      const previewPixelRatio = lowPowerMobileMode
+        ? Math.min(1.25, window.devicePixelRatio || 1)
+        : Math.min(2, window.devicePixelRatio || 1);
+      three.renderer.setPixelRatio(previewPixelRatio);
       three.renderer.setSize(container.offsetWidth, container.offsetHeight);
-      three.renderer.shadowMap.enabled = true;
+      three.renderer.shadowMap.enabled = !lowPowerMobileMode;
       three.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       three.renderer.toneMapping = THREE.ACESFilmicToneMapping;
       three.renderer.toneMappingExposure = 0.78;
@@ -3877,8 +4640,8 @@
       three.scene.add(hemi);
       const light = new THREE.DirectionalLight(0xffd7a6, 0.9);
       light.position.set(1800, 4200, 2600);
-      light.castShadow = true;
-      light.shadow.mapSize.set(2048, 2048);
+      light.castShadow = !lowPowerMobileMode;
+      light.shadow.mapSize.set(lowPowerMobileMode ? 512 : 2048, lowPowerMobileMode ? 512 : 2048);
       light.shadow.bias = -0.00025;
       three.scene.add(light);
       const fillLight = new THREE.DirectionalLight(0xdde8ea, 0.2);
@@ -3891,8 +4654,8 @@
       build3DWalls();
       three.group.traverse((object) => {
         if (!object.isMesh) return;
-        object.castShadow = true;
-        object.receiveShadow = true;
+        object.castShadow = !lowPowerMobileMode;
+        object.receiveShadow = !lowPowerMobileMode;
       });
       if (previousCamera) {
         three.target = previousCamera.target;
@@ -4468,8 +5231,16 @@
 
     function addEdges(parent, geometry, position, color, wallVisual = false) {
       const edges = new THREE.EdgesGeometry(geometry);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color }));
+      const edgeColor = wallVisual ? 0x514b45 : (state.renderMode === "white" ? 0x2d3332 : 0x352f2a);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({
+        color: edgeColor,
+        transparent: true,
+        opacity: wallVisual ? 0.48 : 0.82,
+        depthWrite: false,
+        toneMapped: false
+      }));
       line.position.copy(position);
+      line.renderOrder = wallVisual ? 3 : 8;
       line.userData.wallVisual = wallVisual;
       parent.add(line);
       return line;
@@ -4680,8 +5451,18 @@
       three.camera.lookAt(three.target);
     }
 
+    function pause3DRenderWhenHidden() {
+      const shouldPause = document.hidden || !state.view.three || el.threeView.classList.contains("hidden");
+      if (shouldPause && three.animationId) {
+        cancelAnimationFrame(three.animationId);
+        three.animationId = null;
+      }
+      return shouldPause;
+    }
+
     function animate3D() {
       if (!three.renderer || !three.scene || !three.camera) return;
+      if (pause3DRenderWhenHidden()) return;
       three.animationId = requestAnimationFrame(animate3D);
       three.renderer.render(three.scene, three.camera);
     }
@@ -4705,6 +5486,15 @@
     function bindPanZoom(canvas, name) {
       const pointers = new Map();
       let pinchStart = null;
+      let paintFrame = 0;
+
+      function schedule2DPaint() {
+        if (paintFrame) return;
+        paintFrame = requestAnimationFrame(() => {
+          paintFrame = 0;
+          render2D();
+        });
+      }
 
       function gesture() {
         const points = [...pointers.values()].slice(0, 2);
@@ -4744,10 +5534,11 @@
         z.panX += (after.x - before.x) * z.scale;
         z.panY += (after.y - before.y) * z.scale;
         sync2DTransform(name);
-        render2D();
+        schedule2DPaint();
       }, { passive: false });
 
       canvas.addEventListener("pointerdown", (event) => {
+        if (kitchenMobileController?.isMobile() && document.body.classList.contains("mobile-keyboard-open")) return;
         const z = state.zoom[name];
         if (event.pointerType === "touch") {
           if (event.isPrimary && !pointers.has(event.pointerId)) {
@@ -4761,6 +5552,8 @@
           target: name,
           startX: event.clientX - z.panX,
           startY: event.clientY - z.panY,
+          originClientX: event.clientX,
+          originClientY: event.clientY,
           moved: pointers.size >= 2
         };
         if (pointers.size >= 2) {
@@ -4788,20 +5581,21 @@
             }
             sync2DTransform(name);
             drag.moved = true;
-            render2D();
+            schedule2DPaint();
             return;
           }
         }
 
         const nextPanX = event.clientX - drag.startX;
         const nextPanY = event.clientY - drag.startY;
-        if (Math.abs(nextPanX - z.panX) + Math.abs(nextPanY - z.panY) > 3) {
+        const movementThreshold = event.pointerType === "touch" ? 6 : 3;
+        if (Math.hypot(event.clientX - drag.originClientX, event.clientY - drag.originClientY) > movementThreshold) {
           drag.moved = true;
         }
         z.panX = nextPanX;
         z.panY = nextPanY;
         sync2DTransform(name);
-        render2D();
+        schedule2DPaint();
       });
 
       canvas.addEventListener("pointerup", (event) => {
@@ -4817,6 +5611,8 @@
           drag.target = name;
           drag.startX = remaining.x - z.panX;
           drag.startY = remaining.y - z.panY;
+          drag.originClientX = remaining.x;
+          drag.originClientY = remaining.y;
           drag.moved = true;
           return;
         }
@@ -4891,6 +5687,7 @@
       if (!wall || !wall.cabinets[index]) return;
       const cabinet = normalizeCabinet(wall.cabinets[index]);
       state.selectedIndex = index;
+      setCurrentLayer(cabinet.type);
       el.editName.value = cabinet.name;
       el.editWidth.value = String(cabinet.width);
       el.editType.value = cabinet.type;
@@ -4903,6 +5700,7 @@
       el.editModal.classList.add("open");
       const modalContent = el.editModal.querySelector(".modal-content");
       if (modalContent) modalContent.scrollTop = 0;
+      kitchenMobileController?.onCabinetEditorOpen("basic");
       render2D();
     }
 
@@ -5036,7 +5834,11 @@
       const wall = activeWall();
       const index = state.selectedIndex;
       if (!wall || index === null) return;
-      wall.cabinets.splice(index, 1);
+      const cabinet = wall.cabinets[index];
+      if (!window.confirm(`確定刪除「${cabinet?.name || "此櫃體"}」？`)) return;
+      commitKitchenMutation(`刪除${cabinet?.name || "櫃體"}`, () => {
+        wall.cabinets.splice(index, 1);
+      });
       closeModal();
       renderAll();
     }
@@ -5076,9 +5878,11 @@
         const box = name === "floor"
           ? floorCabinetBox(cabinet, index, wall, rect)
           : cabinetBox(cabinet, index, wall, rect);
-        const hitPadding = cabinet.purpose === "filler"
-          ? Math.max(0, (22 - box.width) / 2)
-          : 0;
+        const mobilePadding = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 760 ? 9 : 0;
+        const hitPadding = Math.max(
+          mobilePadding,
+          cabinet.purpose === "filler" ? Math.max(0, (22 - box.width) / 2) : 0
+        );
         if (
           point.x >= box.x - hitPadding
           && point.x <= box.x + box.width + hitPadding
@@ -5097,10 +5901,24 @@
       return candidates.length ? candidates[0].index : null;
     }
 
-    function openCabinetFromCanvas(canvas, name, event) {
+    function handlePointerDown(event, canvas, name) {
       if (drag.moved) return;
+      const point = canvasPoint(event, canvas, state.zoom[name]);
+      const dimensionTarget = getDimensionHitTarget(point.x, point.y, { name, scale: state.zoom[name].scale });
+      if (dimensionTarget.hit) {
+        openDimensionEditor(dimensionTarget, { x: event.clientX, y: event.clientY });
+        return;
+      }
       const index = cabinetIndexAtCanvasPoint(canvas, name, event);
+      if (state.assist.equalizeActive) {
+        if (index !== null) toggleEqualizeSelection(index);
+        return;
+      }
       if (index !== null) openEditModal(index);
+    }
+
+    function openCabinetFromCanvas(canvas, name, event) {
+      handlePointerDown(event, canvas, name);
     }
 
     function bindEvents() {
@@ -5138,15 +5956,82 @@
       });
 
       Object.entries(el.layerButtons).forEach(([name, button]) => {
-        button.addEventListener("click", () => {
-          state.currentLayer = name;
-          el.layerButtons.lower.classList.toggle("active", name === "lower");
-          el.layerButtons.upper.classList.toggle("active", name === "upper");
-        });
+        button.addEventListener("click", () => setCurrentLayer(name));
+      });
+      Object.entries(el.layerContextButtons).forEach(([name, button]) => {
+        button.addEventListener("click", () => setCurrentLayer(name));
       });
 
       document.getElementById("addCabinetBtn").addEventListener("click", addCabinet);
       document.getElementById("autoLayoutBtn").addEventListener("click", autoGenerateKitchen);
+      document.getElementById("aiAssistBtn").addEventListener("click", () => openAiAssistPanel(state.currentLayer));
+      document.getElementById("equalizeBtn").addEventListener("click", startEqualizeMode);
+      document.getElementById("closeAiAssistBtn").addEventListener("click", closeAiAssistPanel);
+      document.getElementById("closeEqualizeBtn").addEventListener("click", closeEqualizePanel);
+      document.getElementById("cancelEqualizeBtn").addEventListener("click", closeEqualizePanel);
+      el.equalizeTargetCount.addEventListener("input", updateEqualizePanel);
+      el.equalizeStyleRule.addEventListener("change", updateEqualizePanel);
+      el.applyEqualizeBtn.addEventListener("click", applyEqualize);
+      el.aiAssistLayer.addEventListener("change", () => {
+        setCurrentLayer(el.aiAssistLayer.value, { syncAssist: false });
+        renderAiAssistResults();
+      });
+      el.aiAssistResults.addEventListener("click", (event) => {
+        const button = event.target.closest("button[data-assist-action]");
+        if (!button) return;
+        const action = button.dataset.assistAction;
+        applyRecommendation(button.dataset.spaceId, button.dataset.recommendationId, {
+          layer: el.aiAssistLayer.value,
+          fillRemaining: action === "fill",
+          forceFiller: action === "filler"
+        });
+      });
+      el.undoKitchenBtn.addEventListener("click", undoKitchenAction);
+      el.redoKitchenBtn.addEventListener("click", redoKitchenAction);
+      document.getElementById("cancelDimensionEditBtn").addEventListener("click", closeDimensionEditor);
+      document.getElementById("applyDimensionEditBtn").addEventListener("click", submitDimensionEdit);
+      el.dimensionValueInput.addEventListener("input", () => el.dimensionError.classList.remove("visible"));
+      el.dimensionValueInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          submitDimensionEdit();
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDimensionEditor();
+        }
+      });
+      document.getElementById("closeGapActionBtn").addEventListener("click", closeGapActionPanel);
+      document.getElementById("gapAiAssistBtn").addEventListener("click", () => {
+        const target = activeGapTarget;
+        if (!target) return;
+        const space = gapSpaceForTarget(target);
+        closeGapActionPanel();
+        openAiAssistPanel(target.layer, space?.id || null);
+      });
+      document.getElementById("gapToFillerBtn").addEventListener("click", () => {
+        const target = activeGapTarget;
+        if (!target) return;
+        const space = gapSpaceForTarget(target);
+        if (space) applyRecommendation(space.id, "", { layer: target.layer, forceFiller: true, fillRemaining: true });
+        closeGapActionPanel();
+      });
+      document.getElementById("gapAdjustNeighborBtn").addEventListener("click", adjustGapNeighbor);
+      document.getElementById("gapEditWallBtn").addEventListener("click", () => {
+        const target = activeGapTarget;
+        const wall = activeWall();
+        if (!target || !wall) return;
+        closeGapActionPanel();
+        openDimensionEditor({
+          type: "wall-width",
+          targetId: wall.id,
+          wallId: wall.id,
+          dimensionValue: wall.width,
+          editable: true,
+          label: "牆面總寬",
+          unit: "mm"
+        });
+      });
       document.getElementById("addWallBtn").addEventListener("click", addWall);
       el.alignWallLeftBtn.addEventListener("click", () => setWallAlignment("left"));
       el.alignWallRightBtn.addEventListener("click", () => setWallAlignment("right"));
@@ -5217,7 +6102,25 @@
       });
 
       document.addEventListener("keydown", (event) => {
+        const editableTarget = event.target instanceof HTMLInputElement
+          || event.target instanceof HTMLTextAreaElement
+          || event.target instanceof HTMLSelectElement;
+        if (!editableTarget && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+          event.preventDefault();
+          if (event.shiftKey) redoKitchenAction();
+          else undoKitchenAction();
+          return;
+        }
+        if (!editableTarget && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+          event.preventDefault();
+          redoKitchenAction();
+          return;
+        }
         if (event.key === "Escape") {
+          if (state.assist.equalizeActive) closeEqualizePanel();
+          if (el.aiAssistPanel.classList.contains("open")) closeAiAssistPanel();
+          if (el.dimensionEditor.classList.contains("open")) closeDimensionEditor();
+          if (el.gapActionPanel.classList.contains("open")) closeGapActionPanel();
           if (el.tutorialModal.classList.contains("open")) closeTutorial();
           if (el.editModal.classList.contains("open")) closeModal();
           if (el.installModal.classList.contains("open")) closeInstallModal();
@@ -5232,9 +6135,17 @@
 
       el.floorCanvas.addEventListener("click", (event) => openCabinetFromCanvas(el.floorCanvas, "floor", event));
       el.elevationCanvas.addEventListener("click", (event) => openCabinetFromCanvas(el.elevationCanvas, "elevation", event));
+      el.floorCanvas.addEventListener("pointermove", (event) => handleDimensionHover(el.floorCanvas, "floor", event));
+      el.elevationCanvas.addEventListener("pointermove", (event) => handleDimensionHover(el.elevationCanvas, "elevation", event));
+      el.floorCanvas.addEventListener("pointerleave", () => clearDimensionHover(el.floorCanvas));
+      el.elevationCanvas.addEventListener("pointerleave", () => clearDimensionHover(el.elevationCanvas));
 
       window.addEventListener("resize", () => {
         renderAll();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) pause3DRenderWhenHidden();
+        else if (state.view.three && three.renderer && !three.animationId) animate3D();
       });
 
       if (document.fonts) {
@@ -5253,6 +6164,8 @@
       window.addEventListener("appinstalled", () => {
         deferredInstallPrompt = null;
       });
+      updateHistoryButtons();
+      setCurrentLayer(state.currentLayer, { syncAssist: false });
     }
 
     let kitchenProductProject = null;
@@ -5358,9 +6271,312 @@
       el.wallVisibilityToggle.checked = state.showWalls;
       el.topFillerVisibilityToggle.checked = state.showTopFiller;
       el.globalHandleStyle.value = state.globalHandleStyle;
+      setCurrentLayer(state.currentLayer, { syncAssist: false });
       rebuildWallSelect();
       resetViews();
       renderAll();
+    }
+
+    function addCabinetFromValues(values = {}) {
+      const wall = activeWall();
+      if (!wall) return false;
+      const layer = values.layer === "upper" ? "upper" : "lower";
+      const purpose = ["general", "drawer", "sink", "stove", "appliance", "open", "filler"].includes(values.purpose)
+        ? values.purpose
+        : "general";
+      const requestedWidth = Math.round(Number(values.width));
+      if (!Number.isFinite(requestedWidth) || requestedWidth <= 0) {
+        showKitchenToast("請輸入有效尺寸", "error");
+        return false;
+      }
+      const remaining = wall.width - layerTotal(wall, layer);
+      const minimum = purpose === "filler" ? 10 : 50;
+      if (remaining < minimum) {
+        showKitchenToast("目前牆面已沒有足夠空間新增櫃體。", "warning");
+        return false;
+      }
+      const width = Math.min(requestedWidth, remaining);
+      if (width < minimum) {
+        showKitchenToast(purpose === "filler" ? "補板寬度至少需要 10 mm。" : "櫃體寬度至少需要 50 mm。", "warning");
+        return false;
+      }
+      const name = String(values.name || "").trim() || (layer === "upper" ? "新增吊櫃" : "新增下櫃");
+      commitKitchenMutation(`新增${name}`, () => {
+        wall.cabinets.push(makeCabinet(name, width, layer, purpose));
+      });
+      setCurrentLayer(layer, { syncAssist: false });
+      renderAll();
+      showKitchenToast(`已新增${name} ${formatNumber(width)} mm`);
+      return true;
+    }
+
+    function distanceToSegment(pointX, pointY, x1, y1, x2, y2) {
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      if (dx === 0 && dy === 0) return Math.hypot(pointX - x1, pointY - y1);
+      const progress = Math.max(0, Math.min(1, ((pointX - x1) * dx + (pointY - y1) * dy) / (dx * dx + dy * dy)));
+      return Math.hypot(pointX - (x1 + progress * dx), pointY - (y1 + progress * dy));
+    }
+
+    function getDimensionHitTarget(pointerX, pointerY, viewState) {
+      const name = typeof viewState === "string" ? viewState : viewState?.name;
+      const zoomScale = Math.max(0.2, Number(typeof viewState === "object" ? viewState.scale : state.zoom[name]?.scale) || 1);
+      const regions = dimensionHitRegions[name] || [];
+      const touchLike = window.matchMedia("(pointer: coarse)").matches || window.innerWidth <= 760;
+      const textPadding = (touchLike ? 14 : 8) / zoomScale;
+      const lineTolerance = (touchLike ? 10 : 6) / zoomScale;
+      const endpointTolerance = (touchLike ? 14 : 8) / zoomScale;
+      const candidates = [];
+
+      regions.forEach((region) => {
+        const bounds = region.textBounds;
+        const insideText = bounds
+          && pointerX >= bounds.left - textPadding
+          && pointerX <= bounds.right + textPadding
+          && pointerY >= bounds.top - textPadding
+          && pointerY <= bounds.bottom + textPadding;
+        const lineDistance = distanceToSegment(pointerX, pointerY, region.x1, region.y1, region.x2, region.y2);
+        const endpointDistance = Math.min(
+          Math.hypot(pointerX - region.x1, pointerY - region.y1),
+          Math.hypot(pointerX - region.x2, pointerY - region.y2)
+        );
+        if (!insideText && lineDistance > lineTolerance && endpointDistance > endpointTolerance) return;
+        const textCenterX = bounds ? (bounds.left + bounds.right) / 2 : (region.x1 + region.x2) / 2;
+        const textCenterY = bounds ? (bounds.top + bounds.bottom) / 2 : (region.y1 + region.y2) / 2;
+        candidates.push({
+          region,
+          hitRank: insideText ? 0 : (endpointDistance <= endpointTolerance ? 1 : 2),
+          distance: insideText ? Math.hypot(pointerX - textCenterX, pointerY - textCenterY) : Math.min(lineDistance, endpointDistance),
+          scopePriority: Number(region.target.scopePriority) || 0
+        });
+      });
+
+      candidates.sort((a, b) => a.hitRank - b.hitRank || a.distance - b.distance || a.scopePriority - b.scopePriority);
+      if (!candidates.length) return { hit: false };
+      const winner = candidates[0];
+      return {
+        hit: true,
+        ...winner.region.target,
+        key: winner.region.key,
+        region: winner.region
+      };
+    }
+
+    function positionFloatingPanel(panel, clientX, clientY) {
+      if (window.innerWidth <= 760) {
+        panel.style.left = "";
+        panel.style.top = "";
+        return;
+      }
+      const panelWidth = panel.offsetWidth || 320;
+      const panelHeight = panel.offsetHeight || 260;
+      panel.style.left = `${Math.max(12, Math.min(window.innerWidth - panelWidth - 12, clientX + 12))}px`;
+      panel.style.top = `${Math.max(12, Math.min(window.innerHeight - panelHeight - 12, clientY + 12))}px`;
+    }
+
+    function dimensionNoteForTarget(target) {
+      if (target.type === "cabinet-width") return "修改後，右側櫃體會自動順延。";
+      if (target.type === "wall-width") return "修改牆寬不會自動改變櫃體，系統會重新計算剩餘空間。";
+      if (target.type === "wall-height") return "天花高度為共用尺寸，會同步套用到所有牆面。";
+      if (target.type === "group-width") return "此為多個櫃體的總寬，修改後可選擇平均分配或等比例分配。";
+      return "輸入新的正數尺寸後按 Enter 套用。";
+    }
+
+    function openDimensionEditor(target, anchor = { x: window.innerWidth / 2, y: window.innerHeight / 2 }) {
+      if (!target?.editable) return;
+      if (target.type === "gap-width") {
+        openGapActionPanel(target, anchor);
+        return;
+      }
+      closeGapActionPanel();
+      dimensionEditorTarget = { ...target };
+      el.dimensionTargetLabel.textContent = `${target.label || "尺寸"} · 目前 ${formatNumber(target.dimensionValue)} mm`;
+      el.dimensionValueInput.value = String(Math.round(Number(target.dimensionValue) || 0));
+      el.dimensionNote.textContent = dimensionNoteForTarget(target);
+      el.dimensionError.textContent = "請輸入有效尺寸";
+      el.dimensionError.classList.remove("visible");
+      el.dimensionDistributionField.classList.toggle("hidden", target.type !== "group-width");
+      el.dimensionEditor.classList.add("open");
+      kitchenMobileController?.showModeNotice(`正在修改：${target.label || "尺寸"}`, 0);
+      positionFloatingPanel(el.dimensionEditor, anchor.x, anchor.y);
+      window.setTimeout(() => {
+        el.dimensionValueInput.focus();
+        el.dimensionValueInput.select();
+      }, 30);
+    }
+
+    function closeDimensionEditor() {
+      dimensionEditorTarget = null;
+      el.dimensionEditor.classList.remove("open");
+      el.dimensionError.classList.remove("visible");
+      kitchenMobileController?.closeModeNotice();
+    }
+
+    function dimensionInputValue() {
+      const raw = el.dimensionValueInput.value.trim();
+      if (!/^\d+(?:\.\d+)?$/.test(raw)) return null;
+      const numeric = Math.round(Number(raw));
+      return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
+    }
+
+    function applyDimensionEdit(target, newValue) {
+      const value = Math.round(Number(newValue));
+      if (!target || !Number.isFinite(value) || value <= 0) return { ok: false, message: "請輸入有效尺寸" };
+      const wall = state.walls.find((item) => String(item.id) === String(target.wallId)) || activeWall();
+      if (!wall) return { ok: false, message: "找不到對應牆面" };
+
+      if (target.type === "cabinet-width") {
+        const cabinet = wall.cabinets.find((item) => item.id === target.cabinetId || item.id === target.targetId);
+        if (!cabinet) return { ok: false, message: "找不到對應櫃體" };
+        commitKitchenMutation(`修改${cabinet.name}寬度`, () => {
+          cabinet.width = value;
+        });
+        renderAll();
+        const warnings = [];
+        if (value < 50) warnings.push("尺寸過小，建議使用補板。");
+        if (cabinet.type === "lower" && value > 1200) warnings.push("單櫃寬度過大，建議拆分為多個櫃體。");
+        if (cabinet.type === "upper" && value > 900) warnings.push("吊櫃寬度過大，建議拆分。");
+        if (layerTotal(wall, cabinet.type) > wall.width) warnings.push("櫃體總寬已超出牆面寬度");
+        return { ok: true, warning: warnings.join(" ") };
+      }
+
+      if (target.type === "wall-width") {
+        if (value < 300 || value > 12000) return { ok: false, message: "牆寬需介於 300 至 12,000 mm" };
+        commitKitchenMutation("修改牆面總寬", () => {
+          wall.width = value;
+        });
+        rebuildWallSelect();
+        renderAll();
+        const overflow = Math.max(layerTotal(wall, "lower"), layerTotal(wall, "upper")) > wall.width;
+        return { ok: true, warning: overflow ? "目前櫃體總寬已超出牆面寬度，請調整櫃體尺寸或刪除部分櫃體。" : "" };
+      }
+
+      if (target.type === "wall-height") {
+        if (value < 1600 || value > 4200) return { ok: false, message: "天花高度需介於 1,600 至 4,200 mm" };
+        commitKitchenMutation("修改天花高度", () => {
+          state.walls.forEach((item) => { item.height = value; });
+        });
+        renderAll();
+        return { ok: true };
+      }
+
+      if (target.type === "group-width" && Array.isArray(target.targetIds) && target.targetIds.length) {
+        const cabinets = target.targetIds.map((id) => wall.cabinets.find((cabinet) => cabinet.id === id)).filter(Boolean);
+        if (!cabinets.length) return { ok: false, message: "找不到對應櫃體群組" };
+        let widths;
+        if (el.dimensionDistribution.value === "proportional") {
+          const originalTotal = cabinets.reduce((sum, cabinet) => sum + cabinet.width, 0);
+          if (originalTotal <= 0) return { ok: false, message: "群組原始尺寸無效" };
+          const raw = cabinets.map((cabinet) => value * cabinet.width / originalTotal);
+          widths = raw.map((item) => Math.floor(item));
+          let remainder = value - widths.reduce((sum, item) => sum + item, 0);
+          raw.map((item, index) => ({ index, fraction: item - Math.floor(item) }))
+            .sort((a, b) => b.fraction - a.fraction)
+            .forEach((item) => {
+              if (remainder > 0) {
+                widths[item.index] += 1;
+                remainder -= 1;
+              }
+            });
+        } else {
+          widths = window.MODUDRAFTKitchenAssist.divideWidths(value, cabinets.length);
+        }
+        if (widths.some((width) => width <= 0)) return { ok: false, message: "分配後尺寸無效" };
+        commitKitchenMutation("修改櫃體群組總寬", () => {
+          cabinets.forEach((cabinet, index) => { cabinet.width = widths[index]; });
+        });
+        renderAll();
+        return { ok: true };
+      }
+
+      return { ok: false, message: "此尺寸目前不可直接修改" };
+    }
+
+    function submitDimensionEdit() {
+      const value = dimensionInputValue();
+      if (value === null) {
+        el.dimensionError.textContent = "請輸入有效尺寸";
+        el.dimensionError.classList.add("visible");
+        return;
+      }
+      const result = applyDimensionEdit(dimensionEditorTarget, value);
+      if (!result.ok) {
+        el.dimensionError.textContent = result.message || "請輸入有效尺寸";
+        el.dimensionError.classList.add("visible");
+        return;
+      }
+      closeDimensionEditor();
+      showKitchenToast(result.warning || "尺寸已更新", result.warning ? "warning" : "info");
+    }
+
+    function gapSpaceForTarget(target) {
+      return assistSpaces(target.layer).find((space) => (
+        space.position === target.position
+        && Math.abs(space.width - target.dimensionValue) <= 1
+      )) || assistSpaces(target.layer)[0] || null;
+    }
+
+    function openGapActionPanel(target, anchor = { x: window.innerWidth / 2, y: window.innerHeight / 2 }) {
+      closeDimensionEditor();
+      const space = gapSpaceForTarget(target);
+      activeGapTarget = { ...target, spaceId: space?.id || null };
+      el.gapActionTitle.textContent = `剩餘空間 ${formatNumber(target.dimensionValue)} mm`;
+      el.gapActionPanel.classList.add("open");
+      kitchenMobileController?.showModeNotice(`正在處理：剩餘空間 ${formatNumber(target.dimensionValue)} mm`, 0);
+      positionFloatingPanel(el.gapActionPanel, anchor.x, anchor.y);
+    }
+
+    function closeGapActionPanel() {
+      activeGapTarget = null;
+      el.gapActionPanel.classList.remove("open");
+      kitchenMobileController?.closeModeNotice();
+    }
+
+    function adjustGapNeighbor() {
+      const wall = activeWall();
+      const target = activeGapTarget;
+      if (!wall || !target) return;
+      calculatePositions();
+      const cabinets = physicalLayerCabinets(wall, target.layer);
+      const cabinet = target.position === "left" ? cabinets[0] : cabinets[cabinets.length - 1];
+      if (!cabinet) {
+        showKitchenToast("此區域沒有可調整的鄰近櫃體。", "warning");
+        return;
+      }
+      closeGapActionPanel();
+      openDimensionEditor({
+        type: "cabinet-width",
+        targetId: cabinet.id,
+        cabinetId: cabinet.id,
+        wallId: wall.id,
+        dimensionValue: cabinet.width,
+        editable: true,
+        label: `${cabinet.name}寬度`,
+        unit: "mm",
+        layer: cabinet.type
+      });
+    }
+
+    function handleDimensionHover(canvas, name, event) {
+      if (drag.active) return;
+      const point = canvasPoint(event, canvas, state.zoom[name]);
+      const target = getDimensionHitTarget(point.x, point.y, { name, scale: state.zoom[name].scale });
+      const nextKey = target.hit ? target.key : null;
+      if (state.assist.hoverDimensionKey !== nextKey) {
+        state.assist.hoverDimensionKey = nextKey;
+        render2D();
+      }
+      canvas.style.cursor = target.hit ? "pointer" : (state.assist.equalizeActive ? "crosshair" : "");
+      canvas.title = target.hit ? "點擊修改尺寸" : "";
+    }
+
+    function clearDimensionHover(canvas) {
+      if (state.assist.hoverDimensionKey) {
+        state.assist.hoverDimensionKey = null;
+        render2D();
+      }
+      canvas.style.cursor = state.assist.equalizeActive ? "crosshair" : "";
+      canvas.title = "";
     }
 
     function applyKitchenStyle(preset, assignments) {
@@ -5405,11 +6621,13 @@
     function scheduleKitchenAutosave() {
       if (!window.MODUDRAFTCore || !state.walls.length || el.startOverlay.style.display !== "none") return;
       clearTimeout(kitchenAutosaveTimer);
+      kitchenMobileController?.setSaveState("儲存中");
       kitchenAutosaveTimer = window.setTimeout(() => {
         const snapshot = kitchenProjectSnapshot();
         if (!snapshot) return;
         kitchenProductProject = window.MODUDRAFTCore.saveProject(snapshot) || snapshot;
         window.MODUDRAFTCore.storageSet("modudraft:kitchen:active-project", snapshot.id);
+        kitchenMobileController?.setSaveState("已儲存");
       }, 900);
     }
 
@@ -5470,7 +6688,90 @@
     bindEvents();
     initializeKitchenProductSuite();
     initializeKitchenRenderWorkflow();
-    window.MODUDRAFTHelp?.mount({ mode: "kitchen", assetBase: "./", buttonTarget: ".toolbar .actions" });
+    kitchenHelpController = window.MODUDRAFTHelp?.mount({
+      mode: "kitchen",
+      assetBase: "./",
+      buttonTarget: ".toolbar .actions",
+      autoOpen: false,
+      resolveHelpId: (event, control) => {
+        if (control === el.floorCanvas || control === el.elevationCanvas) {
+          const name = control === el.floorCanvas ? "floor" : "elevation";
+          const point = canvasPoint(event, control, state.zoom[name]);
+          const dimension = getDimensionHitTarget(point.x, point.y, { name, scale: state.zoom[name].scale });
+          if (dimension.hit) return "dimension-edit";
+          if (cabinetIndexAtCanvasPoint(control, name, event) !== null) return "cabinet-editor";
+          return name === "floor" ? "view-floor" : "view-elevation";
+        }
+        if (control.closest?.("#threeView")) return "view-3d";
+        return "";
+      }
+    }) || null;
+    let mobileCanvasLayoutFrame = 0;
+    kitchenMobileController = window.MODUDRAFTKitchenMobile?.mount({
+      help: kitchenHelpController,
+      getContext: () => {
+        const wall = activeWall();
+        return {
+          walls: state.walls,
+          activeWallIndex: state.activeWallIndex,
+          wallName: wall ? `牆 ${state.activeWallIndex + 1}` : "尚未建立牆面",
+          wallWidth: wall?.width || 2300,
+          wallHeight: sharedWallHeight(),
+          layer: state.currentLayer,
+          selectedIndex: state.selectedIndex,
+          showWalls: state.showWalls,
+          showTopFiller: state.showTopFiller
+        };
+      },
+      setView: (viewName) => {
+        applyViewState({
+          floor: viewName === "floor",
+          elevation: viewName === "elevation",
+          three: viewName === "three"
+        });
+        window.setTimeout(renderAll, 30);
+      },
+      setLayer: (layer) => setCurrentLayer(layer),
+      selectWall: (index) => {
+        state.activeWallIndex = Math.max(0, Math.min(state.walls.length - 1, Number(index) || 0));
+        state.selectedIndex = null;
+        el.wallSelect.value = String(state.activeWallIndex);
+        syncWallInputs();
+        resetViews();
+      },
+      applyWallSize: (width, height) => {
+        el.wallWidthInput.value = String(width);
+        el.wallHeightInput.value = String(height);
+        applyWallSize();
+      },
+      setAlignment: setWallAlignment,
+      addWall,
+      deleteWall: deleteActiveWall,
+      addCabinet: addCabinetFromValues,
+      startEqualize: startEqualizeMode,
+      openSelectedCabinet: (tabName) => {
+        if (state.selectedIndex !== null) {
+          openEditModal(state.selectedIndex);
+          kitchenMobileController?.setEditorTab(tabName || "basic");
+        }
+      },
+      toggleWalls: () => el.wallVisibilityToggle.click(),
+      toggleTopFiller: () => el.topFillerVisibilityToggle.click(),
+      setLowPowerMode: (enabled) => {
+        const next = Boolean(enabled);
+        if (lowPowerMobileMode === next) return;
+        lowPowerMobileMode = next;
+        if (state.view.three) void render3D();
+      },
+      onLayout: () => {
+        cancelAnimationFrame(mobileCanvasLayoutFrame);
+        mobileCanvasLayoutFrame = requestAnimationFrame(() => {
+          resizeCanvases();
+          render2D();
+          if (state.view.three && three.renderer) resize3DRenderer();
+        });
+      }
+    }) || null;
   </script>
 </body>
 </html>
