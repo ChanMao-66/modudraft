@@ -2,7 +2,7 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>MODUDRAFT 廚具系統櫃設計工作台</title>
   <meta name="theme-color" content="#151a22">
   <meta name="mobile-web-app-capable" content="yes">
@@ -13,10 +13,10 @@
   <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
   <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
   <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
-  <link rel="stylesheet" href="./shared/help-system.css?v=20260704-mobilehelp-v2">
+  <link rel="stylesheet" href="./shared/help-system.css?v=20260705-mobile-foundation-v2">
   <link rel="stylesheet" href="./shared/render-workflow.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
-  <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260704-v3">
+  <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-mobile-foundation-v2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1926,10 +1926,11 @@
 
   <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
-  <script src="./shared/help-system.js?v=20260704-mobilehelp-v1"></script>
+  <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
+  <script src="./shared/help-system.js?v=20260705-mobile-foundation-v2"></script>
   <script src="./shared/render-workflow.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
-  <script src="./shared/kitchen-mobile.js?v=20260704-v2"></script>
+  <script src="./shared/kitchen-mobile.js?v=20260705-mobile-foundation-v2"></script>
   <script>
     const state = {
       walls: [],
@@ -3554,7 +3555,9 @@
 
     function fitCanvas(canvas, context) {
       const rect = canvas.getBoundingClientRect();
-      const dpr = window.devicePixelRatio || 1;
+      const dpr = kitchenMobileController?.isPhoneMode?.()
+        ? kitchenMobileController.getRenderDpr()
+        : Math.min(2, window.devicePixelRatio || 1);
       const width = Math.max(1, Math.floor(rect.width * dpr));
       const height = Math.max(1, Math.floor(rect.height * dpr));
 
@@ -5309,6 +5312,7 @@
     function bind3DControls(canvas) {
       canvas.addEventListener("pointerdown", (event) => {
         event.preventDefault();
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerDown(event);
         three.isDragging = true;
         if (event.pointerType === "touch") {
           three.pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
@@ -5331,6 +5335,7 @@
 
       canvas.addEventListener("pointermove", (event) => {
         if (!three.isDragging || !three.group || !three.camera) return;
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerMove(event);
 
         if (event.pointerType === "touch") {
           if (!three.pointers.has(event.pointerId)) return;
@@ -5372,6 +5377,7 @@
       });
 
       canvas.addEventListener("pointerup", (event) => {
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerUp(event);
         three.pointers.delete(event.pointerId);
         three.isDragging = three.pointers.size > 0;
         three.dragMode = three.pointers.size === 1 ? "orbit" : null;
@@ -5387,6 +5393,7 @@
       });
 
       canvas.addEventListener("pointercancel", (event) => {
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerCancel(event);
         three.pointers.delete(event.pointerId);
         three.isDragging = false;
         three.dragMode = null;
@@ -5460,10 +5467,13 @@
       return shouldPause;
     }
 
-    function animate3D() {
+    let lastMobile3DFrame = 0;
+    function animate3D(timestamp = 0) {
       if (!three.renderer || !three.scene || !three.camera) return;
       if (pause3DRenderWhenHidden()) return;
       three.animationId = requestAnimationFrame(animate3D);
+      if (lowPowerMobileMode && timestamp - lastMobile3DFrame < 32) return;
+      lastMobile3DFrame = timestamp;
       three.renderer.render(three.scene, three.camera);
     }
 
@@ -5539,6 +5549,7 @@
 
       canvas.addEventListener("pointerdown", (event) => {
         if (kitchenMobileController?.isMobile() && document.body.classList.contains("mobile-keyboard-open")) return;
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerDown(event);
         const z = state.zoom[name];
         if (event.pointerType === "touch") {
           if (event.isPrimary && !pointers.has(event.pointerId)) {
@@ -5566,6 +5577,7 @@
 
       canvas.addEventListener("pointermove", (event) => {
         if (!drag.active || drag.target !== name) return;
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerMove(event);
         const z = state.zoom[name];
 
         if (event.pointerType === "touch" && pointers.has(event.pointerId)) {
@@ -5599,6 +5611,7 @@
       });
 
       canvas.addEventListener("pointerup", (event) => {
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerUp(event);
         pointers.delete(event.pointerId);
         if (canvas.hasPointerCapture(event.pointerId)) {
           canvas.releasePointerCapture(event.pointerId);
@@ -5626,6 +5639,7 @@
       });
 
       canvas.addEventListener("pointercancel", (event) => {
+        if (event.pointerType === "touch") kitchenMobileController?.gestureManager?.pointerCancel(event);
         pointers.clear();
         pinchStart = null;
         drag.active = false;
@@ -5717,7 +5731,7 @@
 
     function closeModal() {
       el.editModal.classList.remove("open");
-      state.selectedIndex = null;
+      if (!kitchenMobileController?.isPhoneMode?.()) state.selectedIndex = null;
       render2D();
     }
 
@@ -5902,7 +5916,7 @@
     }
 
     function handlePointerDown(event, canvas, name) {
-      if (drag.moved) return;
+      if (drag.moved || kitchenMobileController?.gestureManager?.shouldSuppressTap()) return;
       const point = canvasPoint(event, canvas, state.zoom[name]);
       const dimensionTarget = getDimensionHitTarget(point.x, point.y, { name, scale: state.zoom[name].scale });
       if (dimensionTarget.hit) {
@@ -6693,6 +6707,10 @@
       assetBase: "./",
       buttonTarget: ".toolbar .actions",
       autoOpen: false,
+      onTeachingModeChange: (enabled) => {
+        kitchenMobileController?.gestureManager?.setTeachingMode(enabled);
+        kitchenMobileController?.updateViewportAndCanvasLayout?.("teaching-mode");
+      },
       resolveHelpId: (event, control) => {
         if (control === el.floorCanvas || control === el.elevationCanvas) {
           const name = control === el.floorCanvas ? "floor" : "elevation";
@@ -6770,6 +6788,10 @@
           render2D();
           if (state.view.three && three.renderer) resize3DRenderer();
         });
+      },
+      ensureSelectionVisible: () => {
+        if (state.selectedIndex === null) return;
+        render2D();
       }
     }) || null;
   </script>

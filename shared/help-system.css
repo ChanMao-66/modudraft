@@ -158,3 +158,114 @@ body.md-teaching-mode [data-help-id]:not([data-help-ui='true']) { cursor: help !
   .md-context-actions { position: sticky; bottom: 0; z-index: 2; flex-wrap: wrap; margin: 18px -14px -14px; padding: 12px 14px calc(12px + env(safe-area-inset-bottom)); background: rgba(31,32,30,.96); }
   .md-context-actions button { flex: 1 1 120px; min-height: 46px; }
 }
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open {
+  align-items: flex-end;
+  padding: 0 8px calc(var(--mobile-bottom-bar-height, 70px) + env(safe-area-inset-bottom) + 8px);
+  background: rgba(12,13,12,.42);
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-dialog {
+  position: relative;
+  width: 100%;
+  max-height: min(60dvh, calc(var(--app-height, 100dvh) - 130px));
+  border-radius: 16px;
+  padding-bottom: 0;
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-dialog::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: var(--help-arrow-x, 50%);
+  width: 14px;
+  height: 14px;
+  border-top: 1px solid rgba(255,255,255,.15);
+  border-left: 1px solid rgba(255,255,255,.15);
+  background: #242522;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-nav {
+  display: none;
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-head {
+  min-height: 52px;
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-content {
+  padding: 13px;
+}
+
+body[data-device-mode="mobilePortrait"] .md-teaching-banner {
+  top: calc(var(--mobile-safe-top, 0px) + var(--mobile-top-bar-height, 52px) + var(--mobile-view-switcher-height, 44px) + 12px);
+  z-index: 1795;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 56px 8px 8px 0;
+  background: rgba(12,13,12,.34);
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-dialog {
+  position: relative;
+  grid-template-columns: 1fr;
+  width: clamp(300px, 38vw, 340px);
+  max-height: none;
+  border-radius: 16px;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-dialog::before {
+  content: "";
+  position: absolute;
+  top: var(--help-arrow-y, 50%);
+  left: -7px;
+  width: 14px;
+  height: 14px;
+  border-bottom: 1px solid rgba(255,255,255,.15);
+  border-left: 1px solid rgba(255,255,255,.15);
+  background: #242522;
+  transform: translateY(-50%) rotate(45deg);
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-nav {
+  display: none;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-head {
+  min-height: 54px;
+  padding: 8px 12px;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-content {
+  padding: 13px;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-context-grid {
+  grid-template-columns: 1fr;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-context-actions {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 10px 0 0;
+  background: #242522;
+}
+
+body[data-device-mode="mobileLandscape"] .md-teaching-banner {
+  top: 7px;
+  left: 72px;
+  z-index: 1795;
+  transform: none;
+}
+
+body[data-device-mode="mobilePortrait"] .md-context-actions button,
+body[data-device-mode="mobileLandscape"] .md-context-actions button {
+  min-width: 0;
+  min-height: 44px;
+}

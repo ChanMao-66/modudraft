@@ -1,7 +1,7 @@
 (function kitchenMobileModule(global) {
   "use strict";
 
-  const MOBILE_QUERY = "(max-width: 760px)";
+  const core = global.MODUDRAFTMobileCore;
   const VIEW_LABELS = { floor: "平面圖", elevation: "立面圖", three: "3D" };
 
   function escapeHtml(value) {
@@ -11,6 +11,7 @@
   }
 
   function detectLowEndDevice() {
+    if (core?.detectLowEndMobile) return core.detectLowEndMobile();
     const cores = Number(navigator.hardwareConcurrency) || 4;
     const memory = Number(navigator.deviceMemory) || 4;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -19,7 +20,6 @@
 
   function mount(options) {
     const config = options || {};
-    const media = window.matchMedia(MOBILE_QUERY);
     let activeView = "floor";
     let activeSheet = null;
     let sheetSize = "half";
@@ -28,6 +28,10 @@
     let lastLayout = null;
     let lowPowerMobileMode = false;
     let editorEnhanced = false;
+    let deviceSnapshot = core?.getDeviceMode?.() || { mode: "tabletDesktop", width: innerWidth, height: innerHeight, dpr: devicePixelRatio || 1, isTouchDevice: false };
+    let resizeObserver = null;
+    let activationState = false;
+    const gestureManager = core?.createGestureManager?.() || null;
 
     const shell = document.createElement("div");
     shell.dataset.mobileUi = "true";
@@ -41,12 +45,19 @@
         <button id="mobileTeachingBtn" class="mobile-teaching-button" type="button" aria-label="開啟教學模式" data-help-ui="true">?</button>
       </header>
 
+      <nav class="mobile-view-switcher" aria-label="切換主要視圖" data-help-id="view-switch">
+        <button type="button" data-mobile-view="floor" data-help-id="view-plan">平面</button>
+        <button type="button" data-mobile-view="elevation" data-help-id="view-elevation">立面</button>
+        <button type="button" data-mobile-view="three" data-help-id="view-3d">3D</button>
+      </nav>
+
       <nav class="mobile-bottom-nav" aria-label="手機主要工具列">
         <button type="button" data-mobile-action="wall" data-help-id="wall-tools"><span class="mobile-nav-icon">▱</span><span class="mobile-nav-label">牆面</span></button>
         <button type="button" data-mobile-action="add" data-help-id="add-cabinet"><span class="mobile-nav-icon">＋</span><span class="mobile-nav-label">新增</span></button>
-        <button type="button" data-mobile-action="view" data-help-id="view-switch"><span class="mobile-nav-icon">◇</span><span class="mobile-nav-label">視圖</span></button>
         <button type="button" data-mobile-action="edit" data-help-id="cabinet-editor"><span class="mobile-nav-icon">⌑</span><span class="mobile-nav-label">編輯</span></button>
+        <button type="button" data-mobile-action="view" data-help-id="view-switch"><span class="mobile-nav-icon">◇</span><span class="mobile-nav-label">視圖</span></button>
         <button type="button" data-mobile-action="more" data-help-id="more-tools"><span class="mobile-nav-icon">•••</span><span class="mobile-nav-label">更多</span></button>
+        <button type="button" class="mobile-landscape-only" data-mobile-action="teach" data-help-ui="true"><span class="mobile-nav-icon">?</span><span class="mobile-nav-label">教學</span></button>
       </nav>
 
       <section id="mobileCommandSheet" class="mobile-command-sheet" data-sheet-size="half" aria-labelledby="mobileSheetTitle">
@@ -92,6 +103,7 @@
       saveState: shell.querySelector("#mobileSaveState"),
       layerChip: shell.querySelector("#mobileLayerChip"),
       teachingButton: shell.querySelector("#mobileTeachingBtn"),
+      viewSwitcher: shell.querySelector(".mobile-view-switcher"),
       bottomNav: shell.querySelector(".mobile-bottom-nav"),
       sheet: shell.querySelector("#mobileCommandSheet"),
       sheetGrab: shell.querySelector("#mobileSheetGrab"),
@@ -104,8 +116,17 @@
       firstGuide: shell.querySelector("#mobileFirstGuide")
     };
 
+    function getDeviceMode() {
+      deviceSnapshot = core?.getDeviceMode?.() || deviceSnapshot;
+      return deviceSnapshot;
+    }
+
     function isMobile() {
-      return media.matches;
+      return getDeviceMode().mode !== "tabletDesktop";
+    }
+
+    function isPhoneMode() {
+      return isMobile();
     }
 
     function externalSheetHeight() {
@@ -124,43 +145,93 @@
       return candidates.reduce((height, element) => Math.max(height, element.getBoundingClientRect().height || 0), 0);
     }
 
-    function updateMobileLayout() {
+    function updateViewportAndCanvasLayout(reason = "update") {
       cancelAnimationFrame(resizeFrame);
       resizeFrame = requestAnimationFrame(() => {
+        const previousMode = deviceSnapshot.mode;
+        deviceSnapshot = core?.getDeviceMode?.() || deviceSnapshot;
+        const phoneMode = deviceSnapshot.mode !== "tabletDesktop";
         const viewport = window.visualViewport;
         const viewportWidth = Math.max(1, viewport?.width || window.innerWidth);
         const viewportHeight = Math.max(1, viewport?.height || window.innerHeight);
         const keyboardHeight = Math.max(0, window.innerHeight - viewportHeight - (viewport?.offsetTop || 0));
-        const keyboardOpen = isMobile() && keyboardHeight > 120;
+        const keyboardOpen = phoneMode && keyboardHeight > 120;
+        document.body.dataset.deviceMode = deviceSnapshot.mode;
+        document.body.classList.toggle("mobile-workbench", phoneMode);
         document.body.classList.toggle("mobile-keyboard-open", keyboardOpen);
+        document.documentElement.style.setProperty("--app-height", `${Math.round(viewportHeight)}px`);
         document.documentElement.style.setProperty("--mobile-keyboard-height", `${Math.round(keyboardOpen ? keyboardHeight : 0)}px`);
 
         let activeSheetHeight = 0;
         if (nodes.sheet.classList.contains("open")) activeSheetHeight = nodes.sheet.getBoundingClientRect().height;
         activeSheetHeight = Math.max(activeSheetHeight, externalSheetHeight());
         const topRect = nodes.topBar.getBoundingClientRect();
+        const viewRect = nodes.viewSwitcher.getBoundingClientRect();
         const bottomRect = nodes.bottomNav.getBoundingClientRect();
-        const topBarHeight = isMobile() ? Math.max(56, topRect.bottom) : 0;
-        const bottomBarHeight = isMobile() ? Math.max(70, viewportHeight - bottomRect.top) : 0;
+        const portrait = deviceSnapshot.mode === "mobilePortrait";
+        const landscape = deviceSnapshot.mode === "mobileLandscape";
+        const topBarHeight = phoneMode ? Math.max(0, topRect.height) : 0;
+        const viewSwitcherHeight = phoneMode ? Math.max(0, viewRect.height) : 0;
+        const bottomBarHeight = portrait ? Math.max(70, viewportHeight - bottomRect.top) : 0;
+        const sideToolbarWidth = landscape ? Math.max(64, bottomRect.width) : 0;
         const maximumSheet = Math.max(0, viewportHeight - topBarHeight - bottomBarHeight - 104);
-        activeSheetHeight = Math.min(activeSheetHeight, maximumSheet);
+        activeSheetHeight = portrait ? Math.min(activeSheetHeight, maximumSheet) : 0;
+        const externalPanel = landscape ? document.querySelector("#editModal.open .modal-content, #aiAssistPanel.open, #equalizePanel.open, #dimensionEditor.open, #gapActionPanel.open, .mobile-command-sheet.open") : null;
+        const activePanelWidth = landscape && viewportWidth >= 740 && externalPanel ? Math.min(360, Math.max(300, externalPanel.getBoundingClientRect().width || 320)) : 0;
         document.documentElement.style.setProperty("--mobile-active-sheet-height", `${Math.round(activeSheetHeight)}px`);
+        document.documentElement.style.setProperty("--mobile-side-toolbar-width", `${Math.round(sideToolbarWidth)}px`);
+        document.documentElement.style.setProperty("--mobile-active-panel-width", `${Math.round(activePanelWidth)}px`);
+        document.documentElement.style.setProperty("--mobile-view-switcher-height", `${Math.round(viewSwitcherHeight)}px`);
 
         const workspace = document.getElementById("workspace");
         const canvasRect = workspace?.getBoundingClientRect() || { x: 0, y: 0, width: viewportWidth, height: viewportHeight };
+        const renderDpr = Math.min(lowPowerMobileMode ? 1.25 : 2, deviceSnapshot.dpr || 1);
         lastLayout = {
+          reason,
+          mode: deviceSnapshot.mode,
           viewportWidth,
           viewportHeight,
+          visualViewportWidth: viewportWidth,
+          visualViewportHeight: viewportHeight,
           canvasRect: { x: canvasRect.x, y: canvasRect.y, width: canvasRect.width, height: canvasRect.height },
-          safeArea: { top: topBarHeight, bottom: bottomBarHeight, left: 8, right: 8 },
+          canvasCssWidth: Math.max(1, canvasRect.width),
+          canvasCssHeight: Math.max(1, canvasRect.height),
+          canvasPixelWidth: Math.max(1, Math.round(canvasRect.width * renderDpr)),
+          canvasPixelHeight: Math.max(1, Math.round(canvasRect.height * renderDpr)),
+          dpr: renderDpr,
+          safeArea: { top: topBarHeight + viewSwitcherHeight + 8, bottom: bottomBarHeight + 8, left: sideToolbarWidth + 8, right: 8 },
           topBarHeight,
           bottomBarHeight,
+          viewSwitcherHeight,
+          sideToolbarWidth,
+          activePanelWidth,
           activeSheetHeight,
-          keyboardHeight: keyboardOpen ? keyboardHeight : 0
+          keyboardHeight: keyboardOpen ? keyboardHeight : 0,
+          avoidRects: [topRect, viewRect, bottomRect, externalPanel?.getBoundingClientRect?.()].filter(Boolean)
         };
-        if (isMobile()) config.onLayout?.(lastLayout);
+        if (phoneMode) config.onLayout?.(lastLayout);
+        if (previousMode !== deviceSnapshot.mode) {
+          if (phoneMode && !activationState) activateMobile(false);
+          else if (!phoneMode && activationState) deactivateMobile(false);
+          requestAnimationFrame(() => requestAnimationFrame(() => updateViewportAndCanvasLayout("mode-settled")));
+        }
       });
       return lastLayout;
+    }
+
+    function updateMobileLayout(reason = "legacy") {
+      return updateViewportAndCanvasLayout(reason);
+    }
+
+    function calculateCanvasSafeRect() {
+      return core?.calculateCanvasSafeRect?.(lastLayout || {}) || lastLayout?.canvasRect || null;
+    }
+
+    function ensureTargetVisible(targetBounds, viewName = activeView) {
+      if (!isMobile() || !targetBounds) return false;
+      const safeRect = calculateCanvasSafeRect();
+      config.ensureTargetVisible?.(targetBounds, viewName, safeRect);
+      return true;
     }
 
     function setSaveState(label) {
@@ -174,6 +245,10 @@
       nodes.topWall.textContent = context.wallName || "牆 1";
       nodes.layerChip.dataset.layer = layer;
       nodes.layerChip.textContent = layer === "upper" ? "吊櫃" : "下櫃";
+      nodes.viewSwitcher.querySelectorAll("[data-mobile-view]").forEach((button) => {
+        button.classList.toggle("active", button.dataset.mobileView === activeView);
+        button.setAttribute("aria-pressed", String(button.dataset.mobileView === activeView));
+      });
       nodes.bottomNav.querySelectorAll("button").forEach((button) => {
         button.classList.toggle("active", button.dataset.mobileAction === activeSheet);
       });
@@ -192,7 +267,8 @@
       updateContext();
       closeSheet();
       if (activeView === "three") showModeNotice("3D 模式：單指旋轉，雙指縮放與移動。", 4200);
-      updateMobileLayout();
+      requestAnimationFrame(() => config.ensureSelectionVisible?.(activeView, calculateCanvasSafeRect()));
+      updateViewportAndCanvasLayout("view-change");
     }
 
     function showModeNotice(message, duration = 0) {
@@ -462,21 +538,25 @@
       config.setLowPowerMode?.(lowPowerMobileMode);
     }
 
-    function activateMobile() {
+    function activateMobile(refreshLayout = true) {
+      activationState = true;
       document.body.classList.add("mobile-workbench");
       setLowPowerMode(detectLowEndDevice());
       setActiveView(activeView, { apply: true });
       enhanceCabinetEditor();
       updateContext();
-      updateMobileLayout();
+      if (refreshLayout) updateViewportAndCanvasLayout("activate");
       maybeShowFirstGuide();
     }
 
-    function deactivateMobile() {
+    function deactivateMobile(refreshLayout = true) {
+      activationState = false;
       closeSheet();
       document.body.classList.remove("mobile-workbench", "mobile-keyboard-open", "low-power-mobile");
+      delete document.body.dataset.deviceMode;
       document.documentElement.style.setProperty("--mobile-active-sheet-height", "0px");
       config.setLowPowerMode?.(false);
+      if (refreshLayout) config.onLayout?.(null);
     }
 
     function maybeShowFirstGuide() {
@@ -484,21 +564,54 @@
       const overlay = document.getElementById("startOverlay");
       if (overlay && getComputedStyle(overlay).display !== "none") return;
       let seen = false;
-      try { seen = localStorage.getItem("modudraft:kitchen:mobile-guide:v1") === "1"; } catch (_error) {}
+      try {
+        const legacySeen = localStorage.getItem("modudraft:kitchen:mobile-guide:v1") === "1";
+        seen = localStorage.getItem("modudraft.mobileIntro.dismissed") === "true" || legacySeen;
+        if (legacySeen) localStorage.setItem("modudraft.mobileIntro.dismissed", "true");
+      } catch (_error) {}
       if (!seen) nodes.firstGuide.classList.add("open");
     }
 
     function closeFirstGuide(persist = true) {
       nodes.firstGuide.classList.remove("open");
       if (persist) {
-        try { localStorage.setItem("modudraft:kitchen:mobile-guide:v1", "1"); } catch (_error) {}
+        try {
+          localStorage.setItem("modudraft:kitchen:mobile-guide:v1", "1");
+          localStorage.setItem("modudraft.mobileIntro.dismissed", "true");
+        } catch (_error) {}
       }
     }
+
+    nodes.viewSwitcher.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-mobile-view]");
+      if (!button) return;
+      setActiveView(button.dataset.mobileView);
+    });
+
+    let switchSwipeStart = null;
+    nodes.viewSwitcher.addEventListener("pointerdown", (event) => {
+      switchSwipeStart = { x: event.clientX, y: event.clientY, pointerId: event.pointerId };
+    });
+    nodes.viewSwitcher.addEventListener("pointerup", (event) => {
+      if (!switchSwipeStart || switchSwipeStart.pointerId !== event.pointerId) return;
+      const deltaX = event.clientX - switchSwipeStart.x;
+      const deltaY = event.clientY - switchSwipeStart.y;
+      switchSwipeStart = null;
+      if (Math.abs(deltaX) < 52 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+      const views = ["floor", "elevation", "three"];
+      const index = views.indexOf(activeView);
+      setActiveView(views[Math.max(0, Math.min(views.length - 1, index + (deltaX < 0 ? 1 : -1)))]);
+    });
+    nodes.viewSwitcher.addEventListener("pointercancel", () => { switchSwipeStart = null; });
 
     nodes.bottomNav.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-mobile-action]");
       if (!button) return;
       const action = button.dataset.mobileAction;
+      if (action === "teach") {
+        config.help?.toggleTeachingMode?.(true);
+        return;
+      }
       if (action === activeSheet && nodes.sheet.classList.contains("open")) closeSheet();
       else openSheet(action);
     });
@@ -537,6 +650,7 @@
 
     nodes.sheetGrab.addEventListener("pointerdown", (event) => {
       sheetDrag = { pointerId: event.pointerId, startY: event.clientY, startSize: sheetSize };
+      gestureManager?.setBottomSheetDragging(true);
       nodes.sheetGrab.setPointerCapture(event.pointerId);
     });
     nodes.sheetGrab.addEventListener("pointerup", (event) => {
@@ -550,8 +664,9 @@
       }
       if (nodes.sheetGrab.hasPointerCapture(event.pointerId)) nodes.sheetGrab.releasePointerCapture(event.pointerId);
       sheetDrag = null;
+      gestureManager?.setBottomSheetDragging(false);
     });
-    nodes.sheetGrab.addEventListener("pointercancel", () => { sheetDrag = null; });
+    nodes.sheetGrab.addEventListener("pointercancel", () => { sheetDrag = null; gestureManager?.setBottomSheetDragging(false); });
     nodes.sheetGrab.addEventListener("click", () => setSheetSize(sheetSize === "collapsed" ? "half" : (sheetSize === "half" ? "full" : "collapsed")));
 
     const panelObserver = new MutationObserver(() => {
@@ -565,19 +680,43 @@
     const startOverlay = document.getElementById("startOverlay");
     if (startOverlay) panelObserver.observe(startOverlay, { attributes: true, attributeFilter: ["style", "class"] });
 
-    const resizeHandler = () => updateMobileLayout();
+    const resizeHandler = () => updateViewportAndCanvasLayout("viewport");
     window.addEventListener("resize", resizeHandler, { passive: true });
-    window.addEventListener("orientationchange", resizeHandler, { passive: true });
+    window.addEventListener("orientationchange", () => {
+      updateViewportAndCanvasLayout("orientation");
+      window.setTimeout(() => updateViewportAndCanvasLayout("orientation-settled"), 180);
+    }, { passive: true });
     window.visualViewport?.addEventListener("resize", resizeHandler, { passive: true });
     window.visualViewport?.addEventListener("scroll", resizeHandler, { passive: true });
-    media.addEventListener?.("change", () => media.matches ? activateMobile() : deactivateMobile());
+    document.addEventListener("focusin", (event) => {
+      if (!event.target.matches("input,select,textarea,[contenteditable='true']")) return;
+      gestureManager?.setEditingInput(true);
+      updateViewportAndCanvasLayout("input-focus");
+      window.setTimeout(() => event.target.scrollIntoView?.({ block: "center", behavior: "smooth" }), 120);
+    });
+    document.addEventListener("focusout", () => {
+      gestureManager?.setEditingInput(false);
+      window.setTimeout(() => updateViewportAndCanvasLayout("input-blur"), 80);
+    });
 
-    if (media.matches) activateMobile();
+    const workspace = document.getElementById("workspace");
+    if (workspace && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(() => updateViewportAndCanvasLayout("workspace-resize"));
+      resizeObserver.observe(workspace);
+    }
+
+    if (isMobile()) activateMobile();
+    else updateViewportAndCanvasLayout("desktop-init");
 
     return {
       isMobile,
+      isPhoneMode,
+      getDeviceMode,
       update: updateContext,
       updateMobileLayout,
+      updateViewportAndCanvasLayout,
+      calculateCanvasSafeRect,
+      ensureTargetVisible,
       openSheet,
       closeSheet,
       setActiveView,
@@ -589,6 +728,9 @@
       setEditorTab,
       maybeShowFirstGuide,
       detectLowEndDevice,
+      gestureManager,
+      getRenderDpr() { return Math.min(lowPowerMobileMode ? 1.25 : 2, getDeviceMode().dpr || 1); },
+      get layout() { return lastLayout; },
       get lowPowerMobileMode() { return lowPowerMobileMode; }
     };
   }

@@ -11,7 +11,7 @@
         ["輸入空間", "先輸入牆寬與天花高，所有尺寸統一使用 mm。"],
         ["完成配置", "使用自動配置或新增櫃體，再逐一修改用途、寬度與門片。"],
         ["檢查交付", "切換平面、立面、3D，進入專案中心做設計檢查、備份與分享。"]
-      ], tip: "看到不熟悉的按鈕時，直接長按約 0.65 秒，即可查看該按鈕的用途與操作方式。"
+      ], tip: "看到不熟悉的按鈕時，手機請點右上角「？」開啟教學模式；桌面可按右鍵查看說明。"
     },
     views: {
       nav: "2D 與 3D", index: "02", title: "同一份資料，從不同視圖交叉檢查", kicker: "DRAWING & 3D",
@@ -45,14 +45,14 @@
       ], tip: "AI 渲染提示詞已要求保留原櫃體尺寸與位置，但交付前仍要人工核對。"
     },
     longpress: {
-      nav: "長按說明", index: "?", title: "每個控制項都有就地說明", kicker: "CONTEXT HELP",
-      summary: "手機用手指長按；電腦用滑鼠長按或按右鍵。看到環形進度完成後，就會顯示目前控制項的專屬說明。",
+      nav: "逐點說明", index: "?", title: "每個控制項都有就地說明", kicker: "CONTEXT HELP",
+      summary: "手機先點右上角問號開啟教學模式，再點想了解的功能；電腦也可按右鍵直接查看說明。",
       steps: [
-        ["長按按鈕", "按住約 0.65 秒，不要移動手指；放開後不會誤觸原本功能。"],
-        ["長按欄位", "數字欄位會說明單位、建議範圍及它會影響的圖面。"],
+        ["手機逐點教學", "點右上角問號後，再點按鈕或欄位查看專屬說明。"],
+        ["查看欄位", "數字欄位會說明單位、建議範圍及它會影響的圖面。"],
         ["右鍵替代", "電腦也可以在按鈕或欄位按右鍵，直接查看說明。"],
         ["重新查看完整教學", "任何時候按上方的問號按鈕，都可回到完整教學中心。"]
-      ], tip: "新增功能即使尚未建立專屬文字，也會自動顯示依按鈕名稱產生的通用說明。"
+      ], tip: "觸控裝置不使用長按教學，避免與雙指縮放、拖曳及瀏覽器手勢衝突。"
     }
   };
 
@@ -207,8 +207,34 @@
 
   defineHelp("more-tools", "更多功能", "手機操作", "收納自動工具、渲染、匯出、分享與教學。", "手機畫面找不到次要功能時使用。", ["點底部更多。", "向上滑動面板。", "選擇需要的工具。"], ["功能沒有刪除，只是分層收納。"], "從更多開啟 AI 進階渲染。", ["bottom-sheet"]);
   defineHelp("bottom-sheet", "底部操作面板", "手機操作", "手機版集中顯示目前情境的設定與工具。", "修改牆面、櫃體或更多功能時使用。", ["向上拖曳把手可全展開。", "向下拖曳可半展開或收合。", "按 × 關閉。"], ["面板打開時畫布會自動保留可見安全區。"], "把櫃體編輯面板拖到全展開設定進階項目。", ["more-tools"]);
+  defineHelp("mobile-bottom-toolbar", "手機主工具列", "手機操作", "手機版固定的五個主要入口：牆面、新增、編輯、視圖與更多。", "需要快速進入目前最常用的工具時使用。", ["點選需要的入口。", "設定會在 Bottom Sheet 或橫屏側面板開啟。"], ["完整功能仍保留在更多，不會因手機版而刪除。"], "點新增後選擇下櫃或吊櫃。", ["mobile-more-menu", "bottom-sheet"]);
+  defineHelp("mobile-more-menu", "手機更多選單", "手機操作", "集中自動配置、AI、渲染、匯出、分享與教學等完整功能。", "底部五鍵沒有顯示需要的功能時使用。", ["點底部更多。", "滑動面板查看所有工具。", "點選要執行的功能。"], ["所有桌面功能都能從這裡找到。"], "從更多開啟 AI 輔助構圖。", ["more-tools"]);
   defineHelp("teaching-mode", "教學模式", "教學", "開啟後，點任何工具只會顯示該功能教學，不會直接執行。", "第一次使用或遇到不熟悉工具時使用。", ["點右上角問號。", "再點想了解的功能。", "閱讀用途、步驟與注意事項。", "按實際操作看看可退出教學並執行。"], ["桌面與手機共用同一份教學資料。"], "在教學模式點新增櫃體，先看說明而不新增。", ["full-guide"]);
   defineHelp("full-guide", "完整使用說明", "教學", "以章節方式介紹從建牆到匯出的完整流程。", "想先理解整套軟體流程時使用。", ["從更多選單開啟使用說明。", "切換左側或上方章節。"], ["逐點細節請使用教學模式。"], "先看快速開始，再回工作台逐點操作。", ["teaching-mode"]);
+
+  const HELP_ALIASES = Object.freeze({
+    "ceiling-height": "wall-height",
+    "edit-cabinet": "cabinet-editor",
+    "equal-split": "equalize",
+    "view-plan": "view-floor",
+    "render-basic": "normal-render",
+    "render-ai": "ai-render",
+    "cabinet-door-style": "door-style-double-door",
+    "cabinet-handle": "global-handle",
+    "sink-cabinet": "purpose-sink",
+    "stove-cabinet": "purpose-stove",
+    "drawer-cabinet": "purpose-drawer",
+    "wall-cabinet": "cabinet-layer",
+    "base-cabinet": "cabinet-layer",
+    "filler-panel": "purpose-filler",
+    "mobile-more-menu": "mobile-more-menu",
+    "canvas-zoom": "mobile-zoom",
+    "canvas-pan": "mobile-pan"
+  });
+
+  Object.entries(HELP_ALIASES).forEach(([alias, target]) => {
+    if (!HELP_REGISTRY[alias] && HELP_REGISTRY[target]) HELP_REGISTRY[alias] = HELP_REGISTRY[target];
+  });
 
   const HELP_RULES = [
     [/新增牆面|addWall/i, ["新增牆面", "在目前專案加入另一面可獨立設定寬度的牆。", "新增後先輸入牆寬，再決定靠左或靠右配置。", "天花高度會與其他牆共用；刪除牆面會一併刪除其櫃體。"]],
@@ -325,6 +351,21 @@
     let suppressUntil = 0;
     let teachingMode = false;
     let currentContextTarget = null;
+    const touchPointers = new Map();
+    let touchGestureMoved = false;
+    let touchGestureMultiple = false;
+    let touchSuppressUntil = 0;
+    const teachingModeState = {
+      enabled: false,
+      dismissedIntro: false,
+      currentHelpId: null,
+      overlayVisible: false
+    };
+    const isCoarsePointer = global.matchMedia?.("(pointer: coarse)")?.matches === true || (navigator.maxTouchPoints || 0) > 0;
+    try {
+      teachingModeState.dismissedIntro = localStorage.getItem("modudraft.mobileTeaching.dismissed") === "true";
+      localStorage.setItem("modudraft.mobileTeaching.enabled", "false");
+    } catch (_error) {}
 
     const button = document.createElement("button");
     button.type = "button";
@@ -344,13 +385,13 @@
     hold.dataset.helpUi = "true";
     const toast = document.createElement("div");
     toast.className = "md-help-toast";
-    toast.textContent = "提示：長按任何按鈕可查看說明";
+    toast.textContent = "提示：點問號可開啟逐點教學";
     toast.dataset.helpUi = "true";
 
     const teachingBanner = document.createElement("div");
     teachingBanner.className = "md-teaching-banner";
     teachingBanner.dataset.helpUi = "true";
-    teachingBanner.innerHTML = `<span><b>教學模式</b> 已開啟，點擊任何功能可查看說明</span><button type="button" data-help-ui="true">退出</button>`;
+    teachingBanner.innerHTML = `<span><b>教學模式</b> 已開啟，點擊功能查看說明</span><button type="button" data-help-ui="true">退出教學</button>`;
 
     const focusRing = document.createElement("div");
     focusRing.className = "md-help-focus-ring";
@@ -361,6 +402,8 @@
     document.body.append(backdrop, hold, toast, teachingBanner, focusRing);
     const content = backdrop.querySelector(".md-help-content");
     const navButtons = Array.from(backdrop.querySelectorAll("[data-help-chapter]"));
+    const navHint = backdrop.querySelector(".md-help-nav-hint");
+    if (navHint && isCoarsePointer) navHint.textContent = "點右上角問號開啟教學模式，再點功能查看逐點說明。";
 
     function refreshMetadata(root = document) {
       const candidates = root.matches?.("button,a,input,select,textarea,canvas,[role='button'],.view")
@@ -373,8 +416,14 @@
           control.dataset.helpId = inferred;
           if (!control.title && HELP_REGISTRY[inferred]) control.title = `${HELP_REGISTRY[inferred].title}：${HELP_REGISTRY[inferred].shortDescription}`;
         }
-        else if (!control.dataset.helpId && control.id) control.dataset.helpId = `control-${control.id}`;
       });
+    }
+
+    function showToast(message, duration = 1800) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("show"), duration);
     }
 
     function updateFocusRing(control) {
@@ -407,7 +456,8 @@
       currentContextTarget = control;
       navButtons.forEach((item) => item.classList.remove("active"));
       const related = (help.related || []).map((id) => HELP_REGISTRY[id]).filter(Boolean);
-      content.innerHTML = `<article class="md-context-card"><div class="md-context-icon">?</div><span class="md-context-category">${escapeHtml(help.category || "功能說明")}</span><h3>${escapeHtml(help.title)}</h3><section class="md-context-intro"><h4>這是什麼</h4><p>${escapeHtml(help.shortDescription)}</p></section><div class="md-context-grid"><section><h4>什麼時候用</h4><p>${escapeHtml(help.whenToUse)}</p></section><section><h4>怎麼操作</h4><ol>${(help.howToUse || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol></section><section><h4>注意事項</h4><ul>${(help.tips || []).map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}</ul></section><section><h4>範例</h4><p>${escapeHtml(help.example)}</p></section></div>${related.length ? `<div class="md-context-related"><b>相關功能</b>${related.map((item) => `<span>${escapeHtml(item.title)}</span>`).join("")}</div>` : ""}<div class="md-context-actions"><button type="button" data-context-action="know" data-help-ui="true">我知道了</button><button type="button" data-context-action="try" data-help-ui="true">實際操作看看</button><button type="button" data-context-action="next" data-help-ui="true">下一個教學</button></div></article>`;
+      teachingModeState.currentHelpId = help.helpId || forcedHelpId || control?.dataset?.helpId || null;
+      content.innerHTML = `<article class="md-context-card"><div class="md-context-icon">?</div><span class="md-context-category">${escapeHtml(help.category || "功能說明")}</span><h3>${escapeHtml(help.title)}</h3><section class="md-context-intro"><h4>這是什麼</h4><p>${escapeHtml(help.shortDescription)}</p></section><div class="md-context-grid"><section><h4>什麼時候用</h4><p>${escapeHtml(help.whenToUse)}</p></section><section><h4>怎麼操作</h4><ol>${(help.howToUse || []).map((step) => `<li>${escapeHtml(step)}</li>`).join("")}</ol></section><section><h4>注意事項</h4><ul>${(help.tips || []).map((tip) => `<li>${escapeHtml(tip)}</li>`).join("")}</ul></section><section><h4>範例</h4><p>${escapeHtml(help.example)}</p></section></div>${related.length ? `<div class="md-context-related"><b>相關功能</b>${related.map((item) => `<span>${escapeHtml(item.title)}</span>`).join("")}</div>` : ""}<div class="md-context-actions"><button type="button" data-context-action="know" data-help-ui="true">我知道了</button><button type="button" data-context-action="try" data-help-ui="true">實際操作看看</button><button type="button" data-context-action="next" data-help-ui="true">下一個教學</button><button type="button" data-context-action="exit" data-help-ui="true">退出教學</button></div></article>`;
       content.scrollTop = 0;
       updateFocusRing(control);
     }
@@ -420,20 +470,45 @@
     }
 
     function openContext(control, forcedHelpId = "") {
+      const helpId = forcedHelpId || deriveHelpId(control);
+      if (!helpId || !HELP_REGISTRY[helpId]) {
+        showToast("此區域尚未建立教學");
+        return false;
+      }
       renderContext(control, forcedHelpId);
       backdrop.classList.add("open");
+      backdrop.classList.add("context-open");
+      teachingModeState.overlayVisible = true;
       document.documentElement.style.overflow = "hidden";
+      positionHelpCard(control?.getBoundingClientRect?.());
+      return true;
     }
 
     function close() {
       backdrop.classList.remove("open");
+      backdrop.classList.remove("context-open");
       document.documentElement.style.overflow = "";
       focusRing.classList.remove("open");
       currentContextTarget = null;
+      teachingModeState.currentHelpId = null;
+      teachingModeState.overlayVisible = false;
+    }
+
+    function positionHelpCard(targetRect) {
+      const mode = document.body.dataset.deviceMode || "tabletDesktop";
+      const dialog = backdrop.querySelector(".md-help-dialog");
+      backdrop.dataset.helpLayout = mode;
+      if (!dialog || !targetRect) return;
+      const targetCenter = targetRect.left + targetRect.width / 2;
+      const targetMiddle = targetRect.top + targetRect.height / 2;
+      backdrop.style.setProperty("--help-arrow-x", `${Math.max(8, Math.min(92, targetCenter / Math.max(1, innerWidth) * 100))}%`);
+      backdrop.style.setProperty("--help-arrow-y", `${Math.max(10, Math.min(90, targetMiddle / Math.max(1, innerHeight) * 100))}%`);
+      backdrop.dataset.targetSide = targetCenter < innerWidth / 2 ? "left" : "right";
     }
 
     function toggleTeachingMode(force) {
       teachingMode = typeof force === "boolean" ? force : !teachingMode;
+      teachingModeState.enabled = teachingMode;
       document.body.classList.toggle("md-teaching-mode", teachingMode);
       teachingBanner.classList.toggle("open", teachingMode);
       button.classList.toggle("active", teachingMode);
@@ -442,12 +517,17 @@
         focusRing.classList.remove("open");
         if (backdrop.classList.contains("open") && currentContextTarget) close();
       }
+      try {
+        localStorage.setItem("modudraft.mobileTeaching.enabled", String(teachingMode));
+        if (!teachingMode) localStorage.setItem("modudraft.mobileTeaching.dismissed", "true");
+      } catch (_error) {}
       if (typeof config.onTeachingModeChange === "function") config.onTeachingModeChange(teachingMode);
       return teachingMode;
     }
 
-    function eligible(event) {
-      const control = event.target.closest("[data-help-id],button,a,input,select,textarea,canvas,[role='button'],.view");
+    function eligible(event, strict = false) {
+      const selector = strict ? "[data-help-id]" : "[data-help-id],button,a,input,select,textarea,canvas,[role='button'],.view";
+      const control = event.target.closest?.(selector);
       return control && !control.closest("[data-help-ui='true']") && !control.disabled ? control : null;
     }
 
@@ -460,7 +540,15 @@
     }
 
     document.addEventListener("pointerdown", (event) => {
-      if (event.button !== 0 || backdrop.classList.contains("open") || teachingMode) return;
+      if (event.pointerType === "touch") {
+        touchPointers.set(event.pointerId, { x: event.clientX, y: event.clientY, startX: event.clientX, startY: event.clientY });
+        if (touchPointers.size >= 2) {
+          touchGestureMultiple = true;
+          touchSuppressUntil = Date.now() + 650;
+          cancelHold();
+        }
+      }
+      if (isCoarsePointer || event.button !== 0 || backdrop.classList.contains("open") || teachingMode) return;
       const control = eligible(event);
       if (!control) return;
       longTarget = control;
@@ -478,19 +566,56 @@
     }, true);
 
     document.addEventListener("pointermove", (event) => {
+      if (event.pointerType === "touch" && touchPointers.has(event.pointerId)) {
+        const pointer = touchPointers.get(event.pointerId);
+        pointer.x = event.clientX;
+        pointer.y = event.clientY;
+        if (Math.hypot(pointer.x - pointer.startX, pointer.y - pointer.startY) > 6) {
+          touchGestureMoved = true;
+          touchSuppressUntil = Date.now() + 650;
+        }
+      }
       if (!longStart) return;
       if (Math.hypot(event.clientX - longStart.x, event.clientY - longStart.y) > 12) cancelHold();
     }, true);
-    document.addEventListener("pointerup", cancelHold, true);
-    document.addEventListener("pointercancel", cancelHold, true);
+    document.addEventListener("pointerup", (event) => {
+      if (event.pointerType === "touch") {
+        touchPointers.delete(event.pointerId);
+        if (touchGestureMoved || touchGestureMultiple) touchSuppressUntil = Date.now() + 650;
+        if (touchPointers.size === 0) {
+          window.setTimeout(() => { touchGestureMoved = false; touchGestureMultiple = false; }, 0);
+        }
+      }
+      cancelHold();
+    }, true);
+    document.addEventListener("pointercancel", (event) => {
+      if (event.pointerType === "touch") {
+        touchPointers.delete(event.pointerId);
+        touchSuppressUntil = Date.now() + 650;
+      }
+      cancelHold();
+    }, true);
     document.addEventListener("click", (event) => {
       if (teachingMode) {
-        const control = eligible(event);
+        if (Date.now() < touchSuppressUntil || touchGestureMoved || touchGestureMultiple) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+        const control = eligible(event, true);
         if (control) {
           event.preventDefault();
           event.stopImmediatePropagation();
           const resolvedHelpId = typeof config.resolveHelpId === "function" ? config.resolveHelpId(event, control) : "";
+          if (control.tagName === "CANVAS" && /^view-/.test(resolvedHelpId)) return;
           openContext(control, resolvedHelpId);
+          return;
+        }
+        const unsupported = event.target.closest?.("button,a,input,select,textarea,[role='button']");
+        if (unsupported && !unsupported.closest("[data-help-ui='true']")) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          showToast("此區域尚未建立教學");
           return;
         }
       }
@@ -501,6 +626,7 @@
       }
     }, true);
     document.addEventListener("contextmenu", (event) => {
+      if (isCoarsePointer) return;
       const control = eligible(event);
       if (!control) return;
       event.preventDefault();
@@ -516,6 +642,10 @@
         close();
         toggleTeachingMode(false);
         window.setTimeout(() => control?.click(), 80);
+      }
+      if (action === "exit") {
+        close();
+        toggleTeachingMode(false);
       }
       if (action === "next") {
         const controls = Array.from(document.querySelectorAll("[data-help-id]"))
@@ -547,7 +677,7 @@
     });
     metadataObserver.observe(document.body, { childList: true, subtree: true });
 
-    if (config.autoOpen !== false) {
+    if (config.autoOpen !== false && !isCoarsePointer) {
       let seen = false;
       try { seen = localStorage.getItem(`modudraft:guide-seen:${config.mode}:v2`) === "1"; } catch (error) {}
       if (!seen) {
@@ -560,7 +690,18 @@
       }
     }
 
-    return { open, close, openContext, toggleTeachingMode, isTeaching: () => teachingMode, refreshMetadata, registry: HELP_REGISTRY };
+    return {
+      open,
+      close,
+      openContext,
+      toggleTeachingMode,
+      isTeaching: () => teachingMode,
+      positionHelpCard,
+      showToast,
+      refreshMetadata,
+      teachingModeState,
+      registry: HELP_REGISTRY
+    };
   }
 
   global.MODUDRAFTHelp = Object.freeze({ mount, helpFor, registry: HELP_REGISTRY });
