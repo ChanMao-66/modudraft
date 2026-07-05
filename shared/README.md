@@ -10,6 +10,13 @@
 - 新手流程與專業工具共用同一份 Project Schema；任何櫃體異動都會同步圖面、清單、估價狀態與 AI 提示詞。
 - 教學中心新增「新手完整流程」章節，材質、檢查、標準櫃、估價與 AI 提案均有獨立 `helpId`。
 
+## 盲角轉角下櫃
+
+- Project Schema v3 將盲角櫃拆成 `adjacentCabinetDepthRef`、`adjacentDoorReferencePanelWidth`、`hingeMountPanelWidth` 與 `frontDoorWidth`，預設為 `560 / 20 / 20 / 400`，總寬 1000 mm。
+- 左盲角依序顯示 560 / 20 / 20 / 400；右盲角完整鏡像為 400 / 20 / 20 / 560。
+- 平面圖、立面圖、Three.js 3D 與 Collada 匯出都使用同一結構；兩片 20 mm 板是獨立物件，不再合併為 40 mm 補板。
+- 估價第一版視為整櫃計價：100 CM × 下櫃單價 75 = 7,500；雙 20 板包含於整櫃單價。
+
 ## Estimate 模擬估價
 
 - `estimate.js` 定義共用的 `EstimateItem`、`EstimateSection`、`EstimateDocument`、稅額計算、廚具／系統櫃轉換規則與 CSV／JSON 匯出。

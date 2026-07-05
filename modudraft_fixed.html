@@ -712,6 +712,46 @@
       outline: none;
     }
 
+    .corner-structure-panel {
+      display: grid;
+      gap: 10px;
+      margin: 2px 0;
+      padding: 14px;
+      border: 1px solid rgba(145, 104, 64, 0.28);
+      border-radius: 9px;
+      background: rgba(177, 128, 78, 0.08);
+    }
+
+    .corner-structure-panel.hidden { display: none; }
+
+    .corner-structure-panel legend {
+      padding: 0 7px;
+      color: #6d4a20;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .corner-structure-panel > p {
+      margin: 0;
+      color: #69645d;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .corner-structure-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .corner-structure-grid label { position: relative; }
+    .corner-structure-grid label > span { position: absolute; right: 9px; bottom: 12px; color: #8a837a; font-size: 10px; }
+    .corner-structure-panel output { padding: 9px 11px; border-radius: 7px; background: rgba(109, 74, 32, 0.08); color: #6d4a20; font-size: 11px; font-weight: 900; }
+
+    @media (max-width: 560px) {
+      .corner-structure-grid { grid-template-columns: 1fr; }
+    }
+
     .modal-actions,
     .order-actions {
       display: grid;
@@ -1781,8 +1821,25 @@
             <option value="dish-dryer">吊掛式烘碗機</option>
             <option value="open">開放櫃</option>
             <option value="filler">補板／補邊</option>
+            <option value="blind-corner">盲角轉角下櫃 1000</option>
           </select>
         </label>
+        <fieldset id="editBlindCornerFields" class="corner-structure-panel hidden" data-mobile-edit-tab="advanced">
+          <legend>盲角轉角結構</legend>
+          <p>總寬由 560 / 20 / 20 / 400 四段相加；雙 20 板分別負責相鄰門板對位與鉸鏈安裝。</p>
+          <div class="corner-structure-grid">
+            <label>轉角方向<select id="editCornerHanding"><option value="left">左盲角（560 在左）</option><option value="right">右盲角（560 在右）</option></select></label>
+            <label>另一側櫃深對應<input id="editAdjacentDepthRef" type="number" min="300" max="900" step="10" inputmode="numeric"><span>mm</span></label>
+            <label>相鄰門板對應板<input id="editAdjacentDoorPanelWidth" type="number" min="0" max="200" step="1" inputmode="numeric"><span>mm</span></label>
+            <label>鉸鏈安裝板<input id="editHingePanelWidth" type="number" min="0" max="200" step="1" inputmode="numeric"><span>mm</span></label>
+            <label>正面門片寬<input id="editCornerDoorWidth" type="number" min="200" max="900" step="10" inputmode="numeric"><span>mm</span></label>
+            <label>轉角五金<select id="editCornerHardwareType"><option value="none">無</option><option value="magicCorner">Magic Corner</option><option value="lemans">LeMans</option><option value="halfLazySusan">半圓轉盤</option></select></label>
+            <label class="toggle-control"><input id="editHasCornerShelf" type="checkbox"><span>內部轉角層板</span></label>
+            <label>層板數量<input id="editCornerShelfCount" type="number" min="0" max="8" step="1" inputmode="numeric"></label>
+            <label class="toggle-control"><input id="editShowCornerStructure" type="checkbox"><span>3D 顯示內部結構</span></label>
+          </div>
+          <output id="editCornerTotal">總寬 1000 mm = 560 + 20 + 20 + 400</output>
+        </fieldset>
         <label data-mobile-edit-tab="door">
           門片形式
           <select id="editFrontStyle">
@@ -2066,6 +2123,17 @@
       editDepth: document.getElementById("editDepth"),
       editType: document.getElementById("editType"),
       editPurpose: document.getElementById("editPurpose"),
+      editBlindCornerFields: document.getElementById("editBlindCornerFields"),
+      editCornerHanding: document.getElementById("editCornerHanding"),
+      editAdjacentDepthRef: document.getElementById("editAdjacentDepthRef"),
+      editAdjacentDoorPanelWidth: document.getElementById("editAdjacentDoorPanelWidth"),
+      editHingePanelWidth: document.getElementById("editHingePanelWidth"),
+      editCornerDoorWidth: document.getElementById("editCornerDoorWidth"),
+      editHasCornerShelf: document.getElementById("editHasCornerShelf"),
+      editCornerShelfCount: document.getElementById("editCornerShelfCount"),
+      editCornerHardwareType: document.getElementById("editCornerHardwareType"),
+      editShowCornerStructure: document.getElementById("editShowCornerStructure"),
+      editCornerTotal: document.getElementById("editCornerTotal"),
       editFrontStyle: document.getElementById("editFrontStyle"),
       editHandleStyle: document.getElementById("editHandleStyle"),
       editSideTreatmentField: document.getElementById("editSideTreatmentField"),
@@ -2653,6 +2721,7 @@
 
     function inferCabinetPurpose(cabinet) {
       const name = cabinet.name || "";
+      if (name.includes("盲角") || name.includes("轉角下櫃")) return "blind-corner";
       if (name.includes("補邊") || name.includes("補板") || name.includes("封板")) return "filler";
       if (name.includes("排油煙機")) return "hood";
       if (name.includes("烘碗機")) return "dish-dryer";
@@ -2665,6 +2734,7 @@
     }
 
     function defaultFrontStyle(purpose, type) {
+      if (purpose === "blind-corner") return "single-door";
       if (purpose === "filler") return "panel";
       if (purpose === "open") return "open";
       if (purpose === "appliance") return "appliance";
@@ -2676,6 +2746,7 @@
     function normalizeCabinet(cabinet) {
       cabinet.type = cabinet.type === "upper" ? "upper" : "lower";
       cabinet.purpose = cabinet.purpose || inferCabinetPurpose(cabinet);
+      if (cabinet.cornerType === "blindCorner") cabinet.purpose = "blind-corner";
       cabinet.frontStyle = cabinet.frontStyle || defaultFrontStyle(cabinet.purpose, cabinet.type);
       cabinet.customHeight = Number.isFinite(Number(cabinet.customHeight)) && Number(cabinet.customHeight) > 0 ? Number(cabinet.customHeight) : null;
       cabinet.customDepth = Number.isFinite(Number(cabinet.customDepth)) && Number(cabinet.customDepth) > 0 ? Number(cabinet.customDepth) : null;
@@ -2684,6 +2755,36 @@
       cabinet.hasCountertop = cabinet.hasCountertop !== false && cabinet.type === "lower" && cabinet.purpose !== "filler";
       cabinet.hasToeKick = cabinet.hasToeKick !== false && cabinet.type === "lower" && cabinet.purpose !== "filler";
       cabinet.notes = String(cabinet.notes || "");
+      if (cabinet.purpose === "blind-corner") {
+        const normalizedCorner = window.MODUDRAFTCore?.normalizeBlindCorner?.(cabinet) || {
+          cornerType: "blindCorner",
+          cornerHanding: cabinet.cornerHanding === "right" ? "right" : "left",
+          adjacentCabinetDepthRef: Number(cabinet.adjacentCabinetDepthRef) || 560,
+          adjacentDoorReferencePanelWidth: Number(cabinet.adjacentDoorReferencePanelWidth) || 20,
+          hingeMountPanelWidth: Number(cabinet.hingeMountPanelWidth) || 20,
+          frontDoorWidth: Number(cabinet.frontDoorWidth) || 400,
+          depth: Number(cabinet.customDepth || cabinet.depth) || 560,
+          height: Number(cabinet.customHeight || cabinet.height) || 850,
+          hasCornerShelf: cabinet.hasCornerShelf !== false,
+          cornerShelfCount: Math.max(0, Math.round(Number(cabinet.cornerShelfCount) || 1)),
+          hasCornerHardware: cabinet.hasCornerHardware === true,
+          cornerHardwareType: cabinet.hasCornerHardware === true ? (cabinet.cornerHardwareType || "magicCorner") : "none",
+          showInternalStructure: cabinet.showInternalStructure !== false
+        };
+        Object.assign(cabinet, normalizedCorner);
+        cabinet.width = normalizedCorner.totalWidth || (
+          normalizedCorner.adjacentCabinetDepthRef
+          + normalizedCorner.adjacentDoorReferencePanelWidth
+          + normalizedCorner.hingeMountPanelWidth
+          + normalizedCorner.frontDoorWidth
+        );
+        cabinet.totalWidth = cabinet.width;
+        cabinet.customDepth = normalizedCorner.depth;
+        cabinet.customHeight = normalizedCorner.height;
+        cabinet.frontStyle = "single-door";
+        cabinet.hasCountertop = true;
+        cabinet.hasToeKick = true;
+      }
       cabinet.sideTreatment = cabinet.sideTreatment === "finished-end" ? "finished-end" : "wall-filler";
       cabinet.sinkMount = ["flush", "topmount", "undermount"].includes(cabinet.sinkMount)
         ? cabinet.sinkMount
@@ -3357,6 +3458,45 @@
         }
 
         wall.cabinets.forEach((cabinet, cabinetIndex) => {
+          if (cabinet.purpose === "blind-corner" || cabinet.cornerType === "blindCorner") {
+            const structure = blindCornerStructure(cabinet);
+            const segments = blindCornerSegments(cabinet);
+            const bodyHeight = cabinetBodyHeight(cabinet, wall);
+            const board = Math.max(18, sizes.sidePanelThickness || 20);
+            const baseY = sizes.toeKickHeight;
+            children.push(boxDaeNode(`blind-corner-${cabinetIndex + 1}-bottom`, cabinet.x + structure.totalWidth / 2, baseY + board / 2, structure.depth / 2, structure.totalWidth, board, structure.depth, "lower-material"));
+            children.push(boxDaeNode(`blind-corner-${cabinetIndex + 1}-left-side`, cabinet.x + board / 2, baseY + bodyHeight / 2, structure.depth / 2, board, bodyHeight, structure.depth, "lower-material"));
+            children.push(boxDaeNode(`blind-corner-${cabinetIndex + 1}-right-side`, cabinet.x + structure.totalWidth - board / 2, baseY + bodyHeight / 2, structure.depth / 2, board, bodyHeight, structure.depth, "lower-material"));
+            let segmentX = cabinet.x;
+            segments.forEach((segment) => {
+              if (segment.key === "adjacentDoorPanel" || segment.key === "hingePanel") {
+                children.push(boxDaeNode(
+                  `blind-corner-${cabinetIndex + 1}-${segment.key}`,
+                  segmentX + segment.width / 2,
+                  baseY + bodyHeight / 2,
+                  structure.depth - 40,
+                  segment.width,
+                  bodyHeight,
+                  80,
+                  "lower-material"
+                ));
+              }
+              if (segment.key === "frontDoor") {
+                children.push(boxDaeNode(
+                  `blind-corner-${cabinetIndex + 1}-front-door`,
+                  segmentX + segment.width / 2,
+                  baseY + bodyHeight / 2,
+                  structure.depth + sizes.doorThickness / 2,
+                  segment.width - 4,
+                  bodyHeight - 6,
+                  sizes.doorThickness,
+                  "lower-material"
+                ));
+              }
+              segmentX += segment.width;
+            });
+            return;
+          }
           const isLower = cabinet.type === "lower";
           const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
           const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
@@ -3926,6 +4066,98 @@
       };
     }
 
+    function blindCornerStructure(cabinet) {
+      return window.MODUDRAFTCore?.normalizeBlindCorner?.(cabinet) || {
+        cornerType: "blindCorner",
+        cornerHanding: cabinet.cornerHanding === "right" ? "right" : "left",
+        totalWidth: 1000,
+        adjacentCabinetDepthRef: 560,
+        adjacentDoorReferencePanelWidth: 20,
+        hingeMountPanelWidth: 20,
+        frontDoorWidth: 400,
+        depth: 560,
+        hasCornerShelf: true,
+        cornerShelfCount: 1,
+        hasCornerHardware: false,
+        cornerHardwareType: "none",
+        showInternalStructure: true
+      };
+    }
+
+    function blindCornerSegments(cabinet) {
+      return window.MODUDRAFTCore?.blindCornerSegments?.(cabinet) || [
+        { key: "adjacentDepth", label: "另一側櫃體深度對應區", width: 560 },
+        { key: "adjacentDoorPanel", label: "相鄰門板對應板", width: 20 },
+        { key: "hingePanel", label: "鉸鏈安裝板", width: 20 },
+        { key: "frontDoor", label: "正面門片區", width: 400 }
+      ];
+    }
+
+    function drawBlindCornerFloorplan(context, cabinet, geometry, selected) {
+      const { x, y, width, depth, baseScale } = geometry;
+      const structure = blindCornerStructure(cabinet);
+      const segments = blindCornerSegments(cabinet);
+      const colors = {
+        adjacentDepth: "rgba(104, 119, 132, 0.15)",
+        adjacentDoorPanel: "rgba(190, 147, 96, 0.40)",
+        hingePanel: "rgba(151, 102, 58, 0.55)",
+        frontDoor: "rgba(255, 255, 255, 0.94)"
+      };
+      let cursor = x;
+      const rendered = [];
+      context.save();
+      segments.forEach((segment) => {
+        const segmentWidth = segment.width * baseScale;
+        context.fillStyle = colors[segment.key];
+        context.fillRect(cursor, y, segmentWidth, depth);
+        context.strokeStyle = selected ? "#c77b22" : "#28333d";
+        context.lineWidth = selected ? 2.4 : 1.1;
+        context.strokeRect(cursor, y, segmentWidth, depth);
+        rendered.push({ ...segment, x: cursor, pixelWidth: segmentWidth });
+        if (segment.key === "adjacentDepth") {
+          context.strokeStyle = "#71808c";
+          context.lineWidth = 1;
+          context.beginPath();
+          context.moveTo(cursor + 3, y + 3);
+          context.lineTo(cursor + segmentWidth - 3, y + depth - 3);
+          context.moveTo(cursor + segmentWidth - 3, y + 3);
+          context.lineTo(cursor + 3, y + depth - 3);
+          context.stroke();
+        }
+        cursor += segmentWidth;
+      });
+
+      const door = rendered.find((segment) => segment.key === "frontDoor");
+      const hinge = rendered.find((segment) => segment.key === "hingePanel");
+      if (door && hinge) {
+        const hingeAtLeft = door.x > hinge.x;
+        const hingeX = hingeAtLeft ? door.x : door.x + door.pixelWidth;
+        const freeX = hingeAtLeft ? door.x + door.pixelWidth : door.x;
+        context.strokeStyle = "#536d82";
+        context.lineWidth = 1.4;
+        context.beginPath();
+        context.moveTo(freeX, y + 3);
+        context.lineTo(hingeX, y + depth / 2);
+        context.lineTo(freeX, y + depth - 3);
+        context.stroke();
+      }
+
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      rendered.forEach((segment) => {
+        context.fillStyle = segment.key === "hingePanel" ? "#fff" : "#28333d";
+        context.font = `${segment.pixelWidth < 24 ? 8 : 10}px Noto Sans TC, sans-serif`;
+        context.fillText(String(segment.width), segment.x + segment.pixelWidth / 2, y + 12);
+      });
+      context.fillStyle = "#24313b";
+      context.font = "800 10px Noto Sans TC, sans-serif";
+      context.fillText("盲角 560 / 20 / 20 / 400", x + width / 2, y + depth / 2);
+      context.fillStyle = "#5b5147";
+      context.font = "9px Noto Sans TC, sans-serif";
+      context.fillText(`總寬 ${structure.totalWidth}　深度 ${structure.depth}`, x + width / 2, y + depth - 10);
+      context.restore();
+    }
+
     function drawFloorplan(wall) {
       dimensionHitRegions.floor = [];
       const rect = clearDraftCanvas(el.floorCanvas, ctx.floor);
@@ -3963,16 +4195,19 @@
           : fullDepth;
         const y = isWallFiller ? wallY - fullDepth : wallY - depth;
 
-        ctx.floor.fillStyle = isWallFiller
-          ? "#d9d2c8"
-          : (cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)");
-        ctx.floor.fillRect(x, y, width, depth);
         const assistSelected = state.assist.equalizeSelectedIds.includes(cabinet.id);
-        ctx.floor.strokeStyle = assistSelected ? "#c77b22" : (cabinet.type === "lower" ? "#151a22" : "#6d7c8f");
-        ctx.floor.lineWidth = assistSelected ? 3 : (cabinet.type === "lower" ? 1.5 : 1);
-        ctx.floor.strokeRect(x, y, width, depth);
-
-        if (width > 36) drawCabinetLabel(ctx.floor, cabinet.name, x, y, width, depth);
+        if (cabinet.purpose === "blind-corner") {
+          drawBlindCornerFloorplan(ctx.floor, cabinet, { x, y, width, depth, baseScale }, assistSelected);
+        } else {
+          ctx.floor.fillStyle = isWallFiller
+            ? "#d9d2c8"
+            : (cabinet.type === "lower" ? "#ffffff" : "rgba(92, 109, 128, 0.25)");
+          ctx.floor.fillRect(x, y, width, depth);
+          ctx.floor.strokeStyle = assistSelected ? "#c77b22" : (cabinet.type === "lower" ? "#151a22" : "#6d7c8f");
+          ctx.floor.lineWidth = assistSelected ? 3 : (cabinet.type === "lower" ? 1.5 : 1);
+          ctx.floor.strokeRect(x, y, width, depth);
+          if (width > 36) drawCabinetLabel(ctx.floor, cabinet.name, x, y, width, depth);
+        }
         drawDimension(
           ctx.floor,
           x,
@@ -4422,6 +4657,7 @@
         context.strokeRect(box.x, box.y, box.width, box.height);
       }
 
+      if (cabinet.purpose === "blind-corner") drawBlindCornerElevation(context, cabinet, face);
       if (!isSidePanel) drawCabinetFront(context, cabinet, face);
       drawCabinetEquipment(context, cabinet, box, counterH, scaleY, wall);
 
@@ -4431,8 +4667,47 @@
       context.restore();
     }
 
+    function drawBlindCornerElevation(context, cabinet, face) {
+      const structure = blindCornerStructure(cabinet);
+      const segments = blindCornerSegments(cabinet);
+      let cursor = face.x;
+      context.save();
+      segments.forEach((segment) => {
+        const width = face.width * segment.width / structure.totalWidth;
+        if (segment.key !== "frontDoor") {
+          context.fillStyle = segment.key === "adjacentDepth"
+            ? "rgba(101, 116, 128, 0.18)"
+            : segment.key === "adjacentDoorPanel" ? "rgba(190, 147, 96, 0.42)" : "rgba(145, 96, 54, 0.58)";
+          context.fillRect(cursor, face.y, width, face.height);
+          context.strokeStyle = "#4d5963";
+          context.lineWidth = 1;
+          context.strokeRect(cursor, face.y, width, face.height);
+        }
+        cursor += width;
+      });
+      context.fillStyle = "#5e5144";
+      context.font = "800 9px Noto Sans TC, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "top";
+      context.fillText("560 / 20 / 20 / 400", face.x + face.width / 2, face.y + 6);
+      context.restore();
+    }
+
     function frontPanelRects(cabinet, face) {
       const gap = Math.max(2, Math.min(5, Math.min(face.width, face.height) * 0.025));
+      if (cabinet.purpose === "blind-corner" || cabinet.cornerType === "blindCorner") {
+        const structure = blindCornerStructure(cabinet);
+        const segments = blindCornerSegments(cabinet);
+        let offset = 0;
+        const door = segments.find((segment) => {
+          if (segment.key === "frontDoor") return true;
+          offset += segment.width;
+          return false;
+        });
+        const x = face.x + face.width * offset / structure.totalWidth + gap;
+        const width = face.width * door.width / structure.totalWidth - gap * 2;
+        return [{ x, y: face.y + gap, width: Math.max(1, width), height: Math.max(1, face.height - gap * 2) }];
+      }
       const inner = {
         x: face.x + gap,
         y: face.y + gap,
@@ -5011,8 +5286,81 @@
       three.group.add(floor);
     }
 
+    function addBlindCornerCabinet3D(parent, cabinet, wall) {
+      const structure = blindCornerStructure(cabinet);
+      const segments = blindCornerSegments(cabinet);
+      const depth = structure.depth;
+      const bodyHeight = cabinetBodyHeight(cabinet, wall);
+      const baseY = sizes.toeKickHeight;
+      const board = Math.max(18, sizes.sidePanelThickness || 20);
+      const bodyMaterial = new THREE.MeshStandardMaterial({
+        color: shadeThreeColor(projectMaterialColor("body", 0xfffdf9), 0.76),
+        roughness: 0.74,
+        metalness: 0.02
+      });
+      const referenceMaterial = new THREE.MeshStandardMaterial({ color: 0xc9aa82, roughness: 0.66, metalness: 0.02 });
+      const hingeMaterial = new THREE.MeshStandardMaterial({ color: 0x94704f, roughness: 0.58, metalness: 0.05 });
+      const doorMaterial = new THREE.MeshStandardMaterial({
+        color: shadeThreeColor(projectMaterialColor("door", 0xf5f4f0), 0.84),
+        roughness: 0.68,
+        metalness: 0.02,
+        transparent: structure.showInternalStructure,
+        opacity: structure.showInternalStructure ? 0.5 : 1
+      });
+      const addPart = (name, width, height, partDepth, x, y, z, material, color = 0x4c5660) => {
+        const geometry = new THREE.BoxGeometry(Math.max(1, width), Math.max(1, height), Math.max(1, partDepth));
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.name = name;
+        mesh.position.set(x, y, z);
+        mesh.userData.blindCornerPart = name;
+        mesh.userData.cornerHanding = structure.cornerHanding;
+        parent.add(mesh);
+        addEdges(parent, geometry, mesh.position, color);
+        return mesh;
+      };
+
+      addPart("blind-corner-bottom", structure.totalWidth, board, depth, cabinet.x + structure.totalWidth / 2, baseY + board / 2, depth / 2, bodyMaterial);
+      addPart("blind-corner-left-side", board, bodyHeight, depth, cabinet.x + board / 2, baseY + bodyHeight / 2, depth / 2, bodyMaterial);
+      addPart("blind-corner-right-side", board, bodyHeight, depth, cabinet.x + structure.totalWidth - board / 2, baseY + bodyHeight / 2, depth / 2, bodyMaterial);
+      addPart("blind-corner-back", structure.totalWidth - board * 2, bodyHeight, board, cabinet.x + structure.totalWidth / 2, baseY + bodyHeight / 2, board / 2, bodyMaterial);
+      addPart("blind-corner-front-rail", structure.totalWidth - board * 2, 80, 80, cabinet.x + structure.totalWidth / 2, baseY + bodyHeight - 40, depth - 40, bodyMaterial);
+      addPart("blind-corner-rear-rail", structure.totalWidth - board * 2, 80, 80, cabinet.x + structure.totalWidth / 2, baseY + bodyHeight - 40, 40, bodyMaterial);
+
+      let cursor = cabinet.x;
+      let doorSegment = null;
+      segments.forEach((segment) => {
+        const segmentCenter = cursor + segment.width / 2;
+        if (segment.key === "adjacentDoorPanel") {
+          addPart("adjacent-door-reference-panel-20", segment.width, bodyHeight, 80, segmentCenter, baseY + bodyHeight / 2, depth - 40, referenceMaterial, 0x6e543b);
+        } else if (segment.key === "hingePanel") {
+          addPart("hinge-mount-panel-20", segment.width, bodyHeight, 80, segmentCenter, baseY + bodyHeight / 2, depth - 40, hingeMaterial, 0x4d3828);
+        } else if (segment.key === "frontDoor") {
+          doorSegment = { x: cursor, width: segment.width };
+        }
+        cursor += segment.width;
+      });
+
+      if (structure.showInternalStructure && structure.hasCornerShelf && structure.cornerShelfCount > 0) {
+        for (let index = 1; index <= structure.cornerShelfCount; index += 1) {
+          const y = baseY + (bodyHeight * index) / (structure.cornerShelfCount + 1);
+          addPart(`blind-corner-shelf-${index}`, structure.totalWidth - board * 2, 18, depth - board * 2, cabinet.x + structure.totalWidth / 2, y, depth / 2, bodyMaterial);
+        }
+      }
+
+      if (doorSegment) {
+        const door = addPart("blind-corner-front-door", doorSegment.width - 4, bodyHeight - 6, sizes.doorThickness, doorSegment.x + doorSegment.width / 2, baseY + bodyHeight / 2, depth + sizes.doorThickness / 2, doorMaterial, 0x6f7a84);
+        door.userData.doorPanel = true;
+        door.userData.frontDoorWidth = structure.frontDoorWidth;
+        addHandle3D(parent, cabinet, { x: doorSegment.x, y: baseY, width: doorSegment.width, height: bodyHeight }, depth + sizes.doorThickness + 4);
+      }
+    }
+
     function addCabinet3D(parent, cabinet, wall) {
       normalizeCabinet(cabinet);
+      if (cabinet.purpose === "blind-corner") {
+        addBlindCornerCabinet3D(parent, cabinet, wall);
+        return;
+      }
       const isLower = cabinet.type === "lower";
       const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
       const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
@@ -5788,6 +6136,15 @@
       el.editDepth.value = String(Math.round(cabinetDepth(cabinet)));
       el.editType.value = cabinet.type;
       el.editPurpose.value = cabinet.purpose;
+      el.editCornerHanding.value = cabinet.cornerHanding === "right" ? "right" : "left";
+      el.editAdjacentDepthRef.value = String(Math.round(cabinet.adjacentCabinetDepthRef || 560));
+      el.editAdjacentDoorPanelWidth.value = String(Math.round(cabinet.adjacentDoorReferencePanelWidth || 20));
+      el.editHingePanelWidth.value = String(Math.round(cabinet.hingeMountPanelWidth || 20));
+      el.editCornerDoorWidth.value = String(Math.round(cabinet.frontDoorWidth || 400));
+      el.editHasCornerShelf.checked = cabinet.hasCornerShelf !== false;
+      el.editCornerShelfCount.value = String(Math.max(0, Math.round(cabinet.cornerShelfCount || 1)));
+      el.editCornerHardwareType.value = cabinet.hasCornerHardware ? (cabinet.cornerHardwareType || "magicCorner") : "none";
+      el.editShowCornerStructure.checked = cabinet.showInternalStructure !== false;
       el.editFrontStyle.value = cabinet.frontStyle;
       el.editHandleStyle.value = cabinet.handleStyle;
       el.editSideTreatment.value = cabinet.sideTreatment;
@@ -5805,8 +6162,23 @@
 
     function updateSideTreatmentField() {
       const isFiller = el.editPurpose.value === "filler";
+      const isBlindCorner = el.editPurpose.value === "blind-corner";
       el.editSideTreatmentField.classList.toggle("hidden", !isFiller);
       el.editSinkMountField.classList.toggle("hidden", el.editPurpose.value !== "sink");
+      el.editBlindCornerFields.classList.toggle("hidden", !isBlindCorner);
+      el.editWidth.disabled = isBlindCorner;
+      el.editType.disabled = isBlindCorner;
+      if (isBlindCorner) {
+        el.editType.value = "lower";
+        const adjacentDepth = Math.max(0, Number(el.editAdjacentDepthRef.value) || 560);
+        const referencePanel = Math.max(0, Number(el.editAdjacentDoorPanelWidth.value) || 0);
+        const hingePanel = Math.max(0, Number(el.editHingePanelWidth.value) || 0);
+        const frontDoor = Math.max(0, Number(el.editCornerDoorWidth.value) || 400);
+        const total = adjacentDepth + referencePanel + hingePanel + frontDoor;
+        el.editWidth.value = String(total);
+        el.editDepth.value = String(adjacentDepth);
+        el.editCornerTotal.textContent = `總寬 ${total} mm = ${adjacentDepth} + ${referencePanel} + ${hingePanel} + ${frontDoor}`;
+      }
       el.editHandleStyle.disabled = el.editPurpose.value === "hood"
         || el.editPurpose.value === "dish-dryer"
         || isFiller
@@ -5894,7 +6266,28 @@
         .filter((item, itemIndex) => itemIndex !== index && item.type === nextType)
         .reduce((sum, item) => sum + item.width, 0);
       const available = Math.max(10, wall.width - usedByOthers);
-      const requestedWidth = Math.max(10, Number(el.editWidth.value) || 10);
+      const isBlindCorner = el.editPurpose.value === "blind-corner";
+      const cornerInput = isBlindCorner ? {
+        cornerType: "blindCorner",
+        cornerHanding: el.editCornerHanding.value === "right" ? "right" : "left",
+        adjacentCabinetDepthRef: Number(el.editAdjacentDepthRef.value),
+        adjacentDoorReferencePanelWidth: Number(el.editAdjacentDoorPanelWidth.value),
+        hingeMountPanelWidth: Number(el.editHingePanelWidth.value),
+        frontDoorWidth: Number(el.editCornerDoorWidth.value),
+        depth: Number(el.editAdjacentDepthRef.value),
+        height: Number(el.editHeight.value),
+        hasCornerShelf: el.editHasCornerShelf.checked,
+        cornerShelfCount: Number(el.editCornerShelfCount.value),
+        hasCornerHardware: el.editCornerHardwareType.value !== "none",
+        cornerHardwareType: el.editCornerHardwareType.value,
+        showInternalStructure: el.editShowCornerStructure.checked
+      } : null;
+      const normalizedCorner = isBlindCorner ? window.MODUDRAFTCore.normalizeBlindCorner(cornerInput) : null;
+      const requestedWidth = isBlindCorner ? normalizedCorner.totalWidth : Math.max(10, Number(el.editWidth.value) || 10);
+      if (isBlindCorner && requestedWidth > available) {
+        showKitchenToast(`盲角轉角下櫃需要 ${requestedWidth} mm，目前只剩 ${available} mm。`, "warning");
+        return;
+      }
       cabinet.name = el.editName.value.trim() || "未命名櫃體";
       cabinet.width = Math.min(Math.round(requestedWidth), available);
       cabinet.type = nextType;
@@ -5908,6 +6301,19 @@
       cabinet.materialId = el.editMaterialId.value || "door-mist-white";
       cabinet.notes = el.editNotes.value.trim();
       cabinet.includeInQuote = el.editIncludeInQuote.checked;
+      if (isBlindCorner) {
+        Object.assign(cabinet, normalizedCorner);
+        cabinet.name = el.editName.value.trim() || `盲角轉角下櫃 ${normalizedCorner.totalWidth}`;
+        cabinet.type = "lower";
+        cabinet.purpose = "blind-corner";
+        cabinet.width = normalizedCorner.totalWidth;
+        cabinet.totalWidth = normalizedCorner.totalWidth;
+        cabinet.customDepth = normalizedCorner.depth;
+        cabinet.customHeight = clampNumber(el.editHeight.value, 50, wall.height, sizes.lowerHeight);
+        cabinet.frontStyle = "single-door";
+      } else {
+        delete cabinet.cornerType;
+      }
       normalizeCabinet(cabinet);
       closeModal();
       renderAll();
@@ -5973,6 +6379,9 @@
             hasCountertop: item.hasCountertop !== false,
             notes: item.notes || ""
           });
+          if (item.cornerType === "blindCorner" || item.purpose === "blind-corner") {
+            Object.assign(created, window.MODUDRAFTCore.normalizeBlindCorner(item));
+          }
           return normalizeCabinet(created);
         });
         return wall;
@@ -6196,10 +6605,26 @@
       document.getElementById("moveRightBtn").addEventListener("click", () => moveCabinet(1));
       el.editPurpose.addEventListener("change", () => {
         el.editFrontStyle.value = defaultFrontStyle(el.editPurpose.value, el.editType.value);
+        if (el.editPurpose.value === "blind-corner") {
+          el.editName.value = /^新增|^未命名/.test(el.editName.value) ? "盲角轉角下櫃 1000" : el.editName.value;
+          el.editAdjacentDepthRef.value ||= "560";
+          el.editAdjacentDoorPanelWidth.value ||= "20";
+          el.editHingePanelWidth.value ||= "20";
+          el.editCornerDoorWidth.value ||= "400";
+          el.editHasCornerShelf.checked = true;
+          el.editShowCornerStructure.checked = true;
+        }
         if (el.editPurpose.value === "hood" || el.editPurpose.value === "dish-dryer" || el.editPurpose.value === "filler" || el.editPurpose.value === "open") {
           el.editHandleStyle.value = "none";
         }
         updateSideTreatmentField();
+      });
+      [el.editAdjacentDepthRef, el.editAdjacentDoorPanelWidth, el.editHingePanelWidth, el.editCornerDoorWidth]
+        .forEach((input) => input.addEventListener("input", updateSideTreatmentField));
+      el.editCornerHardwareType.addEventListener("change", () => {
+        if (["magicCorner", "lemans"].includes(el.editCornerHardwareType.value) && Number(el.editCornerDoorWidth.value) < 450) {
+          showKitchenToast("Magic Corner 或 LeMans 五金建議門片至少 450 mm。", "warning");
+        }
       });
       el.globalHandleStyle.addEventListener("change", applyGlobalHandleStyle);
       document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
@@ -6373,7 +6798,19 @@
             estimateDomain: "kitchen",
             includeInQuote: cabinet.includeInQuote !== false,
             priceRuleId: cabinet.priceRuleId || "",
-            notes: cabinet.notes || ""
+            notes: cabinet.notes || "",
+            cornerType: cabinet.cornerType,
+            cornerHanding: cabinet.cornerHanding,
+            totalWidth: cabinet.totalWidth,
+            adjacentCabinetDepthRef: cabinet.adjacentCabinetDepthRef,
+            adjacentDoorReferencePanelWidth: cabinet.adjacentDoorReferencePanelWidth,
+            hingeMountPanelWidth: cabinet.hingeMountPanelWidth,
+            frontDoorWidth: cabinet.frontDoorWidth,
+            hasCornerShelf: cabinet.hasCornerShelf,
+            cornerShelfCount: cabinet.cornerShelfCount,
+            hasCornerHardware: cabinet.hasCornerHardware,
+            cornerHardwareType: cabinet.cornerHardwareType,
+            showInternalStructure: cabinet.showInternalStructure
           }));
         });
       });
@@ -6476,17 +6913,21 @@
     function addCabinetFromValues(values = {}) {
       const wall = activeWall();
       if (!wall) return false;
-      const layer = values.layer === "upper" ? "upper" : "lower";
-      const purpose = ["general", "drawer", "sink", "stove", "appliance", "open", "filler"].includes(values.purpose)
+      const purpose = ["general", "drawer", "sink", "stove", "blind-corner", "appliance", "open", "filler"].includes(values.purpose)
         ? values.purpose
         : "general";
-      const requestedWidth = Math.round(Number(values.width));
+      const layer = purpose === "blind-corner" ? "lower" : (values.layer === "upper" ? "upper" : "lower");
+      const requestedWidth = purpose === "blind-corner" ? 1000 : Math.round(Number(values.width));
       if (!Number.isFinite(requestedWidth) || requestedWidth <= 0) {
         showKitchenToast("請輸入有效尺寸", "error");
         return false;
       }
       const remaining = wall.width - layerTotal(wall, layer);
       const minimum = purpose === "filler" ? 10 : 50;
+      if (purpose === "blind-corner" && remaining < 1000) {
+        showKitchenToast(`盲角轉角下櫃需要 1000 mm，目前只剩 ${formatNumber(Math.max(0, remaining))} mm。`, "warning");
+        return false;
+      }
       if (remaining < minimum) {
         showKitchenToast("目前牆面已沒有足夠空間新增櫃體。", "warning");
         return false;
@@ -6496,9 +6937,11 @@
         showKitchenToast(purpose === "filler" ? "補板寬度至少需要 10 mm。" : "櫃體寬度至少需要 50 mm。", "warning");
         return false;
       }
-      const name = String(values.name || "").trim() || (layer === "upper" ? "新增吊櫃" : "新增下櫃");
+      const name = String(values.name || "").trim() || (purpose === "blind-corner" ? "盲角轉角下櫃 1000" : (layer === "upper" ? "新增吊櫃" : "新增下櫃"));
       commitKitchenMutation(`新增${name}`, () => {
-        wall.cabinets.push(makeCabinet(name, width, layer, purpose));
+        const created = makeCabinet(name, width, layer, purpose);
+        if (purpose === "blind-corner") Object.assign(created, window.MODUDRAFTCore.normalizeBlindCorner({ cornerHanding: "left" }));
+        wall.cabinets.push(normalizeCabinet(created));
       });
       setCurrentLayer(layer, { syncAssist: false });
       renderAll();
@@ -6514,7 +6957,7 @@
         return false;
       }
       const layer = preset.layer === "upper" ? "upper" : "lower";
-      const purpose = ["general", "drawer", "sink", "stove", "appliance", "open", "filler", "hood"].includes(preset.purpose)
+      const purpose = ["general", "drawer", "sink", "stove", "blind-corner", "appliance", "open", "filler", "hood"].includes(preset.purpose)
         ? preset.purpose
         : "general";
       const width = Math.max(purpose === "filler" ? 10 : 50, Math.round(Number(preset.width) || 0));
@@ -6532,6 +6975,7 @@
         created.hasToeKick = preset.hasToeKick !== false;
         created.includeInQuote = preset.includeInQuote !== false;
         created.priceRuleId = preset.priceRuleId || "";
+        if (purpose === "blind-corner") Object.assign(created, window.MODUDRAFTCore.normalizeBlindCorner(preset));
         if (purpose === "filler") created.sideTreatment = preset.id === "finished-end" ? "finished-end" : "wall-filler";
         wall.cabinets.push(normalizeCabinet(created));
       });

@@ -1,7 +1,22 @@
 (function (global) {
   "use strict";
 
-  const SCHEMA_VERSION = 2;
+  const SCHEMA_VERSION = 3;
+  const BLIND_CORNER_DEFAULTS = Object.freeze({
+    cornerType: "blindCorner",
+    cornerHanding: "left",
+    adjacentCabinetDepthRef: 560,
+    adjacentDoorReferencePanelWidth: 20,
+    hingeMountPanelWidth: 20,
+    frontDoorWidth: 400,
+    depth: 560,
+    height: 850,
+    hasCornerShelf: true,
+    cornerShelfCount: 1,
+    hasCornerHardware: false,
+    cornerHardwareType: "none",
+    showInternalStructure: true
+  });
   const PROJECT_INDEX_KEY = "modudraft:projects:v1";
   const PROJECT_KEY_PREFIX = "modudraft:project:v1:";
   const DEFAULT_PRICING = Object.freeze({
@@ -50,6 +65,68 @@
     return Math.min(max == null ? Number.MAX_SAFE_INTEGER : max, Math.max(min == null ? 0 : min, safe));
   }
 
+  function normalizeBlindCorner(input) {
+    const source = input || {};
+    const adjacentCabinetDepthRef = finiteNumber(source.adjacentCabinetDepthRef, BLIND_CORNER_DEFAULTS.adjacentCabinetDepthRef, 0, 1500);
+    const adjacentDoorReferencePanelWidth = finiteNumber(source.adjacentDoorReferencePanelWidth, BLIND_CORNER_DEFAULTS.adjacentDoorReferencePanelWidth, 0, 200);
+    const hingeMountPanelWidth = finiteNumber(source.hingeMountPanelWidth ?? source.clearancePanelWidth / 2, BLIND_CORNER_DEFAULTS.hingeMountPanelWidth, 0, 200);
+    const frontDoorWidth = finiteNumber(source.frontDoorWidth, BLIND_CORNER_DEFAULTS.frontDoorWidth, 0, 1200);
+    const totalWidth = adjacentCabinetDepthRef + adjacentDoorReferencePanelWidth + hingeMountPanelWidth + frontDoorWidth;
+    const sourceTotalWidth = Number(source.totalWidth ?? source.width);
+    const cornerStructureAdjusted = source.cornerStructureAdjusted === true
+      || (Number.isFinite(sourceTotalWidth) && Math.abs(sourceTotalWidth - totalWidth) > 0.5);
+    const hasCornerHardware = source.hasCornerHardware === true;
+    const hardwareTypes = ["none", "magicCorner", "lemans", "halfLazySusan"];
+    const cornerHardwareType = hasCornerHardware && hardwareTypes.includes(source.cornerHardwareType)
+      ? source.cornerHardwareType
+      : "none";
+    return {
+      cornerType: "blindCorner",
+      cornerHanding: source.cornerHanding === "right" ? "right" : "left",
+      totalWidth,
+      width: totalWidth,
+      originalTotalWidth: Number.isFinite(sourceTotalWidth) ? sourceTotalWidth : totalWidth,
+      cornerStructureAdjusted,
+      depth: finiteNumber(source.depth, BLIND_CORNER_DEFAULTS.depth, 300, 900),
+      height: finiteNumber(source.height ?? source.customHeight, BLIND_CORNER_DEFAULTS.height, 300, 1500),
+      adjacentCabinetDepthRef,
+      adjacentDoorReferencePanelWidth,
+      hingeMountPanelWidth,
+      frontDoorWidth,
+      hasCornerShelf: source.hasCornerShelf !== false,
+      cornerShelfCount: Math.round(finiteNumber(source.cornerShelfCount, BLIND_CORNER_DEFAULTS.cornerShelfCount, 0, 8)),
+      hasCornerHardware,
+      cornerHardwareType,
+      showInternalStructure: source.showInternalStructure !== false
+    };
+  }
+
+  function blindCornerSegments(input) {
+    const corner = normalizeBlindCorner(input);
+    const segments = [
+      { key: "adjacentDepth", label: "另一側櫃體深度對應區", width: corner.adjacentCabinetDepthRef },
+      { key: "adjacentDoorPanel", label: "相鄰門板對應板", width: corner.adjacentDoorReferencePanelWidth },
+      { key: "hingePanel", label: "鉸鏈安裝板", width: corner.hingeMountPanelWidth },
+      { key: "frontDoor", label: "正面門片區", width: corner.frontDoorWidth }
+    ];
+    return corner.cornerHanding === "right" ? segments.slice().reverse() : segments;
+  }
+
+  function validateBlindCorner(input, targetId) {
+    const source = input || {};
+    const corner = normalizeBlindCorner(source);
+    const result = [];
+    const rawTotal = Number(source.totalWidth ?? source.width);
+    if (corner.cornerStructureAdjusted || (Number.isFinite(rawTotal) && Math.abs(rawTotal - corner.totalWidth) > 0.5)) result.push(issue("blind-corner-total", "error", `盲角轉角下櫃總寬應為 ${corner.adjacentCabinetDepthRef} + ${corner.adjacentDoorReferencePanelWidth} + ${corner.hingeMountPanelWidth} + ${corner.frontDoorWidth} = ${corner.totalWidth} mm。`, targetId));
+    if (corner.adjacentDoorReferencePanelWidth < 18) result.push(issue("blind-corner-reference-panel", "warning", "相鄰門板對應板不可小於 18 mm，建議使用 20 mm。", targetId));
+    if (corner.hingeMountPanelWidth < 18) result.push(issue("blind-corner-hinge-panel", "warning", "鉸鏈安裝板不足，門片開啟時可能撞擊相鄰櫃體門板。", targetId));
+    if (corner.frontDoorWidth < 350) result.push(issue("blind-corner-door-width", "warning", "盲角轉角下櫃正面門片不可小於 350 mm，建議使用 400 mm。", targetId));
+    if (Math.abs(corner.adjacentCabinetDepthRef - corner.depth) > 1) result.push(issue("blind-corner-depth-reference", "warning", `另一側櫃體深度對應值 ${corner.adjacentCabinetDepthRef} mm 與目前櫃深 ${corner.depth} mm 不一致。`, targetId));
+    if (source.cornerHanding != null && !["left", "right"].includes(source.cornerHanding)) result.push(issue("blind-corner-handing", "error", "盲角方向必須選擇左盲角或右盲角。", targetId));
+    if (["magicCorner", "lemans"].includes(corner.cornerHardwareType) && corner.frontDoorWidth < 450) result.push(issue("blind-corner-hardware-door", "warning", `${corner.cornerHardwareType === "lemans" ? "LeMans" : "Magic Corner"} 五金建議門片至少 450 mm。`, targetId));
+    return result;
+  }
+
   function cleanData(value) {
     if (Array.isArray(value)) return value.map(cleanData);
     if (!value || typeof value !== "object") {
@@ -66,7 +143,7 @@
     const now = new Date().toISOString();
     return {
       schemaVersion: SCHEMA_VERSION,
-      version: source.version || "2.0",
+      version: source.version || "3.0",
       id: source.id || uid("project"),
       name: source.name || (source.type === "cabinet" ? "未命名系統櫃" : "未命名廚具"),
       type: ["kitchen", "cabinet", "fullInterior"].includes(source.type) ? source.type : "kitchen",
@@ -78,9 +155,9 @@
       thumbnail: source.thumbnail || "",
       unit: "mm",
       rooms: Array.isArray(source.rooms) ? source.rooms : [],
-      walls: Array.isArray(source.walls) ? source.walls : [],
+      walls: Array.isArray(source.walls) ? source.walls.map(normalizeWall) : [],
       openings: Array.isArray(source.openings) ? source.openings : [],
-      cabinets: Array.isArray(source.cabinets) ? source.cabinets : [],
+      cabinets: Array.isArray(source.cabinets) ? source.cabinets.map(normalizeCabinet) : [],
       appliances: Array.isArray(source.appliances) ? source.appliances : [],
       panels: Array.isArray(source.panels) ? source.panels : [],
       countertops: Array.isArray(source.countertops) ? source.countertops : [],
@@ -159,25 +236,28 @@
   function normalizeCabinet(cabinet) {
     const source = cabinet || {};
     const categoryMap = { lower: "baseCabinet", upper: "wallCabinet", base: "baseCabinet", wall: "wallCabinet", tall: "tallCabinet", filler: "filler", appliance: "appliance" };
-    const usage = source.usage || source.purpose || source.cabinetKind || "storage";
+    const isBlindCorner = source.cornerType === "blindCorner" || ["blind-corner", "blindCorner"].includes(source.usage || source.purpose || source.cabinetKind);
+    const corner = isBlindCorner ? normalizeBlindCorner(source) : null;
+    const usage = isBlindCorner ? "blind-corner" : (source.usage || source.purpose || source.cabinetKind || "storage");
     const category = source.category || categoryMap[source.type] || (usage === "filler" ? "filler" : "baseCabinet");
     const typeMap = { baseCabinet: "base", wallCabinet: "wall", tallCabinet: "tall", filler: "filler", appliance: "appliance" };
-    return Object.assign({}, source, {
+    return Object.assign({}, source, corner || {}, {
       id: source.id || uid("cabinet"),
-      name: source.name || "未命名櫃體",
+      name: source.name || (isBlindCorner ? "盲角轉角下櫃 1000" : "未命名櫃體"),
       type: source.type && !["lower", "upper"].includes(source.type) ? source.type : (typeMap[category] || (source.type === "upper" ? "wall" : "base")),
       category,
       usage,
       wallId: source.wallId || "",
       orderIndex: finiteNumber(source.orderIndex, 0, 0, 9999),
-      width: finiteNumber(source.width, 600, 50, 5000),
-      height: finiteNumber(source.height == null ? source.bodyHeight : source.height, 2400, 50, 5000),
-      depth: finiteNumber(source.depth, 600, 50, 1500),
+      width: isBlindCorner ? corner.totalWidth : finiteNumber(source.width, 600, 50, 5000),
+      totalWidth: isBlindCorner ? corner.totalWidth : finiteNumber(source.totalWidth ?? source.width, 600, 50, 5000),
+      height: finiteNumber(source.height == null ? source.bodyHeight : source.height, isBlindCorner ? BLIND_CORNER_DEFAULTS.height : 2400, 50, 5000),
+      depth: finiteNumber(source.depth, isBlindCorner ? BLIND_CORNER_DEFAULTS.depth : 600, 50, 1500),
       x: finiteNumber(source.x, 0, -30000, 30000),
       y: finiteNumber(source.y, 0, -30000, 30000),
       z: finiteNumber(source.z, 0, -30000, 30000),
       materialId: source.materialId || "door-mist-white",
-      doorStyle: source.doorStyle || source.frontStyle || "double-door",
+      doorStyle: source.doorStyle || source.frontStyle || (isBlindCorner ? "single-door" : "double-door"),
       handleStyle: source.handleStyle || "none",
       hasCountertop: source.hasCountertop ?? source.countertop ?? category === "baseCabinet",
       hasToeKick: source.hasToeKick ?? source.toeKick ?? category === "baseCabinet",
@@ -213,6 +293,7 @@
   function validateCabinet(cabinet, wall) {
     const result = [];
     const normalized = normalizeCabinet(cabinet);
+    if (normalized.cornerType === "blindCorner") result.push(...validateBlindCorner(cabinet, normalized.id));
     if (normalized.width < 200 && normalized.usage !== "filler") result.push(issue("cabinet-narrow", "warning", `${normalized.name} 寬度過窄，請確認施工可行性`, normalized.id));
     if (normalized.height > finiteNumber(wall && wall.height, 10000, 0, 10000)) result.push(issue("cabinet-ceiling", "error", `${normalized.name} 高度超過天花`, normalized.id));
     if (normalized.doorSystem === "sliding" && normalized.usage === "wardrobe" && normalized.depth < 650) result.push(issue("sliding-depth", "warning", `${normalized.name} 為衣櫃推拉門，建議深度至少 650 mm`, normalized.id));
@@ -356,6 +437,7 @@
     MATERIALS,
     STYLE_PRESETS,
     DEFAULT_PRICING,
+    BLIND_CORNER_DEFAULTS,
     uid,
     finiteNumber,
     cleanData,
@@ -363,6 +445,9 @@
     migrateProject,
     normalizeWall,
     normalizeCabinet,
+    normalizeBlindCorner,
+    blindCornerSegments,
+    validateBlindCorner,
     validateWall,
     validateCabinet,
     validateProject,

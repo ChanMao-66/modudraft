@@ -321,7 +321,7 @@
       type: project?.type,
       kitchenType: project?.kitchenType,
       walls: (project?.walls || []).map((wall) => [wall.id, wall.width, wall.height]),
-      cabinets: (project?.cabinets || []).map((cabinet) => [cabinet.id, cabinet.wallId, cabinet.category, cabinetUsage(cabinet), cabinet.width, cabinet.height, cabinet.depth, cabinet.doorStyle, cabinet.handleStyle, cabinet.runLayer, countedSidePanels(cabinet), cabinet.drawers?.length, cabinet.shelves?.length, cabinet.accessories?.length])
+      cabinets: (project?.cabinets || []).map((cabinet) => [cabinet.id, cabinet.wallId, cabinet.category, cabinetUsage(cabinet), cabinet.width, cabinet.height, cabinet.depth, cabinet.doorStyle, cabinet.handleStyle, cabinet.runLayer, cabinet.cornerType, cabinet.cornerHanding, cabinet.adjacentCabinetDepthRef, cabinet.adjacentDoorReferencePanelWidth, cabinet.hingeMountPanelWidth, cabinet.frontDoorWidth, cabinet.cornerHardwareType, countedSidePanels(cabinet), cabinet.drawers?.length, cabinet.shelves?.length, cabinet.accessories?.length])
     };
     const text = JSON.stringify(projection);
     let hash = 2166136261;
@@ -342,7 +342,9 @@
     const regular = cabinets.filter((cabinet) => !isFiller(cabinet));
     const upper = regular.filter(isUpper);
     const tall = regular.filter((cabinet) => !isUpper(cabinet) && isTall(cabinet));
-    const lower = regular.filter((cabinet) => !isUpper(cabinet) && !isTall(cabinet));
+    const allLower = regular.filter((cabinet) => !isUpper(cabinet) && !isTall(cabinet));
+    const blindCorners = allLower.filter((cabinet) => cabinet.cornerType === "blindCorner" || cabinetUsage(cabinet) === "blind-corner");
+    const lower = allLower.filter((cabinet) => !blindCorners.includes(cabinet));
     const fridgeTall = tall.filter((cabinet) => cabinetUsage(cabinet).includes("fridge"));
     const applianceTall = tall.filter((cabinet) => ["appliance", "electric-tall", "appliance-tall"].some((key) => cabinetUsage(cabinet).includes(key)));
     const storageTall = tall.filter((cabinet) => !fridgeTall.includes(cabinet) && !applianceTall.includes(cabinet));
@@ -350,18 +352,26 @@
 
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "upper-run", "上櫃", "木芯板桶身／六面結烤", "CM", sumCm(upper), kitchenRates.upperCabinetBasicPerCm, "kitchen.upperCabinetBasicPerCm");
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "base-run", "下櫃", "木芯板桶身／六面結烤", "CM", sumCm(lower), kitchenRates.baseCabinetBasicPerCm, "kitchen.baseCabinetBasicPerCm");
+    blindCorners.forEach((cabinet) => {
+      const adjacentDepth = safeNumber(cabinet.adjacentCabinetDepthRef, 560, 0);
+      const referencePanel = safeNumber(cabinet.adjacentDoorReferencePanelWidth, 20, 0);
+      const hingePanel = safeNumber(cabinet.hingeMountPanelWidth, 20, 0);
+      const frontDoor = safeNumber(cabinet.frontDoorWidth, 400, 0);
+      const total = adjacentDepth + referencePanel + hingePanel + frontDoor;
+      groupedItem(items, "kitchen-carcass", "kitchenCabinet", cabinet.id || `blind-corner-${items.length}`, "轉角下櫃", `${adjacentDepth}/${referencePanel}/${hingePanel}/${frontDoor} 結構`, "CM", roundQuantity(total / 10, 1), kitchenRates.baseCabinetBasicPerCm, "kitchen.baseCabinetBasicPerCm");
+    });
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "tall-run", "高櫃", "高櫃桶身與門片", "CM", sumCm(storageTall), kitchenRates.tallCabinetPerCm, "kitchen.tallCabinetPerCm");
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "fridge-run", "冰箱高櫃", "冰箱上櫃／側櫃", "CM", sumCm(fridgeTall), kitchenRates.fridgeCabinetPerCm, "kitchen.fridgeCabinetPerCm");
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "appliance-run", "電器高櫃", "電器收納高櫃", "CM", sumCm(applianceTall), kitchenRates.tallCabinetPerCm, "kitchen.tallCabinetPerCm");
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "fillers", "補板／補邊", "依現場牆面收尾", "片", fillerCabinets.length, kitchenRates.fillerPanelPerPiece, "kitchen.fillerPanelPerPiece");
     const sidePanelCount = regular.reduce((sum, cabinet) => sum + countedSidePanels(cabinet), 0);
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "side-panels", "見光側封板", "櫃體落地側封", "片", sidePanelCount, kitchenRates.sidePanelPerPiece, "kitchen.sidePanelPerPiece");
-    const toeKickCm = roundQuantity(lower.filter((cabinet) => cabinet.hasToeKick !== false && cabinet.toeKick !== false).reduce((sum, cabinet) => sum + cabinetWidth(cabinet), 0) / 10, 1);
+    const toeKickCm = roundQuantity(allLower.filter((cabinet) => cabinet.hasToeKick !== false && cabinet.toeKick !== false).reduce((sum, cabinet) => sum + cabinetWidth(cabinet), 0) / 10, 1);
     groupedItem(items, "kitchen-carcass", "kitchenCabinet", "toe-kick", "踢腳板", "連續踢腳板", "CM", toeKickCm, kitchenRates.toeKickPerCm, "kitchen.toeKickPerCm");
 
     const countertopOption = COUNTERTOP_OPTIONS[settings.countertopMaterial] || COUNTERTOP_OPTIONS.koreanArtificialStone;
     const explicitCountertopMm = (project?.countertops || []).reduce((sum, item) => sum + safeNumber(item.length ?? item.width, 0), 0);
-    const inferredCountertopMm = lower.filter((cabinet) => cabinet.hasCountertop !== false && cabinet.countertop !== false).reduce((sum, cabinet) => sum + cabinetWidth(cabinet), 0);
+    const inferredCountertopMm = allLower.filter((cabinet) => cabinet.hasCountertop !== false && cabinet.countertop !== false).reduce((sum, cabinet) => sum + cabinetWidth(cabinet), 0);
     const countertopCm = roundQuantity((explicitCountertopMm || inferredCountertopMm) / 10, 1);
     groupedItem(items, "countertop-sink", "countertop", "countertop-run", countertopOption.name, "連續檯面，實際接縫依現場確認", "CM", countertopCm, rates.countertop[countertopOption.rateKey], `countertop.${countertopOption.rateKey}`);
 

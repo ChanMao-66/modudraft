@@ -169,6 +169,8 @@
   defineHelp("cabinet-notes", "櫃體備註", "櫃體", "記錄現場、五金、設備或施工注意事項。", "需要把圖面無法表達的資訊帶到櫃體清單時使用。", ["輸入備註。", "儲存櫃體。", "到櫃體清單核對。"], ["備註不會改變 3D 幾何。"], "備註：右側避開瓦斯管 50 mm。", ["cabinet-list"]);
   defineHelp("cabinet-layer", "下櫃／吊櫃", "櫃體", "決定目前新增與 AI 建議要套用在哪一層。", "新增櫃體或查看剩餘空間前使用。", ["確認頂部狀態顯示下櫃或吊櫃。", "點擊可快速切換。"], ["下櫃與吊櫃不能在輔助等分中混選。"], "先切到吊櫃，再新增烘碗機櫃。", ["add-cabinet", "equalize"]);
   defineHelp("cabinet-purpose", "櫃體用途", "櫃體", "指定櫃體是收納、水槽、爐台、抽屜或設備櫃。", "要讓立面與 3D 顯示正確設備外觀時使用。", ["開啟用途分頁。", "選擇用途卡片。", "按儲存。"], ["用途會影響預設門片與設備外觀。"], "水槽櫃會顯示水槽與龍頭。", ["purpose-sink", "purpose-stove"]);
+  defineHelp("blind-corner", "盲角轉角下櫃", "櫃體", "使用 560 / 20 / 20 / 400 四段結構處理 L 型轉角。", "L 型廚房需要利用轉角，又要避免門片互撞時使用。", ["新增盲角轉角下櫃 1000。", "選擇左盲角或右盲角。", "確認兩片 20 mm 板與 400 mm 門片。", "到平面與 3D 檢查鏡像方向。"], ["第一片 20 mm 是相鄰門板對應板；第二片 20 mm 是鉸鏈安裝板，不是單一 40 mm 補板。", "Magic Corner 或 LeMans 五金建議門片至少 450 mm。"], "左盲角依序為 560 / 20 / 20 / 400；右盲角會完整鏡像。", ["view-floor", "view-3d"]);
+  HELP_REGISTRY["purpose-blind-corner"] = HELP_REGISTRY["blind-corner"];
   defineHelp("purpose-general", "一般收納櫃", "櫃體用途", "沒有特殊設備的一般門櫃。", "收納鍋具、乾貨或清潔用品時使用。", ["用途選一般收納櫃。", "選擇門片與把手。"], ["可依寬度改成單門或對開門。"], "450 mm 單門備品櫃。", ["door-style-single-door"]);
   defineHelp("purpose-stove", "爐台櫃", "櫃體用途", "上方配置瓦斯爐或爐具的下櫃。", "規劃烹調區時使用。", ["設定下櫃用途為爐台。", "確認上方吊櫃為排油煙機。", "檢查與水槽距離。"], ["不要讓一般吊櫃直接蓋住爐台。"], "800 mm 爐台櫃搭配同寬排油煙機。", ["purpose-hood", "purpose-sink"]);
   defineHelp("purpose-sink", "水槽櫃", "櫃體用途", "容納水槽、龍頭與下方管線的下櫃。", "規劃洗滌區時使用。", ["設定用途為水槽。", "選擇水槽安裝方式。", "確認龍頭遠離爐台。"], ["下方要保留管線維修空間。"], "800 mm 對開門水槽櫃。", ["sink-undermount", "purpose-dish-dryer"]);
@@ -362,6 +364,9 @@
     editName: "cabinet-name", editWidth: "cabinet-width", editType: "cabinet-layer",
     editHeight: "cabinet-height", editDepth: "cabinet-depth", editMaterialId: "cabinet-material", editNotes: "cabinet-notes", editIncludeInQuote: "cabinet-quote",
     editPurpose: "cabinet-purpose", editFrontStyle: "door-style-double-door",
+    editBlindCornerFields: "blind-corner", editCornerHanding: "blind-corner", editAdjacentDepthRef: "blind-corner",
+    editAdjacentDoorPanelWidth: "blind-corner", editHingePanelWidth: "blind-corner", editCornerDoorWidth: "blind-corner",
+    editHasCornerShelf: "blind-corner", editCornerShelfCount: "blind-corner", editCornerHardwareType: "blind-corner", editShowCornerStructure: "blind-corner",
     editHandleStyle: "handle-style-none", editSinkMount: "sink-undermount",
     saveCabinetBtn: "save-cabinet", cancelEditBtn: "cabinet-editor",
     copyCabinetBtn: "copy-cabinet", deleteCabinetBtn: "delete-cabinet",

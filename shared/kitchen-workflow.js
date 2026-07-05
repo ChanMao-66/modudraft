@@ -16,6 +16,7 @@
     { id: "sink-800", name: "水槽下櫃 800", layer: "lower", purpose: "sink", width: 800, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
     { id: "stove-600", name: "爐台下櫃 600", layer: "lower", purpose: "stove", width: 600, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
     { id: "stove-700", name: "爐台下櫃 700", layer: "lower", purpose: "stove", width: 700, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "blind-corner-1000", name: "盲角轉角下櫃 1000", layer: "lower", purpose: "blind-corner", width: 1000, totalWidth: 1000, height: 850, depth: 560, cornerType: "blindCorner", cornerHanding: "left", adjacentCabinetDepthRef: 560, adjacentDoorReferencePanelWidth: 20, hingeMountPanelWidth: 20, frontDoorWidth: 400, hasCornerShelf: true, cornerShelfCount: 1, hasCornerHardware: false, cornerHardwareType: "none", showInternalStructure: true, hasCountertop: true, hasToeKick: true, frontStyle: "single-door", priceRuleId: "baseCabinetBasicPerCm", description: "560 / 20 / 20 / 400 結構；雙 20 板分別作為門板對位與鉸鏈安裝。" },
     { id: "wall-300", name: "標準吊櫃 300", layer: "upper", purpose: "general", width: 300, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "wall-400", name: "標準吊櫃 400", layer: "upper", purpose: "general", width: 400, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "wall-600", name: "標準吊櫃 600", layer: "upper", purpose: "general", width: 600, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
@@ -164,13 +165,31 @@
 
   function buildStorageWall(width, config) {
     const filler = width >= 1200 ? 30 : 20;
-    const corner = Math.min(650, Math.max(300, Math.round(width * 0.32)));
+    const corner = 1000;
     const usable = Math.max(0, width - corner - filler);
     const split = splitStorageWidth(usable, "側牆收納櫃", "lower");
-    const lower = [cabinet("轉角保留區", corner, "lower", "open", "open", { isCornerReserve: true }), ...split.cabinets];
+    const lower = [cabinet("盲角轉角下櫃 1000", corner, "lower", "blind-corner", "single-door", {
+      cornerType: "blindCorner",
+      cornerHanding: config.turnDirection === "right" ? "right" : "left",
+      totalWidth: 1000,
+      adjacentCabinetDepthRef: 560,
+      adjacentDoorReferencePanelWidth: 20,
+      hingeMountPanelWidth: 20,
+      frontDoorWidth: 400,
+      depth: 560,
+      height: config.lowerHeight || 850,
+      hasCornerShelf: true,
+      cornerShelfCount: 1,
+      hasCornerHardware: false,
+      cornerHardwareType: "none",
+      showInternalStructure: true,
+      hasCountertop: true,
+      hasToeKick: true,
+      priceRuleId: "baseCabinetBasicPerCm"
+    }), ...split.cabinets];
     const endFiller = filler + split.remainder;
     if (endFiller >= 10) lower.push(cabinet("側牆收尾補板", endFiller, "lower", "filler", "panel"));
-    const upper = config.upperMode === "none" ? [] : lower.filter((item) => !item.isCornerReserve && item.purpose !== "filler").map((item) => cabinet("側牆收納吊櫃", item.width, "upper", "general", "double-door"));
+    const upper = config.upperMode === "none" ? [] : lower.filter((item) => item.purpose !== "blind-corner" && item.purpose !== "filler").map((item) => cabinet("側牆收納吊櫃", item.width, "upper", "general", "double-door"));
     return lower.concat(upper);
   }
 
@@ -186,7 +205,7 @@
     return {
       type: "L",
       walls,
-      warnings: main.warnings.concat("L 型目前採穩定簡化轉角保留區；施工前請在專業模式確認轉角櫃與開門方向。"),
+      warnings: main.warnings.concat("L 型已使用 560 / 20 / 20 / 400 盲角轉角下櫃；施工前請依現場確認左右方向與五金。"),
       summary: summarizePlan(walls)
     };
   }
@@ -320,7 +339,7 @@
       ];
       libraryBody.innerHTML = `${groups.map((group) => {
         const items = STANDARD_CABINETS.filter((item) => group.id === "filler" ? item.purpose === "filler" && item.id !== "filler-top" : item.layer === group.id && item.purpose !== "filler");
-        return `<section class="md-kw-library-group"><header><div><b>${group.title}</b><span>${group.note}</span></div><em>${items.length} 種</em></header><div class="md-kw-library-grid">${items.map((item) => `<button type="button" data-kw-preset="${item.id}" data-help-id="standard-cabinet-library"><span>${item.layer === "upper" ? "吊" : item.purpose === "filler" ? "補" : "下"}</span><b>${item.name}</b><small>寬 ${item.width} × 高 ${item.height} × 深 ${item.depth} mm</small><em>加入目前牆面</em></button>`).join("")}</div></section>`;
+        return `<section class="md-kw-library-group"><header><div><b>${group.title}</b><span>${group.note}</span></div><em>${items.length} 種</em></header><div class="md-kw-library-grid">${items.map((item) => `<button type="button" data-kw-preset="${item.id}" data-help-id="${item.purpose === "blind-corner" ? "blind-corner" : "standard-cabinet-library"}"><span>${item.layer === "upper" ? "吊" : item.purpose === "filler" ? "補" : "下"}</span><b>${item.name}</b><small>${item.description ? escapeHtml(item.description) : `寬 ${item.width} × 高 ${item.height} × 深 ${item.depth} mm`}</small><em>加入目前牆面</em></button>`).join("")}</div></section>`;
       }).join("")}<aside class="md-kw-library-note"><b>高櫃提示</b><span>目前高櫃仍可從一般櫃體進階尺寸調整建立；待高櫃檯面與踢腳規則完成後，會再開放一鍵標準高櫃。</span></aside>`;
     }
 

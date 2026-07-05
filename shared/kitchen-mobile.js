@@ -348,7 +348,8 @@
             <label class="mobile-field">寬度 mm<input id="mobileAddWidth" type="number" inputmode="numeric" pattern="[0-9]*" value="600" min="50" data-help-id="cabinet-width"></label>
           </div>
           <label class="mobile-field" style="margin-top:9px">名稱<input id="mobileAddName" type="text" value="${layer === "upper" ? "新增吊櫃" : "新增下櫃"}" data-help-id="cabinet-name"></label>
-          <label class="mobile-field" style="margin-top:9px">用途<select id="mobileAddPurpose" data-help-id="cabinet-purpose"><option value="general">一般收納櫃</option><option value="drawer">抽屜櫃</option><option value="sink">水槽櫃</option><option value="stove">爐台櫃</option><option value="appliance">嵌入電器櫃</option><option value="open">開放櫃</option><option value="filler">補板／補邊</option></select></label>
+          <label class="mobile-field" style="margin-top:9px">用途<select id="mobileAddPurpose" data-help-id="cabinet-purpose"><option value="general">一般收納櫃</option><option value="drawer">抽屜櫃</option><option value="sink">水槽櫃</option><option value="stove">爐台櫃</option><option value="blind-corner">盲角轉角下櫃 1000</option><option value="appliance">嵌入電器櫃</option><option value="open">開放櫃</option><option value="filler">補板／補邊</option></select></label>
+          <p class="mobile-field-note">盲角轉角櫃採 560 / 20 / 20 / 400 結構，加入後可編輯左右方向與轉角五金。</p>
           <button type="button" class="primary mobile-sheet-primary" data-sheet-action="create-cabinet" data-help-id="add-cabinet">新增到目前牆面</button>
         </section>
         <section class="mobile-sheet-section">
