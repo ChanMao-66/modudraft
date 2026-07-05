@@ -405,6 +405,7 @@ let systemProductProject = null;
 let systemProductAutosaveTimer = 0;
 let systemProductSuite = null;
 let systemRenderHub = null;
+let systemEstimateController = null;
 
 function systemProjectSnapshot() {
   const core = window.MODUDRAFTCore;
@@ -418,11 +419,11 @@ function systemProjectSnapshot() {
   state.walls.forEach((wall) => {
     calculateLayout(wall).forEach(({ item, x }) => {
       if (item.type === "filler") {
-        cabinets.push(core.normalizeCabinet({ id: item.id, name: item.name, category: "filler", usage: "filler", wallId: wall.id, runLayer: "full", x, width: item.width, height: item.height, depth: item.depth }));
+        cabinets.push(core.normalizeCabinet({ id: item.id, name: item.name, category: "filler", usage: "filler", wallId: wall.id, runLayer: "full", estimateDomain: "system", x, width: item.width, height: item.height, depth: item.depth }));
         return;
       }
       cabinets.push(core.normalizeCabinet({
-        id: item.id, name: item.name, category: "tall", usage: item.cabinetKind, wallId: wall.id, runLayer: "full", x,
+        id: item.id, name: item.name, category: "tall", usage: item.cabinetKind, wallId: wall.id, runLayer: "full", estimateDomain: "system", x,
         width: itemWidth(item), height: item.bodyHeight + item.plinthHeight, depth: cabinetTotalDepth(item),
         doorStyle: `${item.doorSystem}-${item.doorPosition}-${item.doorLayout}`,
         sidePanel: { left: item.leftFinishedEnd, right: item.rightFinishedEnd },
@@ -440,6 +441,8 @@ function systemProjectSnapshot() {
     cabinets,
     stylePreset: state.projectStyle || systemProductProject.stylePreset,
     materialAssignments: state.materialPalette || systemProductProject.materialAssignments,
+    estimateDocument: systemProductProject.estimateDocument || null,
+    estimateRates: systemProductProject.estimateRates || {},
     sourceState: { system: { walls: core.cleanData(state.walls), activeWallId: state.activeWallId, showDoors: state.showDoors, materialPalette: state.materialPalette, renderMode: state.renderMode, renderStyle: state.renderStyle } }
   });
 }
@@ -557,5 +560,26 @@ function initializeSystemRenderWorkflow() {
   el.normalRenderBtn.classList.toggle("active", state.renderMode === "material");
 }
 
-function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view,true);updateFlowUI();if(window.lucide)window.lucide.createIcons();initializeSystemProductSuite();initializeSystemRenderWorkflow();window.MODUDRAFTHelp?.mount({mode:"cabinet",assetBase:"../",buttonTarget:".header-actions",autoOpen:false,onTeachingModeChange:enabled=>window.MODUDRAFTSystemMobileController?.gestureManager?.setTeachingMode(enabled)});}
+function initializeSystemEstimate() {
+  if (!window.MODUDRAFTEstimate || !window.MODUDRAFTCore) return;
+  systemEstimateController = window.MODUDRAFTEstimate.mount({
+    type: "cabinet",
+    buttonTarget: ".header-actions",
+    getProject: systemProjectSnapshot,
+    saveDocument: estimateDocument => {
+      if (!systemProductProject) systemProjectSnapshot();
+      systemProductProject = window.MODUDRAFTCore.createProject({
+        ...systemProductProject,
+        type: "cabinet",
+        estimateDocument,
+        estimateRates: estimateDocument.rates || {}
+      });
+      scheduleSystemProjectAutosave();
+    },
+    showToast
+  });
+  if (el.dockEstimate) el.dockEstimate.onclick = () => systemEstimateController?.open();
+}
+
+function initialize(){cacheElements();loadState();bindEvents();el.showDoorsBtn.classList.toggle("active",state.showDoors);updateForms();switchView(state.view,true);updateFlowUI();if(window.lucide)window.lucide.createIcons();initializeSystemProductSuite();initializeSystemRenderWorkflow();initializeSystemEstimate();window.MODUDRAFTHelp?.mount({mode:"cabinet",assetBase:"../",buttonTarget:".header-actions",autoOpen:false,onTeachingModeChange:enabled=>window.MODUDRAFTSystemMobileController?.gestureManager?.setTeachingMode(enabled)});}
 document.addEventListener("DOMContentLoaded",initialize);

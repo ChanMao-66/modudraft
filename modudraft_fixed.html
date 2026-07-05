@@ -16,7 +16,8 @@
   <link rel="stylesheet" href="./shared/help-system.css?v=20260705-mobile-foundation-v2">
   <link rel="stylesheet" href="./shared/render-workflow.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
-  <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-mobile-foundation-v2">
+  <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-estimate-v1">
+  <link rel="stylesheet" href="./shared/estimate.css?v=20260705-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1924,13 +1925,14 @@
     </section>
   </div>
 
-  <script src="./shared/modudraft-core.js?v=20260703-v4"></script>
+  <script src="./shared/modudraft-core.js?v=20260705-estimate-v1"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
-  <script src="./shared/help-system.js?v=20260705-mobile-foundation-v2"></script>
+  <script src="./shared/help-system.js?v=20260705-estimate-v1"></script>
   <script src="./shared/render-workflow.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
-  <script src="./shared/kitchen-mobile.js?v=20260705-mobile-foundation-v2"></script>
+  <script src="./shared/kitchen-mobile.js?v=20260705-estimate-v1"></script>
+  <script src="./shared/estimate.js?v=20260705-v1"></script>
   <script>
     const state = {
       walls: [],
@@ -5271,7 +5273,9 @@
       if (!three.renderer || !three.camera) return;
       const width = Math.max(1, el.threeContainer.offsetWidth);
       const height = Math.max(1, el.threeContainer.offsetHeight);
-      three.renderer.setSize(width, height, false);
+      // 預覽尺寸必須同時更新 WebGL 像素與 canvas 的 CSS 尺寸。
+      // 若只更新像素，手機旋轉後會沿用上一個方向的 style 寬高而被拉伸。
+      three.renderer.setSize(width, height, true);
       three.camera.aspect = width / height;
       three.camera.updateProjectionMatrix();
     }
@@ -6185,6 +6189,7 @@
     let kitchenProductProject = null;
     let kitchenAutosaveTimer = 0;
     let kitchenRenderHub = null;
+    let kitchenEstimateController = null;
 
     function kitchenWallId(wall, index) {
       return `kitchen-wall-${wall?.id ?? index}`;
@@ -6208,15 +6213,17 @@
       }, index));
       const cabinets = [];
       state.walls.forEach((wall, wallIndex) => {
-        wall.cabinets.forEach((cabinet) => {
+        wall.cabinets.forEach((cabinet, cabinetIndex) => {
           const isUpper = cabinet.type === "upper";
+          const isFiller = cabinet.purpose === "filler";
           cabinets.push(core.normalizeCabinet({
             id: cabinet.id,
             name: cabinet.name,
-            category: cabinet.purpose === "filler" ? "filler" : (isUpper ? "wall" : "base"),
+            category: isFiller ? "filler" : (isUpper ? "wallCabinet" : "baseCabinet"),
             usage: cabinet.purpose,
             wallId: kitchenWallId(wall, wallIndex),
             runLayer: isUpper ? "upper" : "lower",
+            orderIndex: cabinetIndex,
             x: cabinet.x || 0,
             y: 0,
             z: isUpper ? upperBottom() : sizes.toeKickHeight,
@@ -6226,17 +6233,25 @@
             doorStyle: cabinet.frontStyle,
             handleStyle: cabinet.handleStyle,
             sidePanel: cabinet.sideTreatment,
-            toeKick: !isUpper,
-            countertop: !isUpper
+            hasToeKick: !isUpper && !isFiller,
+            hasCountertop: !isUpper && !isFiller,
+            isSinkCabinet: cabinet.purpose === "sink",
+            isCooktopCabinet: cabinet.purpose === "stove",
+            isFiller,
+            estimateDomain: "kitchen",
+            includeInQuote: true
           }));
         });
       });
       return core.createProject(Object.assign({}, kitchenProductProject, {
         type: "kitchen",
+        kitchenType: state.walls.length > 1 ? "L" : "straight",
         walls,
         cabinets,
         stylePreset: state.projectStyle || kitchenProductProject.stylePreset,
         materialAssignments: state.materialPalette || kitchenProductProject.materialAssignments,
+        estimateDocument: kitchenProductProject.estimateDocument || null,
+        estimateRates: kitchenProductProject.estimateRates || {},
         sourceState: {
           kitchen: {
             walls: core.cleanData(state.walls),
@@ -6699,9 +6714,30 @@
       document.getElementById("materialRenderBtn").classList.toggle("active", state.renderMode === "material");
     }
 
+    function initializeKitchenEstimate() {
+      if (!window.MODUDRAFTEstimate || !window.MODUDRAFTCore) return;
+      kitchenEstimateController = window.MODUDRAFTEstimate.mount({
+        type: "kitchen",
+        buttonTarget: ".toolbar .actions",
+        getProject: kitchenProjectSnapshot,
+        saveDocument: (estimateDocument) => {
+          if (!kitchenProductProject) kitchenProjectSnapshot();
+          kitchenProductProject = window.MODUDRAFTCore.createProject({
+            ...kitchenProductProject,
+            type: "kitchen",
+            estimateDocument,
+            estimateRates: estimateDocument.rates || {}
+          });
+          scheduleKitchenAutosave();
+        },
+        showToast: showKitchenToast
+      });
+    }
+
     bindEvents();
     initializeKitchenProductSuite();
     initializeKitchenRenderWorkflow();
+    initializeKitchenEstimate();
     kitchenHelpController = window.MODUDRAFTHelp?.mount({
       mode: "kitchen",
       assetBase: "./",
@@ -6767,6 +6803,7 @@
       deleteWall: deleteActiveWall,
       addCabinet: addCabinetFromValues,
       startEqualize: startEqualizeMode,
+      openEstimate: () => kitchenEstimateController?.open(),
       openSelectedCabinet: (tabName) => {
         if (state.selectedIndex !== null) {
           openEditModal(state.selectedIndex);

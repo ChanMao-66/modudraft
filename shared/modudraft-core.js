@@ -1,9 +1,21 @@
 (function (global) {
   "use strict";
 
-  const SCHEMA_VERSION = 1;
+  const SCHEMA_VERSION = 2;
   const PROJECT_INDEX_KEY = "modudraft:projects:v1";
   const PROJECT_KEY_PREFIX = "modudraft:project:v1:";
+  const DEFAULT_PRICING = Object.freeze({
+    baseCabinetPricePerMm: 12,
+    wallCabinetPricePerMm: 9,
+    tallCabinetPricePerMm: 16,
+    countertopPricePerMm: 7,
+    fillerPricePerPiece: 1200,
+    handlePricePerPiece: 280,
+    sinkDefaultPrice: 8500,
+    cooktopDefaultPrice: 12000,
+    hoodDefaultPrice: 9800,
+    installationBasePrice: 18000
+  });
 
   const MATERIALS = [
     { id: "door-mist-white", name: "霧面暖白", category: "door", color: "#e8e5df", roughness: 0.78, metalness: 0, price: 1380, note: "柔霧門板" },
@@ -54,9 +66,12 @@
     const now = new Date().toISOString();
     return {
       schemaVersion: SCHEMA_VERSION,
+      version: source.version || "2.0",
       id: source.id || uid("project"),
       name: source.name || (source.type === "cabinet" ? "未命名系統櫃" : "未命名廚具"),
       type: ["kitchen", "cabinet", "fullInterior"].includes(source.type) ? source.type : "kitchen",
+      mode: ["kitchen", "systemCabinet"].includes(source.mode) ? source.mode : (source.type === "cabinet" ? "systemCabinet" : "kitchen"),
+      kitchenType: ["straight", "L", "U", "island"].includes(source.kitchenType) ? source.kitchenType : "straight",
       createdAt: source.createdAt || now,
       updatedAt: now,
       thumbnail: source.thumbnail || "",
@@ -66,6 +81,8 @@
       openings: Array.isArray(source.openings) ? source.openings : [],
       cabinets: Array.isArray(source.cabinets) ? source.cabinets : [],
       appliances: Array.isArray(source.appliances) ? source.appliances : [],
+      panels: Array.isArray(source.panels) ? source.panels : [],
+      countertops: Array.isArray(source.countertops) ? source.countertops : [],
       materials: Array.isArray(source.materials) ? source.materials : MATERIALS.slice(),
       materialAssignments: source.materialAssignments || {},
       stylePreset: source.stylePreset || "modern",
@@ -73,6 +90,11 @@
       renderSettings: Object.assign({ ratio: "4:3", resolution: "1920x1440", lighting: "自然柔光", style: "現代簡約" }, source.renderSettings || {}),
       exportSettings: Object.assign({ format: "jpg", includeDimensions: true, includeNotes: true }, source.exportSettings || {}),
       quotationItems: Array.isArray(source.quotationItems) ? source.quotationItems : [],
+      estimateDocument: source.estimateDocument && typeof source.estimateDocument === "object" ? cleanData(source.estimateDocument) : null,
+      estimateRates: source.estimateRates && typeof source.estimateRates === "object" ? cleanData(source.estimateRates) : {},
+      pricing: Object.assign({}, DEFAULT_PRICING, source.pricing || source.pricingSettings || {}),
+      validations: Array.isArray(source.validations) ? source.validations : [],
+      viewSettings: Object.assign({ activeView: "floor", showDimensions: true, showWalls: true }, source.viewSettings || {}),
       sourceState: cleanData(source.sourceState || {})
     };
   }
@@ -80,14 +102,33 @@
   function migrateProject(raw, fallbackType) {
     if (!raw || typeof raw !== "object") return createProject({ type: fallbackType });
     if (raw.schemaVersion === SCHEMA_VERSION) return createProject(raw);
-    if (raw.project && typeof raw.project === "object") return createProject(raw.project);
-    return createProject({
-      id: raw.id,
-      name: raw.name,
-      type: fallbackType || raw.type,
-      walls: raw.walls,
-      sourceState: raw
+    const legacy = raw.project && typeof raw.project === "object" ? raw.project : raw;
+    const migrated = createProject({
+      id: legacy.id,
+      name: legacy.name,
+      type: fallbackType || legacy.type,
+      mode: legacy.mode,
+      kitchenType: legacy.kitchenType || (legacy.sourceState?.kitchen?.walls?.length > 1 ? "L" : "straight"),
+      createdAt: legacy.createdAt,
+      updatedAt: legacy.updatedAt,
+      walls: legacy.walls,
+      cabinets: legacy.cabinets,
+      appliances: legacy.appliances,
+      panels: legacy.panels,
+      countertops: legacy.countertops,
+      materials: legacy.materials,
+      materialAssignments: legacy.materialAssignments,
+      stylePreset: legacy.stylePreset,
+      pricing: legacy.pricing || legacy.pricingSettings,
+      estimateDocument: legacy.estimateDocument,
+      estimateRates: legacy.estimateRates,
+      renderSettings: legacy.renderSettings,
+      exportSettings: legacy.exportSettings,
+      viewSettings: legacy.viewSettings,
+      sourceState: legacy.sourceState && Object.keys(legacy.sourceState).length ? legacy.sourceState : legacy
     });
+    migrated.migratedFrom = Number(raw.schemaVersion) || 0;
+    return migrated;
   }
 
   function normalizeWall(wall, index) {
@@ -100,7 +141,10 @@
       width,
       height,
       thickness: finiteNumber(source.thickness, 120, 20, 1000),
+      x: finiteNumber(source.x ?? source.startPoint?.x, 0, -30000, 30000),
+      y: finiteNumber(source.y ?? source.startPoint?.y, 0, -30000, 30000),
       angle: finiteNumber(source.angle, 0, -360, 360),
+      type: ["main", "side", "island"].includes(source.type) ? source.type : ((index || 0) === 0 ? "main" : "side"),
       alignment: ["left", "center", "right"].includes(source.alignment || source.align) ? (source.alignment || source.align) : "left",
       openings: Array.isArray(source.openings) ? source.openings : []
     });
@@ -108,17 +152,38 @@
 
   function normalizeCabinet(cabinet) {
     const source = cabinet || {};
+    const categoryMap = { lower: "baseCabinet", upper: "wallCabinet", base: "baseCabinet", wall: "wallCabinet", tall: "tallCabinet", filler: "filler", appliance: "appliance" };
+    const usage = source.usage || source.purpose || source.cabinetKind || "storage";
+    const category = source.category || categoryMap[source.type] || (usage === "filler" ? "filler" : "baseCabinet");
+    const typeMap = { baseCabinet: "base", wallCabinet: "wall", tallCabinet: "tall", filler: "filler", appliance: "appliance" };
     return Object.assign({}, source, {
       id: source.id || uid("cabinet"),
       name: source.name || "未命名櫃體",
-      category: source.category || "tall",
-      usage: source.usage || source.cabinetKind || "storage",
+      type: source.type && !["lower", "upper"].includes(source.type) ? source.type : (typeMap[category] || (source.type === "upper" ? "wall" : "base")),
+      category,
+      usage,
+      wallId: source.wallId || "",
+      orderIndex: finiteNumber(source.orderIndex, 0, 0, 9999),
       width: finiteNumber(source.width, 600, 50, 5000),
       height: finiteNumber(source.height == null ? source.bodyHeight : source.height, 2400, 50, 5000),
       depth: finiteNumber(source.depth, 600, 50, 1500),
       x: finiteNumber(source.x, 0, -30000, 30000),
       y: finiteNumber(source.y, 0, -30000, 30000),
       z: finiteNumber(source.z, 0, -30000, 30000),
+      materialId: source.materialId || "door-mist-white",
+      doorStyle: source.doorStyle || source.frontStyle || "double-door",
+      handleStyle: source.handleStyle || "none",
+      hasCountertop: source.hasCountertop ?? source.countertop ?? category === "baseCabinet",
+      hasToeKick: source.hasToeKick ?? source.toeKick ?? category === "baseCabinet",
+      isSinkCabinet: source.isSinkCabinet ?? usage === "sink",
+      isCooktopCabinet: source.isCooktopCabinet ?? ["stove", "cooktop"].includes(usage),
+      isFiller: source.isFiller ?? (usage === "filler" || category === "filler"),
+      canResize: source.canResize !== false,
+      canMove: source.canMove !== false,
+      includeInQuote: source.includeInQuote !== false,
+      priceRuleId: source.priceRuleId || "",
+      notes: source.notes || "",
+      warnings: Array.isArray(source.warnings) ? source.warnings : [],
       shelves: Array.isArray(source.shelves) ? source.shelves : [],
       doors: Array.isArray(source.doors) ? source.doors : [],
       drawers: Array.isArray(source.drawers) ? source.drawers : [],
@@ -132,8 +197,10 @@
 
   function validateWall(wall) {
     const result = [];
-    if (!wall || !Number.isFinite(Number(wall.width)) || Number(wall.width) <= 0) result.push(issue("wall-width", "error", "牆面寬度必須大於 0 mm", wall && wall.id));
-    if (!wall || !Number.isFinite(Number(wall.height)) || Number(wall.height) <= 0) result.push(issue("wall-height", "error", "牆面高度必須大於 0 mm", wall && wall.id));
+    if (!wall || !Number.isFinite(Number(wall.width)) || Number(wall.width) <= 0) result.push(issue("wall-width", "error", "請輸入有效的牆面寬度。", wall && wall.id));
+    else if (Number(wall.width) < 1200) result.push(issue("wall-width-small", "error", "牆面寬度不可小於 1200 mm。", wall.id));
+    if (!wall || !Number.isFinite(Number(wall.height)) || Number(wall.height) <= 0) result.push(issue("wall-height", "error", "請輸入有效的天花高度。", wall && wall.id));
+    else if (Number(wall.height) < 2000) result.push(issue("wall-height-small", "error", "天花高度不可小於 2000 mm。", wall.id));
     return result;
   }
 
@@ -144,6 +211,10 @@
     if (normalized.height > finiteNumber(wall && wall.height, 10000, 0, 10000)) result.push(issue("cabinet-ceiling", "error", `${normalized.name} 高度超過天花`, normalized.id));
     if (normalized.doorSystem === "sliding" && normalized.usage === "wardrobe" && normalized.depth < 650) result.push(issue("sliding-depth", "warning", `${normalized.name} 為衣櫃推拉門，建議深度至少 650 mm`, normalized.id));
     if (normalized.width > 1100 && normalized.usage !== "filler") result.push(issue("door-wide", "warning", `${normalized.name} 寬度較大，建議加入中立板或分櫃`, normalized.id));
+    if (normalized.isSinkCabinet && normalized.width < 600) result.push(issue("sink-width", "warning", `${normalized.name} 寬度低於建議值，建議至少 600 mm。`, normalized.id));
+    if (normalized.isCooktopCabinet && normalized.width < 600) result.push(issue("cooktop-width", "warning", `${normalized.name} 寬度低於建議值，建議至少 600 mm。`, normalized.id));
+    if (normalized.category === "baseCabinet" && (normalized.depth < 500 || normalized.depth > 700)) result.push(issue("base-depth", "warning", `${normalized.name} 深度 ${Math.round(normalized.depth)} mm，請確認是否符合下櫃施工需求。`, normalized.id));
+    if (normalized.category === "wallCabinet" && (normalized.depth < 280 || normalized.depth > 450)) result.push(issue("wall-depth", "warning", `${normalized.name} 深度 ${Math.round(normalized.depth)} mm，請確認是否符合吊櫃施工需求。`, normalized.id));
     return result;
   }
 
@@ -159,8 +230,16 @@
         return groups;
       }, {});
       const used = Math.max(0, ...Object.values(layerWidths));
-      if (index === 0 && used > finiteNumber(wall.width, 0, 0, 30000)) result.push(issue("wall-overflow", "error", `${wall.name || "牆面"} 的櫃體總寬超出 ${Math.round(used - wall.width)} mm`, wall.id));
+      if (used > finiteNumber(wall.width, 0, 0, 30000)) result.push(issue("wall-overflow", "error", `${wall.name || "牆面"} 的櫃體總寬超出牆面 ${Math.round(used - wall.width)} mm，請減少櫃體寬度或刪除櫃體。`, wall.id));
+      const remaining = finiteNumber(wall.width, 0, 0, 30000) - used;
+      if (remaining >= 20 && remaining < 150) result.push(issue("filler-suggestion", "warning", `目前剩餘 ${Math.round(remaining)} mm，建議設定為補板。`, wall.id));
       wallCabinets.forEach((cabinet) => result.push(...validateCabinet(cabinet, wall)));
+      const ordered = wallCabinets.filter((cabinet) => (cabinet.runLayer || "default") !== "upper").map(normalizeCabinet).sort((a,b)=>a.x-b.x);
+      for (let cursor = 1; cursor < ordered.length; cursor += 1) {
+        const previous = ordered[cursor - 1];
+        const current = ordered[cursor];
+        if (current.x < previous.x + previous.width - 0.5) result.push(issue("cabinet-overlap", "error", `${current.name} 與 ${previous.name} 發生重疊，請調整位置或寬度。`, current.id));
+      }
     });
     return result;
   }
@@ -260,6 +339,7 @@
     SCHEMA_VERSION,
     MATERIALS,
     STYLE_PRESETS,
+    DEFAULT_PRICING,
     uid,
     finiteNumber,
     cleanData,

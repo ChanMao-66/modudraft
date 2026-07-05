@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v31-mobile-foundation";
+const CACHE_NAME = "modudraft-pwa-v32-estimate";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -22,6 +22,8 @@ const APP_ASSETS = [
   "./shared/kitchen-assist.css",
   "./shared/kitchen-mobile.js",
   "./shared/kitchen-mobile.css",
+  "./shared/estimate.js",
+  "./shared/estimate.css",
   "./assets/kitchen-workbench.png",
   "./assets/system-workbench.png",
   "./manifest.webmanifest",

@@ -1,5 +1,13 @@
 # MODUDRAFT 共用產品核心
 
+## Estimate 模擬估價
+
+- `estimate.js` 定義共用的 `EstimateItem`、`EstimateSection`、`EstimateDocument`、稅額計算、廚具／系統櫃轉換規則與 CSV／JSON 匯出。
+- 金額只由明細加總；非「計價」或未勾選「計入總價」的項目不會加入合計。
+- 配置變更使用 `sourceSignature` 標示估價需要更新，不會直接覆蓋手動修改；重新產生時仍保留手動新增項目。
+- `estimate.css` 在桌面顯示明細工作台，手機改為可展開卡片並固定顯示合計、稅額與總計。
+- 廚具與系統櫃共用同一套資料模型，`estimateDomain` 避免完整室內專案重複計價。
+
 ## 本次產品化層
 
 - `help-system.js / help-system.css`：繁體中文教學中心、首次進入導覽、F1 說明，以及所有操作元件的長按／右鍵情境說明。
@@ -11,7 +19,7 @@
 
 ## 檔案
 
-- `modudraft-core.js`：Project Schema v1、舊資料 migration、安全儲存、驗證、材質資料、AI 提示詞、JSON 匯入匯出。
+- `modudraft-core.js`：Project Schema v2、舊資料 migration、安全儲存、驗證、材質資料、估價文件、AI 提示詞、JSON 匯入匯出。
 - `product-suite.js`：專案中心、最近專案、快速風格、設計檢查、AI 渲染提示詞與 URL 客戶展示資料。
 - `design-system.css`：跨首頁、廚具與系統櫃共用的字體、色彩、互動、捲軸、唯讀狀態。
 - `product-suite.css`：專案中心桌面側面板與手機 Bottom Sheet。

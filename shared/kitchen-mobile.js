@@ -55,6 +55,7 @@
         <button type="button" data-mobile-action="wall" data-help-id="wall-tools"><span class="mobile-nav-icon">▱</span><span class="mobile-nav-label">牆面</span></button>
         <button type="button" data-mobile-action="add" data-help-id="add-cabinet"><span class="mobile-nav-icon">＋</span><span class="mobile-nav-label">新增</span></button>
         <button type="button" data-mobile-action="edit" data-help-id="cabinet-editor"><span class="mobile-nav-icon">⌑</span><span class="mobile-nav-label">編輯</span></button>
+        <button type="button" data-mobile-action="estimate" data-help-id="estimate"><span class="mobile-nav-icon">NT</span><span class="mobile-nav-label">估價</span></button>
         <button type="button" data-mobile-action="view" data-help-id="view-switch"><span class="mobile-nav-icon">◇</span><span class="mobile-nav-label">視圖</span></button>
         <button type="button" data-mobile-action="more" data-help-id="more-tools"><span class="mobile-nav-icon">•••</span><span class="mobile-nav-label">更多</span></button>
         <button type="button" class="mobile-landscape-only" data-mobile-action="teach" data-help-ui="true"><span class="mobile-nav-icon">?</span><span class="mobile-nav-label">教學</span></button>
@@ -83,7 +84,7 @@
             <li>雙指可縮放並移動畫布；單指移動超過 6px 會平移圖面。</li>
             <li>點櫃體可編輯尺寸、用途、門片與把手。</li>
             <li>點尺寸數字可直接修改尺寸。</li>
-            <li>底部工具列可切換牆面、新增、視圖、編輯與更多功能。</li>
+            <li>底部工具列可切換牆面、新增、編輯、估價、視圖與更多功能。</li>
             <li>點右上角「？」進入教學模式，再點任何功能查看專屬說明。</li>
           </ol>
           <div class="mobile-first-guide-actions">
@@ -388,6 +389,7 @@
         ${toolCard("auto-layout", "⌘", "自動配置", "依牆寬與常用尺寸產生草稿。", "auto-layout")}
         ${toolCard("ai-layout", "✦", "AI 輔助構圖", "根據剩餘空間推薦適合櫃體。", "ai-layout")}
         ${toolCard("equalize", "⇆", "輔助等分", "把選取的連續櫃體重新平均分割。", "equalize")}
+        ${toolCard("estimate", "NT$", "模擬估價", "依目前櫃體、檯面、三機與人工產生估價明細。", "estimate")}
         ${toolCard("material-render", "◉", "普通材質渲染", "套用內建材質並輸出目前視角。", "normal-render")}
         ${toolCard("ai-render", "✦", "AI 進階渲染", "截圖後交給 ChatGPT 或 Gemini 精緻渲染。", "ai-render")}
         ${toolCard("export", "⇧", "匯出", "輸出平面、立面、3D 或相容 3D 檔。", "export")}
@@ -456,6 +458,7 @@
       else if (action === "auto-layout") triggerOriginal("autoLayoutBtn");
       else if (action === "ai-layout") triggerOriginal("aiAssistBtn");
       else if (action === "equalize") { closeSheet(); config.startEqualize?.(); showModeNotice("輔助等分模式：請點選要重新等分的連續櫃體。", 0); }
+      else if (action === "estimate") { closeSheet(); config.openEstimate?.(); }
       else if (action === "material-render") triggerOriginal("materialRenderBtn");
       else if (action === "ai-render") triggerOriginal("renderViewBtn");
       else if (action === "export") triggerOriginal("exportBtn");
@@ -610,6 +613,11 @@
       const action = button.dataset.mobileAction;
       if (action === "teach") {
         config.help?.toggleTeachingMode?.(true);
+        return;
+      }
+      if (action === "estimate") {
+        closeSheet();
+        config.openEstimate?.();
         return;
       }
       if (action === activeSheet && nodes.sheet.classList.contains("open")) closeSheet();
