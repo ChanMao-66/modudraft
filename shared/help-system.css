@@ -82,6 +82,8 @@
 .md-help-step > span { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: rgba(182,139,98,.18); color: #d7b28e; font-size: 11px; font-weight: 800; }
 .md-help-step b { display: block; margin-bottom: 6px; font-size: 12px; }
 .md-help-step p { margin: 0; color: #aaa49c; font-size: 10px; line-height: 1.65; }
+.md-help-step button[data-help-topic] { min-height: 34px; margin-top: 10px; padding: 0 10px; border: 1px solid rgba(213,177,140,.28); border-radius: 7px; background: rgba(182,139,98,.1); color: #d8b28e; cursor: pointer; font: inherit; font-size: 10px; }
+.md-help-step button[data-help-topic]:hover { border-color: rgba(213,177,140,.5); background: rgba(182,139,98,.18); }
 .md-help-tip { margin-top: 12px; padding: 13px 15px; border-left: 3px solid #b68b62; border-radius: 0 8px 8px 0; background: rgba(182,139,98,.1); color: #c7beb4; font-size: 10px; line-height: 1.7; }
 
 .md-context-card { max-width: 660px; margin: 0 auto; }

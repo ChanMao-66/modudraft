@@ -71,6 +71,7 @@
       name: source.name || (source.type === "cabinet" ? "未命名系統櫃" : "未命名廚具"),
       type: ["kitchen", "cabinet", "fullInterior"].includes(source.type) ? source.type : "kitchen",
       mode: ["kitchen", "systemCabinet"].includes(source.mode) ? source.mode : (source.type === "cabinet" ? "systemCabinet" : "kitchen"),
+      editorMode: source.editorMode === "beginner" ? "beginner" : "pro",
       kitchenType: ["straight", "L", "U", "island"].includes(source.kitchenType) ? source.kitchenType : "straight",
       createdAt: source.createdAt || now,
       updatedAt: now,
@@ -95,6 +96,8 @@
       pricing: Object.assign({}, DEFAULT_PRICING, source.pricing || source.pricingSettings || {}),
       validations: Array.isArray(source.validations) ? source.validations : [],
       viewSettings: Object.assign({ activeView: "floor", showDimensions: true, showWalls: true }, source.viewSettings || {}),
+      workflowState: cleanData(source.workflowState || {}),
+      cabinetListSettings: Object.assign({ includeMaterials: true, includeNotes: true }, source.cabinetListSettings || {}),
       sourceState: cleanData(source.sourceState || {})
     };
   }
@@ -108,6 +111,7 @@
       name: legacy.name,
       type: fallbackType || legacy.type,
       mode: legacy.mode,
+      editorMode: legacy.editorMode,
       kitchenType: legacy.kitchenType || (legacy.sourceState?.kitchen?.walls?.length > 1 ? "L" : "straight"),
       createdAt: legacy.createdAt,
       updatedAt: legacy.updatedAt,
@@ -125,6 +129,8 @@
       renderSettings: legacy.renderSettings,
       exportSettings: legacy.exportSettings,
       viewSettings: legacy.viewSettings,
+      workflowState: legacy.workflowState,
+      cabinetListSettings: legacy.cabinetListSettings,
       sourceState: legacy.sourceState && Object.keys(legacy.sourceState).length ? legacy.sourceState : legacy
     });
     migrated.migratedFrom = Number(raw.schemaVersion) || 0;
@@ -325,8 +331,18 @@
     const names = [assignments.door, assignments.body, assignments.countertop, assignments.handle]
       .map(materialById).filter(Boolean).map((item) => item.name);
     const roomType = normalized.type === "kitchen" ? "廚房廚具" : normalized.type === "cabinet" ? "系統櫃收納空間" : "室內空間";
+    const cabinets = normalized.cabinets.map(normalizeCabinet);
+    const lower = cabinets.filter((item) => item.category === "baseCabinet").length;
+    const upper = cabinets.filter((item) => item.category === "wallCabinet").length;
+    const tall = cabinets.filter((item) => item.category === "tallCabinet").length;
+    const sink = cabinets.find((item) => item.isSinkCabinet);
+    const cooktop = cabinets.find((item) => item.isCooktopCabinet);
+    const wallSummary = normalized.walls.map((wall) => `${wall.name || "牆面"} ${Math.round(finiteNumber(wall.width, 0, 0, 30000))} × ${Math.round(finiteNumber(wall.height, 0, 0, 10000))} mm`).join("、");
+    const kitchenTypeLabel = { straight: "一字型", L: "L 型", U: "U 型", island: "中島型" }[normalized.kitchenType] || normalized.kitchenType;
     return [
       `請將這張 MODUDRAFT ${roomType}配置截圖渲染成高品質、寫實的室內設計提案圖。`,
+      normalized.type === "kitchen" ? `廚房型態：${kitchenTypeLabel}；牆面尺寸：${wallSummary || "依原圖"}。` : `空間尺寸：${wallSummary || "依原圖"}。`,
+      `目前配置：下櫃 ${lower} 座、吊櫃 ${upper} 座、高櫃 ${tall} 座${sink ? `，包含${sink.name}` : ""}${cooktop ? `，包含${cooktop.name}` : ""}。`,
       `設計風格：${settings.style || (preset && preset.name) || "現代簡約"}；光線：${settings.lighting || "自然柔光"}。`,
       names.length ? `主要材質：${names.join("、")}。` : "材質請維持低飽和、耐看的室內設計質感。",
       `請嚴格保留原圖的牆面、櫃體尺寸比例、櫃體數量、門片分割、設備位置與目前相機視角。`,

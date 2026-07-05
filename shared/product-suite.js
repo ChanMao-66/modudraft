@@ -59,6 +59,7 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "md-product-button";
+    button.dataset.helpId = "project-center";
     button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M8 9h8M8 13h5"/></svg><span>專案中心</span>';
     button.setAttribute("aria-label", "開啟專案中心");
 
@@ -68,10 +69,10 @@
       <section class="md-suite-panel" role="dialog" aria-modal="true" aria-label="MODUDRAFT 專案中心">
         <header class="md-suite-head"><div><small>MODUDRAFT PRODUCT CORE</small><h2>專案中心</h2></div><button class="md-suite-close" type="button" aria-label="關閉">×</button></header>
         <nav class="md-suite-tabs" aria-label="專案功能">
-          <button type="button" data-md-tab="project" class="active">專案</button>
-          <button type="button" data-md-tab="materials">材質</button>
-          <button type="button" data-md-tab="checks">檢查</button>
-          <button type="button" data-md-tab="ai">AI 渲染</button>
+          <button type="button" data-md-tab="project" data-help-id="project-center" class="active">專案</button>
+          <button type="button" data-md-tab="materials" data-help-id="material-library">材質</button>
+          <button type="button" data-md-tab="checks" data-help-id="design-check">檢查</button>
+          <button type="button" data-md-tab="ai" data-help-id="ai-proposal">AI 渲染</button>
         </nav>
         <div class="md-suite-content">
           <section class="md-suite-view active" data-md-view="project"></section>
@@ -132,8 +133,8 @@
       projectView.innerHTML = `
         <div class="md-section">
           <div class="md-section-title"><h3>目前專案</h3><span>${project.type === "kitchen" ? "廚具配置" : "系統櫃配置"}</span></div>
-          <label class="md-field">專案名稱<input id="mdProjectName" value="${escapeHtml(project.name)}" maxlength="60"></label>
-          <div class="md-actions"><button class="md-action primary" type="button" data-md-action="save">儲存專案</button><button class="md-action" type="button" data-md-action="export">匯出 JSON</button><button class="md-action" type="button" data-md-action="import">匯入 JSON</button><button class="md-action" type="button" data-md-action="share">客戶分享連結</button></div>
+          <label class="md-field">專案名稱<input id="mdProjectName" data-help-id="project-center" value="${escapeHtml(project.name)}" maxlength="60"></label>
+          <div class="md-actions"><button class="md-action primary" type="button" data-md-action="save" data-help-id="project-center">儲存專案</button><button class="md-action" type="button" data-md-action="export" data-help-id="export">匯出 JSON</button><button class="md-action" type="button" data-md-action="import" data-help-id="import-project">匯入 JSON</button><button class="md-action" type="button" data-md-action="share" data-help-id="share">客戶分享連結</button></div>
           <input id="mdImportFile" type="file" accept="application/json,.json" hidden>
         </div>
         <div class="md-section">
@@ -198,7 +199,7 @@
       materialsView.innerHTML = `
         <div class="md-section"><div class="md-section-title"><h3>快速換風格</h3><span>整案套用</span></div><div class="md-style-grid">${core.STYLE_PRESETS.map((preset) => {
           const swatches = [preset.door, preset.body, preset.countertop, preset.handle].map(core.materialById).filter(Boolean);
-          return `<button type="button" class="md-style-card ${project.stylePreset === preset.id ? "active" : ""}" data-style="${preset.id}"><span class="md-style-swatches">${swatches.map((material) => `<i style="background:${material.color}"></i>`).join("")}</span><b>${escapeHtml(preset.name)}</b><small>${escapeHtml(preset.description)}</small></button>`;
+          return `<button type="button" class="md-style-card ${project.stylePreset === preset.id ? "active" : ""}" data-style="${preset.id}" data-help-id="style-presets"><span class="md-style-swatches">${swatches.map((material) => `<i style="background:${material.color}"></i>`).join("")}</span><b>${escapeHtml(preset.name)}</b><small>${escapeHtml(preset.description)}</small></button>`;
         }).join("")}</div></div>
         <div class="md-section"><div class="md-section-title"><h3>材質庫 Demo</h3><span>${core.MATERIALS.length} 項</span></div><div class="md-material-grid">${core.MATERIALS.map((material) => `<article class="md-material-card"><div class="md-material-chip" style="background:${material.color}"></div><b>${escapeHtml(material.name)}</b><small>${escapeHtml(material.note)} · ${escapeHtml(material.category)}</small></article>`).join("")}</div></div>`;
       materialsView.querySelectorAll("[data-style]").forEach((item) => {
@@ -228,7 +229,7 @@
     function renderAi() {
       const project = snapshot();
       const prompt = core.generateAiPrompt(project);
-      aiView.innerHTML = `<div class="md-section"><div class="md-section-title"><h3>AI 進階渲染提示詞</h3><span>依目前專案生成</span></div><label class="md-field">3D 圖像來源<select id="mdAiSource"><option value="white">白模（讓 AI 自由設計材質）</option><option value="material">普通材質（保留目前配色）</option></select></label><label class="md-field">渲染用途<textarea id="mdAiPrompt">${escapeHtml(prompt)}</textarea></label><div class="md-actions"><button type="button" class="md-action primary" data-ai="copy">複製提示詞</button><button type="button" class="md-action" data-ai="refresh">重新生成</button><button type="button" class="md-action" data-ai="chatgpt">開啟 ChatGPT</button><button type="button" class="md-action" data-ai="gemini">開啟 Gemini</button></div></div><div class="md-section"><div class="md-section-title"><h3>使用順序</h3><span>保留原配置</span></div><div class="md-empty">白模適合讓 AI 自由發揮；普通材質圖適合要求 AI 保留目前門片、櫃身與五金配色。</div></div>`;
+      aiView.innerHTML = `<div class="md-section"><div class="md-section-title"><h3>AI 進階渲染提示詞</h3><span>依目前專案生成</span></div><label class="md-field">3D 圖像來源<select id="mdAiSource" data-help-id="ai-proposal"><option value="white">白模（讓 AI 自由設計材質）</option><option value="material">普通材質（保留目前配色）</option></select></label><label class="md-field">渲染用途<textarea id="mdAiPrompt" data-help-id="ai-proposal">${escapeHtml(prompt)}</textarea></label><div class="md-actions"><button type="button" class="md-action primary" data-ai="copy" data-help-id="ai-proposal">複製提示詞</button><button type="button" class="md-action" data-ai="refresh" data-help-id="ai-proposal">重新生成</button><button type="button" class="md-action" data-ai="chatgpt" data-help-id="open-chatgpt">開啟 ChatGPT</button><button type="button" class="md-action" data-ai="gemini" data-help-id="open-gemini">開啟 Gemini</button></div></div><div class="md-section"><div class="md-section-title"><h3>使用順序</h3><span>保留原配置</span></div><div class="md-empty">白模適合讓 AI 自由發揮；普通材質圖適合要求 AI 保留目前門片、櫃身與五金配色。</div></div>`;
       const source = aiView.querySelector("#mdAiSource");
       source.value = adapter.getRenderMode() === "material" ? "material" : "white";
       source.onchange = async () => { if (adapter.setRenderMode) await adapter.setRenderMode(source.value); showToast(source.value === "material" ? "AI 將使用普通材質圖" : "AI 將使用白模圖"); };

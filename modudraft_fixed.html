@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-estimate-v1">
   <link rel="stylesheet" href="./shared/estimate.css?v=20260705-v1">
+  <link rel="stylesheet" href="./shared/kitchen-workflow.css?v=20260705-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1410,22 +1411,28 @@
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
   <div id="startOverlay" class="start-overlay">
     <section class="start-card" aria-labelledby="startTitle">
-      <h1 id="startTitle">MODUDRAFT</h1>
-      <p>廚具系統櫃設計工作台。尺寸單位採 mm，預設牆面 2340 × 2300，符合現場丈量到設計、渲染的工作流。</p>
-      <div class="mode-list">
-        <button class="mode-btn" type="button" data-mode="single">
-          <b>直線牆快速開始</b>
-          <small>建立單面牆，適合直線廚具或快速草圖。</small>
+      <span class="start-mode-badge">MODUDRAFT KITCHEN WORKFLOW</span>
+      <h1 id="startTitle">開始建立廚具配置</h1>
+      <p>請選擇適合你的開始方式。新手可照步驟完成，熟悉廚具配置的人可直接進入精準工作台。</p>
+      <div class="mode-list start-choice-grid">
+        <button class="mode-btn" id="startBeginnerBtn" type="button" data-help-id="beginner-workflow">
+          <b>新手快速建立</b>
+          <small>依序選型態、輸入尺寸、設定設備，系統會產生一套基礎廚具。</small>
         </button>
-        <button class="mode-btn" type="button" data-mode="multi">
-          <b>多面牆丈量建立</b>
-          <small>建立多面牆，逐面調整牆寬；天花高度全案共用。</small>
+        <button class="mode-btn" id="startProBtn" type="button" data-help-id="pro-mode">
+          <b>專業空白工程</b>
+          <small>直接進入完整工作台，自行新增櫃體、設定精準尺寸與專業配置。</small>
         </button>
-        <button class="mode-btn" id="openTutorialBtn" type="button">
-          <b>軟體使用說明</b>
-          <small>用圖片快速認識牆面、櫃體編輯、手機手勢、3D、匯出與分享。</small>
+        <button class="mode-btn" id="startTemplateBtn" type="button" data-help-id="kitchen-template">
+          <b>從範本開始</b>
+          <small>選擇一字型或 L 型常見廚房，再依現場尺寸調整。</small>
+        </button>
+        <button class="mode-btn" id="startImportBtn" type="button" data-help-id="import-project">
+          <b>匯入既有專案</b>
+          <small>匯入之前保存的 MODUDRAFT JSON 專案檔。</small>
         </button>
       </div>
+      <div class="start-choice-footer"><label><input id="dismissStartChoice" type="checkbox"> 不再顯示開始方式</label><button id="startGuideBtn" type="button" data-help-id="full-guide">查看完整使用說明</button></div>
     </section>
   </div>
 
@@ -1552,6 +1559,8 @@
 
       <div class="actions" aria-label="操作">
         <button class="primary" id="addCabinetBtn" type="button">新增櫃體</button>
+        <button id="standardCabinetLibraryBtn" type="button" data-help-id="standard-cabinet-library">標準櫃體庫</button>
+        <button id="beginnerModeBtn" type="button" data-help-id="beginner-workflow">新手流程</button>
         <button class="success" id="autoLayoutBtn" type="button">自動配置</button>
         <button class="assist-action" id="aiAssistBtn" type="button" title="分析目前選取層的剩餘空間，提供櫃體與補板建議">AI 輔助構圖</button>
         <button class="assist-action" id="equalizeBtn" type="button" title="依序選取連續櫃體，再重新平均分配總寬度">輔助等分</button>
@@ -1561,6 +1570,7 @@
         </span>
         <button id="materialRenderBtn" class="render-command" type="button">普通材質渲染</button>
         <button id="renderViewBtn" class="ai-render-command" type="button">AI 進階渲染</button>
+        <button id="cabinetListBtn" type="button" data-help-id="cabinet-list">櫃體清單</button>
         <button id="exportBtn" type="button">匯出</button>
         <button id="resetViewBtn" type="button">重設視圖</button>
         <button id="installAppBtn" type="button">分享</button>
@@ -1744,6 +1754,14 @@
           寬度 mm
           <input id="editWidth" type="number" min="10" step="10" inputmode="numeric" pattern="[0-9]*">
         </label>
+        <label data-mobile-edit-tab="size advanced">
+          高度 mm
+          <input id="editHeight" type="number" min="50" step="10" inputmode="numeric" pattern="[0-9]*">
+        </label>
+        <label data-mobile-edit-tab="size advanced">
+          深度 mm
+          <input id="editDepth" type="number" min="50" step="10" inputmode="numeric" pattern="[0-9]*">
+        </label>
         <label data-mobile-edit-tab="basic">
           類型
           <select id="editType">
@@ -1801,6 +1819,23 @@
             <option value="flush">平接式</option>
             <option value="topmount">上裝式</option>
           </select>
+        </label>
+        <label data-mobile-edit-tab="advanced">
+          門片材質
+          <select id="editMaterialId">
+            <option value="door-mist-white">霧面暖白</option>
+            <option value="door-cream">奶油米</option>
+            <option value="body-oak">淺橡木</option>
+            <option value="body-walnut">煙燻胡桃</option>
+          </select>
+        </label>
+        <label data-mobile-edit-tab="advanced">
+          備註
+          <input id="editNotes" type="text" autocomplete="off" placeholder="選填">
+        </label>
+        <label class="toggle-control" data-mobile-edit-tab="advanced">
+          <input id="editIncludeInQuote" type="checkbox" checked>
+          <span>計入粗估價</span>
         </label>
         <button type="button" id="copyCabinetBtn" data-mobile-edit-tab="advanced">複製此櫃體</button>
         <div class="modal-actions">
@@ -1933,6 +1968,7 @@
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-mobile.js?v=20260705-estimate-v1"></script>
   <script src="./shared/estimate.js?v=20260705-v1"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260705-v1"></script>
   <script>
     const state = {
       walls: [],
@@ -1957,7 +1993,9 @@
         equalizeActive: false,
         equalizeSelectedIds: [],
         hoverDimensionKey: null
-      }
+      },
+      editorMode: "pro",
+      workflowConfig: null
     };
 
     const sizes = {
@@ -2024,6 +2062,8 @@
       editModal: document.getElementById("editModal"),
       editName: document.getElementById("editName"),
       editWidth: document.getElementById("editWidth"),
+      editHeight: document.getElementById("editHeight"),
+      editDepth: document.getElementById("editDepth"),
       editType: document.getElementById("editType"),
       editPurpose: document.getElementById("editPurpose"),
       editFrontStyle: document.getElementById("editFrontStyle"),
@@ -2032,6 +2072,9 @@
       editSideTreatment: document.getElementById("editSideTreatment"),
       editSinkMountField: document.getElementById("editSinkMountField"),
       editSinkMount: document.getElementById("editSinkMount"),
+      editMaterialId: document.getElementById("editMaterialId"),
+      editNotes: document.getElementById("editNotes"),
+      editIncludeInQuote: document.getElementById("editIncludeInQuote"),
       installModal: document.getElementById("installModal"),
       installStatus: document.getElementById("installStatus"),
       installNowBtn: document.getElementById("installNowBtn"),
@@ -2213,6 +2256,7 @@
         if (kitchenHistory.undo.length > kitchenHistory.limit) kitchenHistory.undo.shift();
         kitchenHistory.redo = [];
         updateHistoryButtons();
+        kitchenEstimateController?.markStale?.();
       }
       return result;
     }
@@ -2223,6 +2267,7 @@
       kitchenHistory.redo.push({ label: entry.label, snapshot: captureKitchenHistoryState() });
       restoreKitchenHistoryState(entry.snapshot);
       updateHistoryButtons();
+      kitchenEstimateController?.markStale?.();
       showKitchenToast(`已復原：${entry.label}`);
     }
 
@@ -2232,6 +2277,7 @@
       kitchenHistory.undo.push({ label: entry.label, snapshot: captureKitchenHistoryState() });
       restoreKitchenHistoryState(entry.snapshot);
       updateHistoryButtons();
+      kitchenEstimateController?.markStale?.();
       showKitchenToast(`已重做：${entry.label}`);
     }
 
@@ -2631,6 +2677,13 @@
       cabinet.type = cabinet.type === "upper" ? "upper" : "lower";
       cabinet.purpose = cabinet.purpose || inferCabinetPurpose(cabinet);
       cabinet.frontStyle = cabinet.frontStyle || defaultFrontStyle(cabinet.purpose, cabinet.type);
+      cabinet.customHeight = Number.isFinite(Number(cabinet.customHeight)) && Number(cabinet.customHeight) > 0 ? Number(cabinet.customHeight) : null;
+      cabinet.customDepth = Number.isFinite(Number(cabinet.customDepth)) && Number(cabinet.customDepth) > 0 ? Number(cabinet.customDepth) : null;
+      cabinet.materialId = cabinet.materialId || state.materialPalette?.door || "door-mist-white";
+      cabinet.includeInQuote = cabinet.includeInQuote !== false;
+      cabinet.hasCountertop = cabinet.hasCountertop !== false && cabinet.type === "lower" && cabinet.purpose !== "filler";
+      cabinet.hasToeKick = cabinet.hasToeKick !== false && cabinet.type === "lower" && cabinet.purpose !== "filler";
+      cabinet.notes = String(cabinet.notes || "");
       cabinet.sideTreatment = cabinet.sideTreatment === "finished-end" ? "finished-end" : "wall-filler";
       cabinet.sinkMount = ["flush", "topmount", "undermount"].includes(cabinet.sinkMount)
         ? cabinet.sinkMount
@@ -2692,14 +2745,27 @@
     }
 
     function cabinetHeight(cabinet, wall) {
-      return cabinet.type === "lower" ? sizes.lowerHeight : wallUpperHeight(wall);
+      const fallback = cabinet.type === "lower" ? sizes.lowerHeight : wallUpperHeight(wall);
+      return Math.max(50, Math.min(wall.height, Number(cabinet.customHeight) || fallback));
+    }
+
+    function cabinetDepth(cabinet) {
+      const fallback = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+      return Math.max(50, Number(cabinet.customDepth) || fallback);
+    }
+
+    function cabinetBodyHeight(cabinet, wall) {
+      const completed = cabinetHeight(cabinet, wall);
+      return cabinet.type === "lower"
+        ? Math.max(100, completed - sizes.toeKickHeight - sizes.counterThickness)
+        : completed;
     }
 
     function upperBottom() {
       return sizes.lowerHeight + sizes.middleGap;
     }
 
-    function initialize(mode) {
+    function initialize(mode, options = {}) {
       const sharedHeight = 2300;
       const walls = mode === "multi"
         ? [
@@ -2711,10 +2777,12 @@
       state.walls = walls;
       state.activeWallIndex = mode === "multi" ? 1 : 0;
       state.selectedIndex = null;
+      state.editorMode = options.editorMode === "beginner" ? "beginner" : "pro";
       setCurrentLayer("lower", { syncAssist: false });
       el.startOverlay.style.display = "none";
       rebuildWallSelect();
-      autoGenerateKitchen();
+      if (options.autoGenerate !== false) autoGenerateKitchen();
+      else renderAll();
       resetViews();
     }
 
@@ -2751,6 +2819,7 @@
       });
       rebuildWallSelect();
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function sharedWallHeight() {
@@ -2765,6 +2834,7 @@
       state.selectedIndex = null;
       rebuildWallSelect();
       autoGenerateKitchen();
+      kitchenEstimateController?.markStale?.();
     }
 
     function setWallAlignment(alignment) {
@@ -2790,6 +2860,7 @@
       state.selectedIndex = null;
       rebuildWallSelect();
       resetViews();
+      kitchenEstimateController?.markStale?.();
     }
 
     function calculatePositions() {
@@ -2932,6 +3003,7 @@
       fitAutoLayerToWall(wall, "lower");
       fitAutoLayerToWall(wall, "upper");
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function fitAutoLayerToWall(wall, type) {
@@ -2968,6 +3040,7 @@
         "general"
       ));
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function clearWall() {
@@ -2977,6 +3050,7 @@
       if (!ok) return;
       wall.cabinets = [];
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function resetViews() {
@@ -3286,10 +3360,11 @@
           const isLower = cabinet.type === "lower";
           const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
           const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
+          const baseBodyHeight = cabinetBodyHeight(cabinet, wall);
           const height = isLower
-            ? sizes.lowerBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
-            : wallUpperHeight(wall);
-          const fullDepth = isLower ? sizes.lowerDepth : sizes.upperDepth;
+            ? baseBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
+            : baseBodyHeight;
+          const fullDepth = cabinetDepth(cabinet);
           const externalDepth = fullDepth + sizes.doorThickness;
           const depth = isWallFiller ? sizes.sidePanelThickness : externalDepth;
           const z = isWallFiller ? externalDepth - depth / 2 : depth / 2;
@@ -3835,7 +3910,7 @@
 
     function floorCabinetBox(cabinet, index, wall, rect) {
       const layout = floorDrawingLayout(wall, rect);
-      const bodyDepthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+      const bodyDepthMm = cabinetDepth(cabinet);
       const depthMm = bodyDepthMm + sizes.doorThickness;
       const fullDepth = Math.max(28, depthMm * layout.baseScale * 0.78);
       const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
@@ -3879,7 +3954,7 @@
         normalizeCabinet(cabinet);
         const x = offsetX + cabinet.x * baseScale;
         const width = cabinet.width * baseScale;
-        const bodyDepthMm = cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth;
+        const bodyDepthMm = cabinetDepth(cabinet);
         const depthMm = bodyDepthMm + sizes.doorThickness;
         const fullDepth = Math.max(28, depthMm * baseScale * 0.78);
         const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
@@ -4735,11 +4810,11 @@
 
         wall.cabinets.forEach((cabinet) => {
           const h = cabinetHeight(cabinet, wall) * scale;
-          const d = Math.max(10, (cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth) * scale * 0.2);
+          const d = Math.max(10, cabinetDepth(cabinet) * scale * 0.2);
           const x = panelX + cabinet.x * scale;
           const y = cabinet.type === "lower"
             ? baseY - h
-            : baseY - (upperBottom() + wallUpperHeight(wall)) * scale;
+            : baseY - upperBottom() * scale - h;
           const w = cabinet.width * scale;
 
           context.fillStyle = cabinet.type === "lower" ? "#fffdf9" : "#eef2f6";
@@ -4941,7 +5016,7 @@
       const isLower = cabinet.type === "lower";
       const isFinishedEnd = cabinet.purpose === "filler" && cabinet.sideTreatment === "finished-end";
       const isWallFiller = cabinet.purpose === "filler" && cabinet.sideTreatment === "wall-filler";
-      const fullDepth = isLower ? sizes.lowerDepth : sizes.upperDepth;
+      const fullDepth = cabinetDepth(cabinet);
       const finishedDepth = fullDepth + sizes.doorThickness;
       const depth = isWallFiller
         ? sizes.sidePanelThickness
@@ -4949,9 +5024,10 @@
       const bodyZ = isWallFiller
         ? finishedDepth - depth / 2
         : depth / 2;
+      const baseBodyHeight = cabinetBodyHeight(cabinet, wall);
       const height = isLower
-        ? sizes.lowerBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
-        : wallUpperHeight(wall);
+        ? baseBodyHeight + (isFinishedEnd ? sizes.toeKickHeight : 0)
+        : baseBodyHeight;
       const bodyY = isLower
         ? (isFinishedEnd ? height / 2 : sizes.toeKickHeight + height / 2)
         : upperBottom() + height / 2;
@@ -5708,12 +5784,17 @@
       setCurrentLayer(cabinet.type);
       el.editName.value = cabinet.name;
       el.editWidth.value = String(cabinet.width);
+      el.editHeight.value = String(Math.round(cabinetHeight(cabinet, wall)));
+      el.editDepth.value = String(Math.round(cabinetDepth(cabinet)));
       el.editType.value = cabinet.type;
       el.editPurpose.value = cabinet.purpose;
       el.editFrontStyle.value = cabinet.frontStyle;
       el.editHandleStyle.value = cabinet.handleStyle;
       el.editSideTreatment.value = cabinet.sideTreatment;
       el.editSinkMount.value = cabinet.sinkMount;
+      el.editMaterialId.value = cabinet.materialId;
+      el.editNotes.value = cabinet.notes || "";
+      el.editIncludeInQuote.checked = cabinet.includeInQuote !== false;
       updateSideTreatmentField();
       el.editModal.classList.add("open");
       const modalContent = el.editModal.querySelector(".modal-content");
@@ -5817,14 +5898,20 @@
       cabinet.name = el.editName.value.trim() || "未命名櫃體";
       cabinet.width = Math.min(Math.round(requestedWidth), available);
       cabinet.type = nextType;
+      cabinet.customHeight = clampNumber(el.editHeight.value, 50, wall.height, cabinet.type === "lower" ? sizes.lowerHeight : wallUpperHeight(wall));
+      cabinet.customDepth = clampNumber(el.editDepth.value, 50, 1500, cabinet.type === "lower" ? sizes.lowerDepth : sizes.upperDepth);
       cabinet.purpose = el.editPurpose.value;
       cabinet.frontStyle = el.editFrontStyle.value;
       cabinet.handleStyle = el.editHandleStyle.value;
       cabinet.sideTreatment = el.editSideTreatment.value;
       cabinet.sinkMount = el.editSinkMount.value;
+      cabinet.materialId = el.editMaterialId.value || "door-mist-white";
+      cabinet.notes = el.editNotes.value.trim();
+      cabinet.includeInQuote = el.editIncludeInQuote.checked;
       normalizeCabinet(cabinet);
       closeModal();
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function copyCabinet() {
@@ -5846,6 +5933,7 @@
       wall.cabinets.splice(index + 1, 0, copy);
       openEditModal(index + 1);
       renderAll();
+      kitchenEstimateController?.markStale?.();
     }
 
     function deleteCabinet() {
@@ -5859,6 +5947,47 @@
       });
       closeModal();
       renderAll();
+      kitchenEstimateController?.markStale?.();
+    }
+
+    function applyBeginnerKitchenPlan(config, plan) {
+      if (!plan?.walls?.length) throw new Error("無法產生廚具配置，請檢查輸入尺寸。");
+      const sharedHeight = clampNumber(config.ceilingHeight, 2000, 4200, 2400);
+      sizes.lowerHeight = clampNumber(config.lowerHeight, 720, 1000, 850);
+      sizes.lowerDepth = clampNumber(config.lowerDepth, 500, 700, 560);
+      sizes.upperHeight = clampNumber(config.upperHeight, 400, 1000, 700);
+      sizes.upperDepth = clampNumber(config.upperDepth, 280, 450, 350);
+      sizes.counterDepth = clampNumber(config.counterDepth, sizes.lowerDepth, 750, 600);
+      sizes.lowerBodyHeight = Math.max(500, sizes.lowerHeight - sizes.toeKickHeight - sizes.counterThickness);
+
+      state.walls = plan.walls.map((wallPlan, wallIndex) => {
+        const wall = createWall(clampNumber(wallPlan.width, 1200, 12000, 2700), sharedHeight, wallIndex);
+        wall.alignment = wallPlan.alignment === "right" ? "right" : "left";
+        wall.cabinets = (wallPlan.cabinets || []).map((item) => {
+          const created = makeCabinet(item.name, item.width, item.layer === "upper" ? "upper" : "lower", item.purpose, item.frontStyle, item.handleStyle);
+          Object.assign(created, {
+            applianceType: item.applianceType || "",
+            isCornerReserve: item.isCornerReserve === true,
+            includeInQuote: item.includeInQuote !== false,
+            priceRuleId: item.priceRuleId || "",
+            hasCountertop: item.hasCountertop !== false,
+            notes: item.notes || ""
+          });
+          return normalizeCabinet(created);
+        });
+        return wall;
+      });
+      state.activeWallIndex = 0;
+      state.selectedIndex = null;
+      state.editorMode = "beginner";
+      state.workflowConfig = cleanClone(config);
+      setCurrentLayer("lower", { syncAssist: false });
+      el.startOverlay.style.display = "none";
+      rebuildWallSelect();
+      resetViews();
+      renderAll();
+      kitchenEstimateController?.markStale?.();
+      scheduleKitchenAutosave();
     }
 
     function moveCabinet(direction) {
@@ -5943,7 +6072,7 @@
       document.querySelectorAll(".mode-btn[data-mode]").forEach((button) => {
         button.addEventListener("click", () => initialize(button.dataset.mode));
       });
-      document.getElementById("openTutorialBtn").addEventListener("click", openTutorial);
+      document.getElementById("openTutorialBtn")?.addEventListener("click", openTutorial);
       document.getElementById("closeTutorialBtn").addEventListener("click", closeTutorial);
 
       el.wallSelect.addEventListener("change", () => {
@@ -6190,6 +6319,8 @@
     let kitchenAutosaveTimer = 0;
     let kitchenRenderHub = null;
     let kitchenEstimateController = null;
+    let kitchenProductSuiteController = null;
+    let kitchenWorkflowController = null;
 
     function kitchenWallId(wall, index) {
       return `kitchen-wall-${wall?.id ?? index}`;
@@ -6229,25 +6360,57 @@
             z: isUpper ? upperBottom() : sizes.toeKickHeight,
             width: cabinet.width,
             height: cabinetHeight(cabinet, wall),
-            depth: isUpper ? sizes.upperDepth : sizes.lowerDepth,
+            depth: cabinetDepth(cabinet),
+            materialId: cabinet.materialId,
             doorStyle: cabinet.frontStyle,
             handleStyle: cabinet.handleStyle,
             sidePanel: cabinet.sideTreatment,
-            hasToeKick: !isUpper && !isFiller,
-            hasCountertop: !isUpper && !isFiller,
+            hasToeKick: cabinet.hasToeKick !== false && !isUpper && !isFiller,
+            hasCountertop: cabinet.hasCountertop !== false && !isUpper && !isFiller,
             isSinkCabinet: cabinet.purpose === "sink",
             isCooktopCabinet: cabinet.purpose === "stove",
             isFiller,
             estimateDomain: "kitchen",
-            includeInQuote: true
+            includeInQuote: cabinet.includeInQuote !== false,
+            priceRuleId: cabinet.priceRuleId || "",
+            notes: cabinet.notes || ""
           }));
         });
       });
+      const appliances = cabinets.filter((cabinet) => cabinet.isSinkCabinet || cabinet.isCooktopCabinet || ["hood", "dish-dryer", "appliance"].includes(cabinet.usage)).map((cabinet) => ({
+        id: `${cabinet.id}-equipment`,
+        type: cabinet.isSinkCabinet ? "sink" : cabinet.isCooktopCabinet ? "cooktop" : cabinet.usage === "hood" ? "hood" : cabinet.usage === "dish-dryer" ? "dishwasher" : (cabinet.applianceType || "appliance"),
+        name: cabinet.name,
+        cabinetId: cabinet.id,
+        wallId: cabinet.wallId,
+        x: cabinet.x,
+        y: cabinet.y,
+        width: cabinet.width,
+        height: cabinet.height,
+        depth: cabinet.depth,
+        includeInQuote: cabinet.includeInQuote !== false
+      }));
+      const panels = cabinets.filter((cabinet) => cabinet.isFiller).map((cabinet) => ({ id: `${cabinet.id}-panel`, name: cabinet.name, wallId: cabinet.wallId, width: cabinet.width, height: cabinet.height, depth: cabinet.depth, type: "filler", includeInQuote: cabinet.includeInQuote !== false }));
+      const countertops = state.walls.map((wall, wallIndex) => ({
+        id: `countertop-${wallIndex}`,
+        wallId: kitchenWallId(wall, wallIndex),
+        length: wall.cabinets.filter((cabinet) => cabinet.type === "lower" && cabinet.purpose !== "filler" && cabinet.hasCountertop !== false && !cabinet.isCornerReserve && cabinet.applianceType !== "fridge").reduce((sum, cabinet) => sum + cabinet.width, 0),
+        depth: sizes.counterDepth,
+        thickness: sizes.counterThickness,
+        materialId: state.materialPalette?.countertop || "counter-quartz"
+      })).filter((item) => item.length > 0);
       return core.createProject(Object.assign({}, kitchenProductProject, {
         type: "kitchen",
+        editorMode: state.editorMode,
         kitchenType: state.walls.length > 1 ? "L" : "straight",
         walls,
         cabinets,
+        appliances,
+        panels,
+        countertops,
+        validations: core.cleanData(kitchenExtraValidation()),
+        workflowState: core.cleanData(state.workflowConfig || {}),
+        viewSettings: { activeView: state.view.three ? "three" : state.view.elevation && !state.view.floor ? "elevation" : "floor", showDimensions: true, showWalls: state.showWalls },
         stylePreset: state.projectStyle || kitchenProductProject.stylePreset,
         materialAssignments: state.materialPalette || kitchenProductProject.materialAssignments,
         estimateDocument: kitchenProductProject.estimateDocument || null,
@@ -6263,6 +6426,8 @@
             materialPalette: state.materialPalette || null,
             renderMode: state.renderMode,
             renderStyle: state.renderStyle,
+            editorMode: state.editorMode,
+            workflowConfig: state.workflowConfig,
             sizes: core.cleanData(sizes)
           }
         }
@@ -6293,6 +6458,8 @@
       state.projectStyle = project.stylePreset || "modern";
       state.renderMode = source.renderMode === "material" ? "material" : "white";
       state.renderStyle = source.renderStyle || state.projectStyle || "nordic";
+      state.editorMode = source.editorMode === "beginner" || project.editorMode === "beginner" ? "beginner" : "pro";
+      state.workflowConfig = source.workflowConfig || project.workflowState || null;
       Object.assign(sizes, source.sizes || {});
       kitchenProductProject = core.createProject(project);
       core.storageSet("modudraft:kitchen:active-project", kitchenProductProject.id);
@@ -6336,6 +6503,40 @@
       setCurrentLayer(layer, { syncAssist: false });
       renderAll();
       showKitchenToast(`已新增${name} ${formatNumber(width)} mm`);
+      return true;
+    }
+
+    function addStandardCabinetPreset(preset = {}) {
+      const wall = activeWall();
+      if (!wall) return false;
+      if (preset.layer === "tall") {
+        showKitchenToast("高櫃的檯面與踢腳規則仍在整理中，請先新增下櫃後於進階尺寸調整高度。", "warning");
+        return false;
+      }
+      const layer = preset.layer === "upper" ? "upper" : "lower";
+      const purpose = ["general", "drawer", "sink", "stove", "appliance", "open", "filler", "hood"].includes(preset.purpose)
+        ? preset.purpose
+        : "general";
+      const width = Math.max(purpose === "filler" ? 10 : 50, Math.round(Number(preset.width) || 0));
+      const remaining = wall.width - layerTotal(wall, layer);
+      if (width > remaining) {
+        showKitchenToast(`目前${layer === "upper" ? "吊櫃" : "下櫃"}只剩 ${formatNumber(Math.max(0, remaining))} mm，無法加入 ${formatNumber(width)} mm。`, "warning");
+        return false;
+      }
+      const name = String(preset.name || (layer === "upper" ? "標準吊櫃" : "標準下櫃"));
+      commitKitchenMutation(`加入${name}`, () => {
+        const created = makeCabinet(name, width, layer, purpose, preset.frontStyle, preset.handleStyle);
+        created.customHeight = clampNumber(preset.height, 50, wall.height, layer === "upper" ? sizes.upperHeight : sizes.lowerHeight);
+        created.customDepth = clampNumber(preset.depth, 50, 1500, layer === "upper" ? sizes.upperDepth : sizes.lowerDepth);
+        created.hasCountertop = preset.hasCountertop !== false;
+        created.hasToeKick = preset.hasToeKick !== false;
+        created.includeInQuote = preset.includeInQuote !== false;
+        created.priceRuleId = preset.priceRuleId || "";
+        if (purpose === "filler") created.sideTreatment = preset.id === "finished-end" ? "finished-end" : "wall-filler";
+        wall.cabinets.push(normalizeCabinet(created));
+      });
+      setCurrentLayer(layer, { syncAssist: false });
+      renderAll();
       return true;
     }
 
@@ -6623,15 +6824,49 @@
 
     function kitchenExtraValidation() {
       const issues = [];
+      calculatePositions();
+      const ids = new Set();
       state.walls.forEach((wall, wallIndex) => {
-        const lower = wall.cabinets.filter((cabinet) => cabinet.type === "lower");
+        const wallName = `牆 ${wallIndex + 1}`;
+        const lower = wall.cabinets.filter((cabinet) => cabinet.type === "lower").sort((a, b) => a.x - b.x);
+        const upper = wall.cabinets.filter((cabinet) => cabinet.type === "upper").sort((a, b) => a.x - b.x);
+        wall.cabinets.forEach((cabinet) => {
+          const numeric = [cabinet.width, cabinet.x];
+          if (numeric.some((value) => !Number.isFinite(Number(value)))) issues.push({ id: `invalid-${cabinet.id}`, code: "invalid-number", level: "error", message: `${cabinet.name} 的尺寸資料異常，系統已阻止產生錯誤尺寸。`, target: cabinet.id });
+          if (ids.has(cabinet.id)) issues.push({ id: `duplicate-${cabinet.id}`, code: "duplicate-id", level: "error", message: `${cabinet.name} 的識別碼重複，請重新複製此櫃體。`, target: cabinet.id });
+          ids.add(cabinet.id);
+        });
+        [lower, upper].forEach((row) => {
+          for (let index = 1; index < row.length; index += 1) {
+            if (row[index].x < row[index - 1].x + row[index - 1].width - 0.5) issues.push({ id: `overlap-${wallIndex}-${index}`, code: "cabinet-overlap", level: "error", message: `${wallName} 的 ${row[index - 1].name} 與 ${row[index].name} 發生重疊。`, target: row[index].id });
+          }
+        });
+        if (sizes.lowerHeight < 800 || sizes.lowerHeight > 920) issues.push({ id: `lower-height-${wallIndex}`, code: "lower-height", level: "warning", message: `下櫃完成高度 ${sizes.lowerHeight} mm，請確認是否符合使用者身高與設備。`, target: wall.id });
+        if (sizes.lowerDepth < 520 || sizes.lowerDepth > 650) issues.push({ id: `lower-depth-${wallIndex}`, code: "lower-depth", level: "warning", message: `下櫃深度 ${sizes.lowerDepth} mm，請確認檯面與設備安裝需求。`, target: wall.id });
+        const unevenLower = lower.find((cabinet) => cabinet.purpose !== "filler" && Math.abs(cabinetHeight(cabinet, wall) - sizes.lowerHeight) > 1);
+        if (unevenLower) issues.push({ id: `counter-height-${wallIndex}`, code: "counter-height", level: "warning", message: `${wallName} 的 ${unevenLower.name} 完成高度與其他下櫃不同，連續檯面可能無法保持水平。`, target: unevenLower.id });
+        if (upper.length && (sizes.upperDepth < 300 || sizes.upperDepth > 400)) issues.push({ id: `upper-depth-${wallIndex}`, code: "upper-depth", level: "warning", message: `吊櫃深度 ${sizes.upperDepth} mm，請確認取物與檯面操作空間。`, target: wall.id });
         const sink = lower.find((cabinet) => cabinet.purpose === "sink");
         const stove = lower.find((cabinet) => cabinet.purpose === "stove");
+        if (sink && sink.width < 600) issues.push({ id: `sink-width-${wallIndex}`, code: "sink-width", level: "warning", message: `${wallName} 的水槽櫃寬度 ${sink.width} mm，建議至少 600 mm。`, target: sink.id });
+        if (stove && stove.width < 600) issues.push({ id: `stove-width-${wallIndex}`, code: "stove-width", level: "warning", message: `${wallName} 的爐台櫃寬度 ${stove.width} mm，建議至少 600 mm。`, target: stove.id });
         if (sink && stove) {
           const gap = Math.max(0, Math.max(sink.x, stove.x) - Math.min(sink.x + sink.width, stove.x + stove.width));
           if (gap < 300) issues.push({ id: `kitchen-gap-${wallIndex}`, code: "sink-stove-gap", level: "warning", message: `牆 ${wallIndex + 1} 的水槽與爐台工作距離少於 300 mm`, target: sink.id });
+          const stoveIndex = lower.indexOf(stove);
+          const leftPrep = lower[stoveIndex - 1] && !["filler", "sink"].includes(lower[stoveIndex - 1].purpose) ? lower[stoveIndex - 1].width : 0;
+          const rightPrep = lower[stoveIndex + 1] && !["filler", "sink"].includes(lower[stoveIndex + 1].purpose) ? lower[stoveIndex + 1].width : 0;
+          if (Math.max(leftPrep, rightPrep) < 300) issues.push({ id: `stove-prep-${wallIndex}`, code: "stove-prep", level: "warning", message: `${wallName} 的爐台左右備餐空間不足 300 mm，請確認是否符合使用需求。`, target: stove.id });
+          const hood = upper.find((cabinet) => cabinet.purpose === "hood");
+          if (!hood) issues.push({ id: `hood-missing-${wallIndex}`, code: "hood-missing", level: "warning", message: `${wallName} 的爐台上方尚未配置排油煙機吊櫃。`, target: stove.id });
+          else if (Math.abs(hood.x - stove.x) > 2 || Math.abs(hood.width - stove.width) > 2) issues.push({ id: `hood-align-${wallIndex}`, code: "hood-align", level: "error", message: `${wallName} 的抽油煙機吊櫃未對齊爐台櫃，請檢查位置。`, target: hood.id });
         }
+        const used = Math.max(layerTotal(wall, "lower"), layerTotal(wall, "upper"));
+        const remaining = wall.width - used;
+        if (remaining >= 20 && remaining < 150) issues.push({ id: `filler-${wallIndex}`, code: "filler-suggestion", level: "warning", message: `${wallName} 目前剩餘 ${Math.round(remaining)} mm，建議設定為補板。`, target: wall.id });
+        if (!lower.length) issues.push({ id: `empty-${wallIndex}`, code: "empty-wall", level: "warning", message: `${wallName} 尚未配置下櫃。`, target: wall.id });
       });
+      if (!issues.length) issues.push({ id: "kitchen-valid", code: "valid", level: "success", message: "目前牆面、櫃體、設備與尺寸資料檢查正常。", target: null });
       return issues;
     }
 
@@ -6667,7 +6902,7 @@
         const stored = window.MODUDRAFTCore.loadProject(requestedId);
         if (stored?.type === "kitchen") importKitchenProject(stored);
       }
-      window.MODUDRAFTSuite.mount({
+      kitchenProductSuiteController = window.MODUDRAFTSuite.mount({
         type: "kitchen",
         buttonTarget: ".toolbar .actions",
         getProject: kitchenProjectSnapshot,
@@ -6732,6 +6967,68 @@
         },
         showToast: showKitchenToast
       });
+    }
+
+    function initializeKitchenWorkflow() {
+      if (!window.MODUDRAFTKitchenWorkflow || !window.MODUDRAFTCore) return;
+      kitchenWorkflowController = window.MODUDRAFTKitchenWorkflow.mount({
+        enterProfessional: (options = {}) => {
+          state.editorMode = "pro";
+          if (options.blank || !state.walls.length) initialize("single", { autoGenerate: false, editorMode: "pro" });
+          else {
+            el.startOverlay.style.display = "none";
+            renderAll();
+            scheduleKitchenAutosave();
+          }
+        },
+        generate: async (config, plan) => applyBeginnerKitchenPlan(config, plan),
+        validate: () => {
+          const project = kitchenProjectSnapshot();
+          const all = (window.MODUDRAFTCore.validateProject(project) || []).concat(kitchenExtraValidation());
+          const seen = new Set();
+          return all.filter((item) => {
+            const key = `${item.code || item.level}:${item.message}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+        },
+        getProject: kitchenProjectSnapshot,
+        getPrompt: (project) => window.MODUDRAFTCore.generateAiPrompt(project || kitchenProjectSnapshot()),
+        applyStyle: async (styleId) => {
+          const preset = window.MODUDRAFTCore.STYLE_PRESETS.find((item) => item.id === styleId);
+          if (!preset) return;
+          const assignments = { door: preset.door, body: preset.body, countertop: preset.countertop, handle: preset.handle, wall: preset.wall, floor: preset.floor };
+          applyKitchenStyle(preset, assignments);
+          if (state.workflowConfig) state.workflowConfig.styleId = styleId;
+          scheduleKitchenAutosave();
+          showKitchenToast(`已套用「${preset.name}」`);
+        },
+        openProjectCenter: (tabName) => {
+          if (!state.walls.length) initialize("single", { autoGenerate: false, editorMode: "pro" });
+          kitchenProductSuiteController?.setTab(tabName || "project");
+          kitchenProductSuiteController?.open();
+        },
+        openImport: () => {
+          if (!state.walls.length) initialize("single", { autoGenerate: false, editorMode: "pro" });
+          kitchenProductSuiteController?.setTab("project");
+          kitchenProductSuiteController?.open();
+          document.querySelector("#mdImportFile")?.click();
+        },
+        openExport: (viewName) => {
+          document.getElementById("exportView").value = viewName || "visible";
+          openExportModal();
+        },
+        openEstimate: () => kitchenEstimateController?.open(),
+        openGuide: () => kitchenHelpController?.open("workflow"),
+        addPreset: addStandardCabinetPreset,
+        showToast: showKitchenToast,
+        styles: window.MODUDRAFTCore.STYLE_PRESETS,
+        materialColor: (id) => window.MODUDRAFTCore.materialById(id)?.color || "#999"
+      });
+      document.getElementById("cabinetListBtn")?.addEventListener("click", () => kitchenWorkflowController?.open(7));
+      document.getElementById("beginnerModeBtn")?.addEventListener("click", () => kitchenWorkflowController?.open(1));
+      document.getElementById("standardCabinetLibraryBtn")?.addEventListener("click", () => kitchenWorkflowController?.openLibrary());
     }
 
     bindEvents();
@@ -6804,6 +7101,13 @@
       addCabinet: addCabinetFromValues,
       startEqualize: startEqualizeMode,
       openEstimate: () => kitchenEstimateController?.open(),
+      openCabinetList: () => kitchenWorkflowController?.open(7),
+      openBeginnerFlow: () => kitchenWorkflowController?.open(1),
+      openStandardLibrary: () => kitchenWorkflowController?.openLibrary(),
+      openProjectCenter: (tabName) => {
+        kitchenProductSuiteController?.setTab(tabName || "project");
+        kitchenProductSuiteController?.open();
+      },
       openSelectedCabinet: (tabName) => {
         if (state.selectedIndex !== null) {
           openEditModal(state.selectedIndex);
@@ -6831,6 +7135,7 @@
         render2D();
       }
     }) || null;
+    initializeKitchenWorkflow();
   </script>
 </body>
 </html>

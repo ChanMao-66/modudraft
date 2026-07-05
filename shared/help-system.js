@@ -13,6 +13,20 @@
         ["檢查交付", "切換平面、立面、3D，進入專案中心做設計檢查、備份與分享。"]
       ], tip: "看到不熟悉的按鈕時，手機請點右上角「？」開啟教學模式；桌面可按右鍵查看說明。"
     },
+    workflow: {
+      nav: "新手完整流程", index: "00", title: "第一次使用：照順序完成一份廚具或系統櫃草圖", kicker: "BEGINNER WORKFLOW",
+      summary: "這不是功能清單，而是一條可以實際做完的路線。每一步都能點「查看這一步」閱讀專屬操作，再回工作台執行。",
+      steps: [
+        ["1. 選擇工作模式", "廚具模式用於下櫃、吊櫃、檯面與三機；系統櫃模式用於衣櫃、鞋櫃、書櫃與收納。", "kitchen-mode"],
+        ["2. 輸入現場尺寸", "先設定牆寬與天花高度，單位都是 mm；多面牆要逐面確認目前選取牆。", "wall-width"],
+        ["3. 建立第一版配置", "初學者先用自動配置；已有明確規劃時再逐座新增櫃體。", "auto-layout"],
+        ["4. 分清下櫃與吊櫃", "新增或編輯前先看目前層級提示，避免把設備櫃放錯上下層。", "cabinet-layer"],
+        ["5. 修改櫃體與尺寸", "點櫃體改用途、門片與把手；也可直接點尺寸數字快速修改。", "cabinet-editor"],
+        ["6. 交叉檢查三個視圖", "平面看深度與位置、立面看高度與門片、3D 看整體比例。", "view-switch"],
+        ["7. 套材質並估價", "先用普通材質檢查提案外觀，再依配置產生模擬估價並核對明細。", "estimate"],
+        ["8. 匯出、備份與分享", "輸出圖面前固定視角；重要案件另存 JSON，再用網址或 QR Code 分享工具。", "export"]
+      ], tip: "新手不需要一次學完所有按鈕。先完成這 8 步，再用逐點教學補充細節。"
+    },
     views: {
       nav: "2D 與 3D", index: "02", title: "同一份資料，從不同視圖交叉檢查", kicker: "DRAWING & 3D",
       summary: "平面圖確認牆面與深度；立面圖確認寬高與門片；3D 用來檢查空間比例與客戶觀看角度。",
@@ -117,6 +131,11 @@
   defineHelp("kitchen-mode", "廚具配置", "首頁與專案", "建立下櫃、吊櫃、設備、檯面與補板配置。", "規劃廚房與系統廚具時使用。", ["建立牆面。", "選擇下櫃或吊櫃。", "配置水槽、爐台與收納櫃。", "用平面、立面與 3D 檢查。"], ["所有尺寸使用 mm。"], "一面 2500 mm 牆可先自動配置，再調整水槽與爐台。", ["wall-width", "auto-layout"]);
   defineHelp("cabinet-mode", "系統櫃配置", "首頁與專案", "配置衣櫃、鞋櫃、書櫃與收納櫃。", "需要編輯層板、分格、門片與吊衣桿時使用。", ["先建立牆面。", "在立面圖安排櫃體。", "進入立面配置修改單櫃內部。"], ["整面牆配置與單櫃內部是兩個不同階段。"], "先排三座衣櫃，再逐座設定吊衣區。", ["view-elevation", "cabinet-editor"]);
   defineHelp("project-center", "專案中心", "首頁與專案", "管理專案名稱、備份、材質、檢查與 AI 提示詞。", "每完成一個主要階段或交付前使用。", ["開啟專案中心。", "輸入專案名稱並儲存。", "需要時匯出 JSON 備份。"], ["清除瀏覽器資料前一定要備份。"], "丈量完成後先儲存一版，再開始改材質。", ["export", "share"]);
+  defineHelp("material-library", "材質庫", "首頁與專案", "管理門片、櫃身、檯面、把手、牆面與地板的材質設定。", "完成配置後要確認外觀或輸出普通材質圖時使用。", ["開啟專案與材質。", "切換到材質頁籤。", "選擇材質或快速風格。", "回到 3D 檢查結果。"], ["材質只改外觀，不會改變櫃體尺寸。"], "把門片改成霧面白、檯面改成淺色石英石。", ["style-presets", "normal-render"]);
+  defineHelp("style-presets", "快速風格", "材質", "一次套用協調的門片、檯面、把手、牆面與地板材質。", "新手想快速得到一致外觀，或需要比較不同提案時使用。", ["選擇一個風格卡片。", "查看平面、立面與 3D。", "不滿意可換另一個風格。"], ["套用後仍可個別調整材質。"], "從現代簡約切換成木紋溫潤，櫃體位置與數量不會改變。", ["material-library", "ai-proposal"]);
+  defineHelp("design-check", "設計檢查", "檢查", "檢查牆寬、櫃體重疊、設備尺寸、補板與爐台對齊。", "自動配置後、手動改尺寸後，以及出圖前都應執行。", ["開啟專案中心。", "切換到設計檢查。", "依錯誤、警告、正常逐項確認。", "回到圖面修正後重新檢查。"], ["黃色是建議注意；紅色表示應先修正。"], "剩餘 45 mm 時，系統會建議改成右補板。", ["dimension-edit", "ai-layout"]);
+  defineHelp("ai-proposal", "AI 提案助手", "AI 與自動工具", "根據目前真實牆面、櫃體、設備與材質產生渲染提示詞。", "完成配置後要交給 ChatGPT、Gemini 或其他 AI 工具製作提案圖時使用。", ["先完成尺寸與設計檢查。", "下載白模或普通材質圖。", "複製 AI 提示詞。", "把圖片與提示詞一起交給外部 AI。"], ["AI 圖只供視覺提案，施工尺寸仍以 MODUDRAFT 圖面與清單為準。"], "提示詞會寫出一字型、總寬、水槽與爐台位置，並要求保留配置。", ["normal-render", "ai-render"]);
+  defineHelp("standard-cabinet-library", "標準櫃體庫", "櫃體", "用常見尺寸快速加入下櫃、吊櫃、高櫃與補板。", "專業模式需要快速配置，又不想每次手動輸入名稱與尺寸時使用。", ["開啟標準櫃體庫。", "選擇分類。", "點擊需要的標準櫃。", "回到圖面確認剩餘空間。"], ["新增前先確認目前牆面；超過剩餘寬度時系統不會硬塞。"], "點選水槽下櫃 800，會加入 800 mm 水槽櫃並同步圖面與估價。", ["add-cabinet", "cabinet-list"]);
 
   defineHelp("add-wall", "新增牆面", "牆面", "在目前專案加入另一面可獨立設定寬度的牆。", "L 型、多面牆或不同牆段需要分開配置時使用。", ["點新增牆面。", "切換到新牆。", "輸入牆寬。", "選擇靠左或靠右排列。"], ["天花高度會與其他牆共用。"], "L 型廚房可建立 A 牆與 B 牆分別配置。", ["select-wall", "wall-width"]);
   defineHelp("select-wall", "選擇牆面", "牆面", "切換目前正在編輯的牆面。", "多面牆案件要修改指定牆段時使用。", ["打開牆面選單。", "選擇牆號與寬度。", "確認畫布與尺寸狀態已切換。"], ["新增櫃體前要先確認目前牆面。"], "要修改轉角另一側時，先從牆 1 切到牆 2。", ["add-wall", "delete-wall"]);
@@ -143,6 +162,11 @@
   defineHelp("cabinet-editor", "編輯櫃體", "櫃體", "修改目前櫃體的名稱、尺寸、用途、門片與把手。", "點選平面或立面中的櫃體後使用。", ["點櫃體。", "手機切換基本、尺寸、用途、門片、把手或進階分頁。", "完成後按儲存。"], ["修改前先確認目前是下櫃或吊櫃。"], "把一般櫃改為 700 mm 水槽櫃。", ["cabinet-width", "cabinet-purpose"]);
   defineHelp("cabinet-name", "櫃體名稱", "櫃體", "用容易辨識的名稱標記櫃體。", "同一面牆有多座相似櫃體時使用。", ["輸入名稱。", "按儲存。"], ["名稱不影響尺寸，但會顯示在圖面與清單。"], "將櫃體命名為「水槽下櫃」。", ["cabinet-editor"]);
   defineHelp("cabinet-width", "櫃體寬度", "櫃體", "單一櫃體的左右寬度，單位 mm。", "要調整模組大小或吸收剩餘空間時使用。", ["點櫃體或尺寸數字。", "輸入新寬度。", "按套用或儲存。"], ["下櫃超過 1200 mm、吊櫃超過 900 mm 建議拆分。"], "把 600 mm 抽屜櫃改成 700 mm。", ["dimension-edit", "equalize"]);
+  defineHelp("cabinet-height", "櫃體高度", "櫃體", "目前櫃體的完成高度，單位 mm。", "特殊設備櫃或非標準上下櫃需要個別高度時使用。", ["選取櫃體。", "輸入高度。", "儲存後檢查立面與 3D。"], ["高度不可超過天花；下櫃高度不同會影響連續檯面。"], "將設備櫃高度設定為 900 mm。", ["wall-height", "view-elevation"]);
+  defineHelp("cabinet-depth", "櫃體深度", "櫃體", "目前櫃體由牆面向外的深度，單位 mm。", "設備、轉角或特殊收納需要非標準深度時使用。", ["選取櫃體。", "輸入深度。", "儲存後檢查平面與 3D。"], ["一般下櫃約 560 mm、吊櫃約 350 mm。"], "將吊櫃深度設定為 350 mm。", ["view-floor", "view-3d"]);
+  defineHelp("cabinet-material", "櫃體門片材質", "材質", "設定單一櫃體的門片材質識別。", "整案風格套用後，某座櫃體需要個別變更時使用。", ["選取櫃體。", "選材質。", "儲存後查看 3D 與清單。"], ["普通材質圖與 AI 提示詞會參考目前材質。"], "將展示櫃改為淺橡木。", ["normal-render", "cabinet-list"]);
+  defineHelp("cabinet-quote", "是否計入估價", "估價", "決定目前櫃體是否由自動估價讀取。", "客供、既有櫃體或只作視覺示意時使用。", ["進入進階設定。", "勾選或取消計入粗估價。", "重新產生估價。"], ["取消後櫃體仍保留在圖面與清單。"], "既有冰箱預留不計入新作櫃體估價。", ["estimate"]);
+  defineHelp("cabinet-notes", "櫃體備註", "櫃體", "記錄現場、五金、設備或施工注意事項。", "需要把圖面無法表達的資訊帶到櫃體清單時使用。", ["輸入備註。", "儲存櫃體。", "到櫃體清單核對。"], ["備註不會改變 3D 幾何。"], "備註：右側避開瓦斯管 50 mm。", ["cabinet-list"]);
   defineHelp("cabinet-layer", "下櫃／吊櫃", "櫃體", "決定目前新增與 AI 建議要套用在哪一層。", "新增櫃體或查看剩餘空間前使用。", ["確認頂部狀態顯示下櫃或吊櫃。", "點擊可快速切換。"], ["下櫃與吊櫃不能在輔助等分中混選。"], "先切到吊櫃，再新增烘碗機櫃。", ["add-cabinet", "equalize"]);
   defineHelp("cabinet-purpose", "櫃體用途", "櫃體", "指定櫃體是收納、水槽、爐台、抽屜或設備櫃。", "要讓立面與 3D 顯示正確設備外觀時使用。", ["開啟用途分頁。", "選擇用途卡片。", "按儲存。"], ["用途會影響預設門片與設備外觀。"], "水槽櫃會顯示水槽與龍頭。", ["purpose-sink", "purpose-stove"]);
   defineHelp("purpose-general", "一般收納櫃", "櫃體用途", "沒有特殊設備的一般門櫃。", "收納鍋具、乾貨或清潔用品時使用。", ["用途選一般收納櫃。", "選擇門片與把手。"], ["可依寬度改成單門或對開門。"], "450 mm 單門備品櫃。", ["door-style-single-door"]);
@@ -205,6 +229,48 @@
   defineHelp("qr-code", "QR Code", "分享", "讓另一支手機掃描後直接開啟網站。", "現場快速分享工具網址時使用。", ["打開分享。", "讓對方相機對準 QR Code。", "點通知開啟。"], ["需要網路連線才能開啟最新公開版。"], "客戶手機掃碼查看工具。", ["mobile-scan"]);
   defineHelp("mobile-scan", "手機掃碼開啟", "分享", "使用手機相機掃描 QR Code 開啟網站。", "不方便手動輸入網址時使用。", ["開啟手機相機。", "掃描 QR Code。", "點擊出現的網址。"], ["不需要安裝 APK。"], "在辦公室電腦顯示 QR Code，現場手機掃描。", ["qr-code"]);
   defineHelp("local-storage", "本機資料儲存", "分享", "專案自動保存在目前瀏覽器的 localStorage。", "了解資料保存範圍與備份責任時查看。", ["同一裝置可從最近專案繼續。", "重要案件另存 JSON。"], ["清除瀏覽器資料可能刪除專案。"], "換手機前先匯出 JSON。", ["project-center"]);
+
+  defineHelp("beginner-workflow", "新手完整流程", "新手教學", "依照牆面、配置、編輯、檢查、估價與匯出的順序完成第一份草圖。", "第一次使用，或不知道下一步該做什麼時使用。", ["開啟使用說明。", "選擇「新手完整流程」。", "依序閱讀八個步驟。", "點每一步的「查看這一步」取得詳細說明。"], ["先完成一條流程，比一次記住所有按鈕更有效。"], "先用 2400 mm 牆完成一字型廚具，再練習修改單櫃。", ["full-guide", "teaching-mode"]);
+  defineHelp("pro-mode", "專業空白工程", "開始方式", "直接進入完整廚具工作台，不先產生櫃體。", "已熟悉牆面、櫃體與工程圖操作，想從空白精準配置時使用。", ["選專業空白工程。", "先輸入牆寬與天花高。", "新增櫃體或執行自動配置。"], ["專業模式不會限制工具，也不會自動開啟教學。"], "現場丈量後建立 3150 mm 空白牆面。", ["wall-width", "add-cabinet"]);
+  defineHelp("kitchen-template", "從廚房範本開始", "開始方式", "先選一字型或 L 型，再進入新手尺寸與設備流程。", "現場型態常見，但不想從完全空白開始時使用。", ["選從範本開始。", "選廚房型態。", "輸入現場尺寸。", "產生配置。"], ["U 型與中島型目前只顯示即將支援，不會讓使用者進入錯誤畫面。"], "用 L 型範本建立主牆 2700、側牆 1800 mm。", ["beginner-workflow"]);
+  defineHelp("clear-wall", "清空目前牆面", "牆面", "移除目前牆面上的全部櫃體，但保留牆面尺寸。", "想保留丈量資料、重新配置整排櫃體時使用。", ["先確認目前牆面。", "按清空牆面。", "確認後重新自動配置或逐座新增。"], ["此操作影響整面牆；重要案件先匯出 JSON。"], "保留 2500 mm 牆寬，清除全部舊櫃體重新設計。", ["auto-layout", "undo"]);
+  defineHelp("layer-lower", "目前編輯下櫃", "上下櫃", "將新增、選取與輔助工具切換到落地的下櫃層。", "要配置水槽櫃、爐台櫃、抽屜櫃或電器櫃時使用。", ["點下櫃。", "確認層級提示顯示下櫃。", "再新增或選取櫃體。"], ["下櫃與吊櫃不能在輔助等分時混選。"], "切到下櫃後新增 600 mm 抽屜櫃。", ["layer-upper", "add-cabinet"]);
+  defineHelp("layer-upper", "目前編輯吊櫃", "上下櫃", "將新增、選取與輔助工具切換到牆上的吊櫃層。", "要配置一般吊櫃、排油煙機櫃或吊掛式烘碗機時使用。", ["點吊櫃。", "確認層級提示顯示吊櫃。", "再新增或選取櫃體。"], ["吊櫃預設高度 700 mm；設備位置要與下櫃對齊。"], "切到吊櫃後在爐台上方新增排油煙機櫃。", ["layer-lower", "purpose-hood"]);
+  defineHelp("ai-assist-layer", "AI 建議層級", "AI 與自動工具", "決定 AI 輔助構圖要分析下櫃、吊櫃或目前牆面。", "牆上同時有上下櫃，需要指定推薦範圍時使用。", ["開啟 AI 輔助構圖。", "選擇下櫃或吊櫃。", "查看剩餘空間與推薦。"], ["不同層級的建議尺寸與用途不同。"], "下櫃剩 200 mm 時推薦側拉籃，吊櫃則推薦窄開放格。", ["ai-layout", "cabinet-layer"]);
+  defineHelp("equalize-count", "等分數量", "AI 與自動工具", "設定已選連續櫃體要重新分成幾座。", "想把一座大櫃拆小，或把三座改成四座時使用。", ["進入輔助等分。", "選取同層連續櫃體。", "輸入 1 至 12。", "檢查預覽。"], ["平均寬度低於 120 mm 或高於 900 mm 會提示。"], "1800 mm 輸入 4，得到四座 450 mm。", ["equalize", "equalize-apply"]);
+  defineHelp("equalize-apply", "套用輔助等分", "AI 與自動工具", "以預覽結果取代目前選取的連續櫃體。", "確認分割數量與門片規則後使用。", ["核對總寬。", "核對每座新寬度。", "按套用等分。", "到三個視圖確認。"], ["套用後可用復原返回。"], "把 600 + 600 + 600 改成 450 × 4。", ["equalize-count", "undo"]);
+  defineHelp("dimension-input", "新尺寸輸入", "尺寸", "輸入目前點選尺寸標註的新值。", "直接點牆寬、櫃寬或剩餘尺寸後使用。", ["輸入正整數 mm。", "按 Enter 或套用。", "檢查右側櫃體是否順延。"], ["零、負數、空白、NaN 與 Infinity 不會套用。"], "將單櫃 600 改為 700 mm。", ["dimension-edit", "dimension-apply"]);
+  defineHelp("dimension-apply", "套用尺寸修改", "尺寸", "將快速編輯框中的數值寫回牆面或櫃體。", "確認輸入值正確後使用。", ["檢查尺寸目標名稱。", "輸入新值。", "按套用。"], ["牆寬修改不會偷偷壓縮其他櫃體。"], "修改牆寬後重新計算右側剩餘空間。", ["dimension-input", "ai-layout"]);
+  defineHelp("gap-actions", "剩餘空間處理", "尺寸", "針對牆面與櫃體間的剩餘寬度選擇合理處理方式。", "點到剩餘尺寸時使用。", ["查看剩餘寬度。", "選 AI 推薦、改成補板、調整鄰櫃或修改牆寬。"], ["剩餘空間是計算結果，不能當作普通櫃體直接改值。"], "剩餘 40 mm 改成補板；剩餘 200 mm查看側拉籃建議。", ["gap-space", "purpose-filler"]);
+  defineHelp("save-cabinet", "儲存櫃體設定", "櫃體", "把編輯視窗內的尺寸、用途、門片與把手寫回目前櫃體。", "完成單櫃修改後使用。", ["確認上下櫃層級。", "核對寬度與用途。", "按儲存。", "查看三個視圖。"], ["關閉編輯視窗前要先儲存。"], "把 600 mm 一般櫃改成水槽櫃後儲存。", ["cabinet-editor", "view-switch"]);
+  defineHelp("cabinet-list", "櫃體清單", "櫃體", "依目前 project data 列出每座櫃體的名稱、類型、寬高深、材質、門片、把手與備註。", "設計完成後核對項目，或要交給估價與 AI 提案時使用。", ["點櫃體清單。", "逐項核對尺寸。", "需要時複製文字或匯出 CSV／JSON。"], ["修改櫃體後清單會重新從同一份專案資料產生。"], "核對水槽下櫃 800 × 850 × 560 mm。", ["estimate", "export"]);
+  defineHelp("export-format", "匯出格式與視圖", "渲染與出圖", "選擇 JPG、SketchUp 相容 DAE，以及要輸出的平面、立面、3D 或合併圖。", "準備交付圖面或轉到其他 3D 軟體時使用。", ["選格式。", "選擇要輸出的視圖。", "設定解析度。", "按開始匯出。"], ["DAE 是相容格式，不是原生 SKP。"], "選 JPG 與全部視圖，輸出橫向 4:3 提案圖。", ["export", "export-all"]);
+  defineHelp("export-confirm", "開始匯出", "渲染與出圖", "依目前格式、視圖、解析度與相機角度產生檔案。", "所有出圖選項確認後使用。", ["先固定 3D 視角。", "核對解析度。", "按開始匯出。"], ["手機高解析出圖可能需要數秒。"], "輸出 2560 × 1920 的立面圖。", ["export-format", "download-screenshot"]);
+  defineHelp("ai-render-view", "AI 渲染視圖", "渲染與出圖", "選擇要交給 AI 的 3D、平面或立面構圖與用途。", "準備 AI 進階渲染提示詞與截圖時使用。", ["選視圖。", "選白模或普通材質來源。", "先截圖。", "再開啟 AI。"], ["AI 渲染前先下載原始截圖保存。"], "以目前 3D 視角產生真實廚具渲染。", ["ai-render", "recapture-ai"]);
+  defineHelp("recapture-ai", "重新截取 AI 圖源", "渲染與出圖", "依最新視角與圖像來源更新送給 AI 的截圖。", "旋轉 3D、換材質或切換視圖後使用。", ["調整畫面。", "按重新截圖。", "確認預覽。"], ["重新截圖不會自動上傳到外部網站。"], "換到正面視角後重新截圖。", ["ai-render-view", "download-screenshot"]);
+
+  defineHelp("estimate-overview", "估價總覽", "估價", "顯示合計、稅額、總計與主要方案設定。", "快速確認整案粗估金額時使用。", ["選稅額模式。", "選檯面、三機、水槽龍頭與運送方案。", "需要時重新產生。"], ["總價只來自逐項明細加總。"], "切換標準三機後查看總計變化。", ["estimate-details", "estimate-tax-mode"]);
+  defineHelp("estimate-details", "估價明細", "估價", "逐項編輯品名、規格、數量、單價、狀態與是否計入總價。", "要核對每一筆來源或做專案微調時使用。", ["展開分類。", "修改欄位。", "檢查每項小計。"], ["贈送、客供、已包含、待報價與不含不會計入總價。"], "把油煙機狀態改為客供。", ["estimate-item-status", "estimate-overview"]);
+  defineHelp("estimate-rates", "專案單價設定", "估價", "修改本專案的廚具、檯面、五金、設備、人工與系統櫃單價。", "你的成本或售價與預設不同時使用。", ["展開分類。", "修改單價。", "按套用單價並重新產生。"], ["只影響目前專案，不會改其他專案。"], "把石英石每公分單價改成目前供應商價格。", ["estimate-regenerate", "estimate-details"]);
+  defineHelp("estimate-manual", "手動新增估價項目", "估價", "加入配置資料無法自動判斷的特殊加工、材料或現場費用。", "遇到玻璃條、特殊五金或臨時施工項目時使用。", ["選分類。", "輸入名稱、單位、數量與單價。", "決定是否計入總價。", "按新增。"], ["手動項目會與自動項目使用同一套加總。"], "新增玻璃條工資 1 式 1500 元。", ["estimate-details", "estimate-copy"]);
+  defineHelp("estimate-tax-mode", "估價稅額模式", "估價", "選擇未稅另加、金額已含稅或不計稅。", "要呈現不同稅務計算方式時使用。", ["選擇模式。", "需要時調整稅率。", "確認稅額與總計。"], ["已含稅模式不會再加一次稅。"], "未稅合計 188,476 元，5% 稅額為 9,424 元。", ["estimate-overview"]);
+  defineHelp("estimate-plan", "估價方案選擇", "估價", "快速設定檯面、三機、水槽龍頭或運送的預設項目。", "想快速產生常用方案明細時使用。", ["選擇方案。", "按重新產生估價。", "到明細核對型號與價格。"], ["方案是草稿，可逐項改為客供或待報價。"], "選標準三機後產生油煙機、瓦斯爐與烘碗機。", ["estimate-regenerate", "estimate-details"]);
+  defineHelp("estimate-regenerate", "依配置重新產生估價", "估價", "重新讀取目前櫃體、檯面、設備與配件，產生新的明細。", "設計配置已改變，估價顯示需要更新時使用。", ["先保存設計。", "確認是否保留手動項目。", "按重新產生。", "核對新明細。"], ["可能更新由配置自動產生的項目，不會無提示偷偷覆蓋。"], "櫃寬變更後重新計算上櫃與下櫃總長。", ["estimate", "estimate-details"]);
+  defineHelp("estimate-item", "估價明細欄位", "估價", "修改單筆估價的名稱、規格、單位、數量、單價、狀態、備註與計入總價。", "自動估價與實際行情不同時使用。", ["展開分類。", "修改需要的欄位。", "離開欄位後確認小計與總計。"], ["數量或單價空白會以 0 安全處理。"], "將鋁高抽數量從 1 改成 2。", ["estimate-details"]);
+  defineHelp("estimate-copy", "複製估價明細", "估價", "將分類、項目與合計整理成繁體中文文字並複製。", "要貼到訊息、筆記或 Email 時使用。", ["核對估價。", "按複製明細。", "到目標程式貼上。"], ["此為模擬估價，不是正式公司報價單。"], "把估價文字貼到 LINE 與客戶討論。", ["estimate-csv", "estimate-json"]);
+  defineHelp("estimate-csv", "匯出估價 CSV", "估價", "輸出可由 Excel 或試算表開啟的估價明細。", "要進一步整理金額或保存表格時使用。", ["按 CSV／Excel。", "開啟下載檔。", "核對中文與金額。"], ["CSV 不含公司抬頭與付款條款。"], "在 Excel 裡調整欄寬後列印內部粗估。", ["estimate-copy"]);
+  defineHelp("estimate-json", "匯出估價 JSON", "估價", "保存完整估價資料與試算表資料結構。", "要備份或交給後續系統處理時使用。", ["按匯出 JSON。", "保存檔案。"], ["JSON 適合資料交換，不是客戶閱讀格式。"], "將估價連同專案 JSON 備份。", ["local-storage"]);
+
+  defineHelp("system-wall", "系統櫃牆面設定", "系統櫃", "設定目前牆面寬度、天花高度與排列方向。", "開始配置整面系統櫃前使用。", ["選擇牆面。", "輸入牆寬與天花高。", "選靠左、置中或靠右。"], ["整排物件總寬不可超出牆寬。"], "在 3000 mm 牆面靠左配置三座櫃。", ["add-system-cabinet", "add-system-filler"]);
+  defineHelp("add-system-cabinet", "新增系統櫃", "系統櫃", "在目前牆面加入衣櫃、鞋櫃、書櫃或儲藏櫃。", "建立整面牆的第一座或後續櫃體時使用。", ["選用途預設。", "按新增櫃體。", "選取後在右側修改尺寸與內部。"], ["寬度超過 1200 mm 建議使用中立板或拆成兩座。"], "新增 800 mm 對開衣櫃。", ["system-cabinet-kind", "system-compartments"]);
+  defineHelp("add-system-filler", "插入獨立補板", "系統櫃", "在牆面排列中加入可獨立選取、調整與刪除的補板。", "牆角不垂直或剩餘尺寸需要收尾時使用。", ["按新增補板。", "設定名稱、寬、高與深。", "移動到正確位置。"], ["補板不參與層板、門片與抽屜計算。"], "在衣櫃與左牆間加入 50 mm 補板。", ["purpose-filler", "system-wall"]);
+  defineHelp("regenerate-system-wall", "重新生成系統櫃牆面", "系統櫃", "依目前牆面、用途與尺寸重新整理整排配置。", "快速回到一版合理牆面配置時使用。", ["先確認牆寬。", "按重新生成。", "逐座檢查內部分格。"], ["可能替換目前排列，重要版本先保存。"], "重新產生兩座衣櫃與左右補板。", ["system-wall"]);
+  defineHelp("system-cabinet-kind", "系統櫃用途", "系統櫃", "套用衣櫃、鞋櫃、書櫃或儲藏櫃的常用深度與分格起點。", "新增櫃體或改變主要收納用途時使用。", ["選取櫃體。", "選擇用途。", "再調整尺寸與分格。"], ["預設值仍需依現場與使用者物品確認。"], "衣櫃採 600 mm 深；鞋櫃採約 400 mm 深。", ["system-compartments", "system-doors"]);
+  defineHelp("system-compartments", "系統櫃層板與分格", "系統櫃", "使用自動等分或手動高度配置單櫃內部。", "要安排鞋格、書格、吊衣區或抽屜區時使用。", ["進入立面配置。", "選自動等分或手動分格。", "指定一格自動補足。", "套用分格。"], ["層板間距與總高度必須合理；手動模式只允許一格自動補足。"], "書櫃以 300 mm 內間距自動等分。", ["system-accessories", "system-doors"]);
+  defineHelp("system-doors", "系統櫃門片", "系統櫃", "設定對開門、內外門、長門、分段門或推拉門。", "內部分格完成後建立外觀時使用。", ["選門型。", "設定門片生成方式。", "按生成門片。", "用眼睛切換有門／無門。"], ["只有衣櫃推拉門預設建議 650 mm 深；其他用途可自訂。"], "1600 mm 衣櫃使用兩片推拉門。", ["show-system-doors", "system-compartments"]);
+  defineHelp("system-accessories", "系統櫃配件", "系統櫃", "在目前分格加入吊衣桿或抽屜，或清除配件。", "完成分格後安排實際收納機能時使用。", ["點選分格。", "選吊衣桿高度或抽屜數量。", "按套用。"], ["吊衣桿位於上層板下方約 50 mm；格子太矮時不適用。"], "在 1500 mm 長衣區加入置中吊衣桿。", ["system-compartments"]);
+  defineHelp("show-system-doors", "顯示系統櫃門片", "系統櫃", "切換門片外觀與無門內部配置，不刪除門片資料。", "在 3D 或立面檢查內部層板與配件時使用。", ["按眼睛按鈕。", "有門檢查完成外觀。", "無門檢查內部配置。"], ["再次開啟會恢復原門片。"], "關閉門片查看吊衣桿與抽屜。", ["system-doors", "view-3d"]);
+  defineHelp("system-selection", "系統櫃目前選取", "系統櫃", "編輯目前選取的櫃體、補板、分格或配件。", "點到圖面物件後查看右側設定時使用。", ["在圖面點物件。", "確認右側名稱。", "修改對應欄位。"], ["點哪裡就會切到對應櫃體與分格。"], "點吊衣桿後直接進入配件設定。", ["system-compartments", "system-accessories"]);
 
   defineHelp("more-tools", "更多功能", "手機操作", "收納自動工具、渲染、匯出、分享與教學。", "手機畫面找不到次要功能時使用。", ["點底部更多。", "向上滑動面板。", "選擇需要的工具。"], ["功能沒有刪除，只是分層收納。"], "從更多開啟 AI 進階渲染。", ["bottom-sheet"]);
   defineHelp("bottom-sheet", "底部操作面板", "手機操作", "手機版集中顯示目前情境的設定與工具。", "修改牆面、櫃體或更多功能時使用。", ["向上拖曳把手可全展開。", "向下拖曳可半展開或收合。", "按 × 關閉。"], ["面板打開時畫布會自動保留可見安全區。"], "把櫃體編輯面板拖到全展開設定進階項目。", ["more-tools"]);
@@ -282,13 +348,22 @@
   }
 
   const HELP_ID_BINDINGS = Object.freeze({
+    openTutorialBtn: "full-guide", closeTutorialBtn: "full-guide",
     addWallBtn: "add-wall", wallSelect: "select-wall", deleteWallBtn: "delete-wall",
     wallWidthInput: "wall-width", wallHeightInput: "wall-height", applyWallSizeBtn: "apply-wall-size",
     alignWallLeftBtn: "align-left", alignWallRightBtn: "align-right", addCabinetBtn: "add-cabinet",
+    standardCabinetLibraryBtn: "standard-cabinet-library", beginnerModeBtn: "beginner-workflow", cabinetListBtn: "cabinet-list",
+    layerLower: "layer-lower", layerUpper: "layer-upper", layerContextLower: "layer-lower", layerContextUpper: "layer-upper",
+    clearWallBtn: "clear-wall", mobileScrollUp: "scroll-rail", mobileScrollDown: "scroll-rail",
     autoLayoutBtn: "auto-layout", aiAssistBtn: "ai-layout", equalizeBtn: "equalize",
+    aiAssistLayer: "ai-assist-layer", equalizeTargetCount: "equalize-count", applyEqualizeBtn: "equalize-apply",
+    dimensionValueInput: "dimension-input", applyDimensionEditBtn: "dimension-apply",
+    gapAiAssistBtn: "gap-actions", gapToFillerBtn: "gap-actions", gapAdjustNeighborBtn: "gap-actions", gapEditWallBtn: "gap-actions", closeGapActionBtn: "gap-actions",
     editName: "cabinet-name", editWidth: "cabinet-width", editType: "cabinet-layer",
+    editHeight: "cabinet-height", editDepth: "cabinet-depth", editMaterialId: "cabinet-material", editNotes: "cabinet-notes", editIncludeInQuote: "cabinet-quote",
     editPurpose: "cabinet-purpose", editFrontStyle: "door-style-double-door",
     editHandleStyle: "handle-style-none", editSinkMount: "sink-undermount",
+    saveCabinetBtn: "save-cabinet", cancelEditBtn: "cabinet-editor",
     copyCabinetBtn: "copy-cabinet", deleteCabinetBtn: "delete-cabinet",
     moveLeftBtn: "move-left", moveRightBtn: "move-right", globalHandleStyle: "global-handle",
     viewFloor: "view-floor", viewElevation: "view-elevation", viewThree: "view-3d",
@@ -296,8 +371,29 @@
     resetViewBtn: "reset-view", wallVisibilityToggle: "wall-visibility",
     topFillerVisibilityToggle: "top-filler", materialRenderBtn: "normal-render",
     renderViewBtn: "ai-render", exportBtn: "export", installAppBtn: "share",
+    exportFormat: "export-format", confirmExportBtn: "export-confirm", aiRenderView: "ai-render-view",
+    recaptureAiBtn: "recapture-ai", closeAiRenderBtn: "ai-render", closeInstallBtn: "share", installNowBtn: "share",
     undoKitchenBtn: "undo", redoKitchenBtn: "redo", captureAiScreenshotBtn: "download-screenshot",
-    openChatGptBtn: "open-chatgpt", openGeminiBtn: "open-gemini", copyMobileUrlBtn: "copy-url"
+    openChatGptBtn: "open-chatgpt", openGeminiBtn: "open-gemini", copyMobileUrlBtn: "copy-url",
+
+    wallWidth: "system-wall", ceilingHeight: "wall-height", wallSelector: "select-wall",
+    regenerateWallBtn: "regenerate-system-wall", addFillerBtn: "add-system-filler",
+    normalRenderBtn: "normal-render", advancedAiRenderBtn: "ai-render", resetBtn: "reset-view",
+    dockAddCabinet: "add-system-cabinet", dockAddFiller: "add-system-filler", dockNormalRender: "normal-render",
+    dockAdvancedAi: "ai-render", dockEstimate: "estimate", dockExportHint: "export",
+    moveItemLeftBtn: "move-left", moveItemRightBtn: "move-right", duplicateCabinetBtn: "copy-cabinet",
+    showDoorsBtn: "show-system-doors", zoomOutBtn: "mobile-zoom", zoomInBtn: "mobile-zoom", fitViewBtn: "reset-view",
+    flowPreviousBtn: "beginner-workflow", flowNextBtn: "beginner-workflow", quickAddKind: "system-cabinet-kind",
+    quickAddBtn: "add-system-cabinet", mobileEditSelectionBtn: "system-selection", closeInspectorBtn: "system-selection",
+    cabinetName: "cabinet-name", cabinetUse: "system-cabinet-kind", doorSystem: "system-doors",
+    cabinetWidth: "cabinet-width", bodyHeight: "system-selection", bodyDepth: "system-selection", plinthHeight: "system-selection",
+    boardThickness: "system-selection", partitionMode: "system-selection", bayCount: "system-selection",
+    maxShelfSpacing: "system-compartments", autoShelvesBtn: "system-compartments",
+    manualCompartmentCount: "system-compartments", buildManualFieldsBtn: "system-compartments", applyManualShelvesBtn: "system-compartments",
+    maxHingedDoorWidth: "system-doors", slidingDoorCount: "system-doors", generateDoorsBtn: "system-doors",
+    rodHeightPreset: "system-accessories", customRodHeight: "system-accessories", applyRodBtn: "system-accessories",
+    drawerCount: "system-accessories", drawerHeight: "system-accessories", applyDrawersBtn: "system-accessories", clearAccessoriesBtn: "system-accessories",
+    fillerName: "add-system-filler", fillerMode: "add-system-filler", fillerWidth: "add-system-filler", fillerHeight: "add-system-filler", fillerDepth: "add-system-filler"
   });
 
   const VALUE_HELP_BINDINGS = Object.freeze({
@@ -343,7 +439,7 @@
   function mount(options) {
     const config = Object.assign({ mode: "home", assetBase: "./", buttonTarget: null, autoOpen: true }, options || {});
     const modeChapter = MODE_CHAPTERS[config.mode]?.mode || MODE_CHAPTERS.home.mode;
-    const chapters = { start: COMMON_CHAPTERS.start, mode: modeChapter, views: COMMON_CHAPTERS.views, project: COMMON_CHAPTERS.project, output: COMMON_CHAPTERS.output, longpress: COMMON_CHAPTERS.longpress };
+    const chapters = { start: COMMON_CHAPTERS.start, workflow: COMMON_CHAPTERS.workflow, mode: modeChapter, views: COMMON_CHAPTERS.views, project: COMMON_CHAPTERS.project, output: COMMON_CHAPTERS.output, longpress: COMMON_CHAPTERS.longpress };
     let activeKey = "start";
     let longTarget = null;
     let longTimer = 0;
@@ -448,7 +544,7 @@
       const chapter = chapters[key] || chapters.start;
       activeKey = key;
       navButtons.forEach((item) => item.classList.toggle("active", item.dataset.helpChapter === key));
-      content.innerHTML = `<article class="md-help-hero"><div class="md-help-hero-copy"><em>${escapeHtml(chapter.kicker)}</em><h3>${escapeHtml(chapter.title)}</h3><p>${escapeHtml(chapter.summary)}</p></div><img src="${chapterImage()}" alt="${escapeHtml(MODE_LABELS[config.mode])}操作畫面"></article><div class="md-help-steps">${chapter.steps.map((step,index) => `<section class="md-help-step"><span>${index + 1}</span><div><b>${escapeHtml(step[0])}</b><p>${escapeHtml(step[1])}</p></div></section>`).join("")}</div><p class="md-help-tip">${escapeHtml(chapter.tip)}</p>`;
+      content.innerHTML = `<article class="md-help-hero"><div class="md-help-hero-copy"><em>${escapeHtml(chapter.kicker)}</em><h3>${escapeHtml(chapter.title)}</h3><p>${escapeHtml(chapter.summary)}</p></div><img src="${chapterImage()}" alt="${escapeHtml(MODE_LABELS[config.mode])}操作畫面"></article><div class="md-help-steps">${chapter.steps.map((step,index) => `<section class="md-help-step"><span>${index + 1}</span><div><b>${escapeHtml(step[0])}</b><p>${escapeHtml(step[1])}</p>${step[2] ? `<button type="button" data-help-topic="${escapeHtml(step[2])}" data-help-ui="true">查看這一步</button>` : ""}</div></section>`).join("")}</div><p class="md-help-tip">${escapeHtml(chapter.tip)}</p>`;
       content.scrollTop = 0;
     }
 
@@ -635,6 +731,11 @@
     });
 
     content.addEventListener("click", (event) => {
+      const topic = event.target.closest("[data-help-topic]")?.dataset.helpTopic;
+      if (topic) {
+        renderContext(null, topic);
+        return;
+      }
       const action = event.target.closest("[data-context-action]")?.dataset.contextAction;
       if (!action) return;
       if (action === "know") close();

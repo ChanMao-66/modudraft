@@ -1,5 +1,15 @@
 # MODUDRAFT 共用產品核心
 
+## Kitchen Workflow Update
+
+- 廚具入口分成「新手快速建立」、「專業空白工程」、「從範本開始」與「匯入既有專案」。
+- 新手模式採七步驟：型態、尺寸、設備、生成、檢查、風格、輸出；一字型完整支援，L 型提供穩定簡化版，U 型與中島明確標示即將支援。
+- `kitchen-workflow.js / kitchen-workflow.css` 提供標準櫃資料庫、規則式基礎配置、櫃體清單、CSV／JSON、AI 提案提示詞與手機卡片流程。
+- 專業工作台保留精準編輯、AI 輔助構圖、輔助等分、估價與原有 2D／立面／3D；新增標準櫃體庫供快速配置。
+- 設計檢查涵蓋牆面、重疊、設備尺寸、爐台備餐空間、排油煙機對齊、補板與連續檯面高度。
+- 新手流程與專業工具共用同一份 Project Schema；任何櫃體異動都會同步圖面、清單、估價狀態與 AI 提示詞。
+- 教學中心新增「新手完整流程」章節，材質、檢查、標準櫃、估價與 AI 提案均有獨立 `helpId`。
+
 ## Estimate 模擬估價
 
 - `estimate.js` 定義共用的 `EstimateItem`、`EstimateSection`、`EstimateDocument`、稅額計算、廚具／系統櫃轉換規則與 CSV／JSON 匯出。

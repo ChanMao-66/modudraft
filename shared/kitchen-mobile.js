@@ -386,10 +386,15 @@
     function renderMoreSheet() {
       nodes.sheetTitle.textContent = "更多功能";
       nodes.sheetBody.innerHTML = `<div class="mobile-sheet-grid one-column">
+        ${toolCard("beginner-flow", "1→7", "新手快速建立", "依七個步驟重新建立或檢查一套廚具。", "beginner-workflow")}
+        ${toolCard("standard-library", "▦", "標準櫃體庫", "用常見尺寸快速加入下櫃、吊櫃與補板。", "standard-cabinet-library")}
         ${toolCard("auto-layout", "⌘", "自動配置", "依牆寬與常用尺寸產生草稿。", "auto-layout")}
         ${toolCard("ai-layout", "✦", "AI 輔助構圖", "根據剩餘空間推薦適合櫃體。", "ai-layout")}
         ${toolCard("equalize", "⇆", "輔助等分", "把選取的連續櫃體重新平均分割。", "equalize")}
+        ${toolCard("cabinet-list", "☷", "櫃體清單", "核對寬高深、門片與把手，並可複製或匯出。", "cabinet-list")}
         ${toolCard("estimate", "NT$", "模擬估價", "依目前櫃體、檯面、三機與人工產生估價明細。", "estimate")}
+        ${toolCard("design-check", "✓", "設計檢查", "檢查尺寸、重疊、設備對齊與補板建議。", "design-check")}
+        ${toolCard("project-center", "◇", "專案與材質", "儲存專案、套用風格與產生 AI 提示詞。", "project-center")}
         ${toolCard("material-render", "◉", "普通材質渲染", "套用內建材質並輸出目前視角。", "normal-render")}
         ${toolCard("ai-render", "✦", "AI 進階渲染", "截圖後交給 ChatGPT 或 Gemini 精緻渲染。", "ai-render")}
         ${toolCard("export", "⇧", "匯出", "輸出平面、立面、3D 或相容 3D 檔。", "export")}
@@ -455,10 +460,15 @@
       else if (action === "view-three") setActiveView("three");
       else if (action === "toggle-wall") { config.toggleWalls?.(); renderViewSheet(); }
       else if (action === "toggle-top-filler") { config.toggleTopFiller?.(); renderViewSheet(); }
+      else if (action === "beginner-flow") { closeSheet(); config.openBeginnerFlow?.(); }
+      else if (action === "standard-library") { closeSheet(); config.openStandardLibrary?.(); }
       else if (action === "auto-layout") triggerOriginal("autoLayoutBtn");
       else if (action === "ai-layout") triggerOriginal("aiAssistBtn");
       else if (action === "equalize") { closeSheet(); config.startEqualize?.(); showModeNotice("輔助等分模式：請點選要重新等分的連續櫃體。", 0); }
+      else if (action === "cabinet-list") { closeSheet(); config.openCabinetList?.(); }
       else if (action === "estimate") { closeSheet(); config.openEstimate?.(); }
+      else if (action === "design-check") { closeSheet(); config.openProjectCenter?.("checks"); }
+      else if (action === "project-center") { closeSheet(); config.openProjectCenter?.("project"); }
       else if (action === "material-render") triggerOriginal("materialRenderBtn");
       else if (action === "ai-render") triggerOriginal("renderViewBtn");
       else if (action === "export") triggerOriginal("exportBtn");
