@@ -63,7 +63,7 @@
       minimumUsefulFillerWidth: 20
     }),
     sink: Object.freeze({
-      outerLengthMin: 580,
+      outerLengthMin: 600,
       outerLengthPreferred: 680,
       outerLengthMax: 750,
       outerDepthMin: 430,
@@ -71,7 +71,10 @@
       outerDepthMax: 450,
       bowlDepthMin: 180,
       bowlDepthPreferred: 200,
-      bowlDepthMax: 220
+      bowlDepthMax: 220,
+      lengthStep: 10,
+      depthStep: 5,
+      bowlDepthStep: 10
     }),
     lShape: Object.freeze({
       blindCornerWidth: 1000,
@@ -316,6 +319,9 @@
       isSinkCabinet: source.isSinkCabinet ?? usage === "sink",
       isCooktopCabinet: source.isCooktopCabinet ?? ["stove", "cooktop"].includes(usage),
       isFiller: source.isFiller ?? (usage === "filler" || category === "filler"),
+      sinkOuterLength: finiteNumber(source.sinkOuterLength, 0, 0, 1200),
+      sinkOuterDepth: finiteNumber(source.sinkOuterDepth, 0, 0, 900),
+      sinkBowlDepth: finiteNumber(source.sinkBowlDepth, 0, 0, 500),
       canResize: source.canResize !== false,
       canMove: source.canMove !== false,
       includeInQuote: source.includeInQuote !== false,

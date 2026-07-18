@@ -86,15 +86,16 @@
   }
 
   function cabinet(name, width, layer, purpose, frontStyle, extra) {
+    const safeWidth = Math.max(purpose === "filler" ? 10 : 50, Math.round(Number(width) || 0));
     return Object.assign({
       name,
-      width: Math.max(purpose === "filler" ? 10 : 50, Math.round(Number(width) || 0)),
+      width: safeWidth,
       layer,
       purpose,
       frontStyle: frontStyle || (purpose === "drawer" ? "two-small-one-large" : purpose === "filler" ? "panel" : purpose === "open" ? "open" : purpose === "appliance" ? "appliance" : "double-door"),
       handleStyle: ["hood", "dish-dryer", "filler", "open"].includes(purpose) ? "none" : null,
       includeInQuote: true
-    }, extra || {});
+    }, purpose === "sink" ? sinkSpecForWidth(safeWidth) : {}, extra || {});
   }
 
   function minimumStraightWidth(config, edgeFillerWidth) {
@@ -126,6 +127,25 @@
     }
     const widths = Array.from({ length: safeCount }, () => baseWidth);
     return { widths, remainder: safeAvailable - baseWidth * safeCount };
+  }
+
+  function sinkSpecForWidth(width) {
+    const rules = CORE_RULES.sink || {};
+    const cabinetWidth = Math.max(0, Math.round(Number(width) || STRAIGHT_RULES.minimumSinkWidth));
+    const lengthMin = rules.outerLengthMin || 600;
+    const lengthMax = rules.outerLengthMax || 750;
+    const lengthPreferred = rules.outerLengthPreferred || 680;
+    const depthMin = rules.outerDepthMin || 430;
+    const depthMax = rules.outerDepthMax || 450;
+    const depthPreferred = rules.outerDepthPreferred || 440;
+    const bowlMin = rules.bowlDepthMin || 180;
+    const bowlMax = rules.bowlDepthMax || 220;
+    const bowlPreferred = rules.bowlDepthPreferred || 200;
+    return {
+      sinkOuterLength: Math.min(lengthMax, Math.max(lengthMin, Math.min(lengthPreferred, cabinetWidth))),
+      sinkOuterDepth: Math.min(depthMax, Math.max(depthMin, depthPreferred)),
+      sinkBowlDepth: Math.min(bowlMax, Math.max(bowlMin, bowlPreferred))
+    };
   }
 
   function splitStorageWidth(total, label, layer, variant = 0) {
