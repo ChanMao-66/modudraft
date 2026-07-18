@@ -292,6 +292,7 @@
     const usage = isBlindCorner ? "blind-corner" : (source.usage || source.purpose || source.cabinetKind || "storage");
     const category = source.category || categoryMap[source.type] || (usage === "filler" ? "filler" : "baseCabinet");
     const typeMap = { baseCabinet: "base", wallCabinet: "wall", tallCabinet: "tall", filler: "filler", appliance: "appliance" };
+    const minWidth = usage === "filler" || category === "filler" ? 10 : 50;
     return Object.assign({}, source, corner || {}, {
       id: source.id || uid("cabinet"),
       name: source.name || (isBlindCorner ? "盲角轉角下櫃 1000" : "未命名櫃體"),
@@ -300,8 +301,8 @@
       usage,
       wallId: source.wallId || "",
       orderIndex: finiteNumber(source.orderIndex, 0, 0, 9999),
-      width: isBlindCorner ? corner.totalWidth : finiteNumber(source.width, 600, 50, 5000),
-      totalWidth: isBlindCorner ? corner.totalWidth : finiteNumber(source.totalWidth ?? source.width, 600, 50, 5000),
+      width: isBlindCorner ? corner.totalWidth : finiteNumber(source.width, 600, minWidth, 5000),
+      totalWidth: isBlindCorner ? corner.totalWidth : finiteNumber(source.totalWidth ?? source.width, 600, minWidth, 5000),
       height: finiteNumber(source.height == null ? source.bodyHeight : source.height, isBlindCorner ? BLIND_CORNER_DEFAULTS.height : 2400, 50, 5000),
       depth: finiteNumber(source.depth, isBlindCorner ? BLIND_CORNER_DEFAULTS.depth : 600, 50, 1500),
       x: finiteNumber(source.x, 0, -30000, 30000),
@@ -356,28 +357,58 @@
     return result;
   }
 
+  function cabinetRunLayer(cabinet) {
+    const normalized = normalizeCabinet(cabinet);
+    if (cabinet && cabinet.runLayer) return cabinet.runLayer;
+    if (normalized.category === "wallCabinet") return "upper";
+    if (normalized.category === "tallCabinet") return "tall";
+    if (normalized.category === "filler" && normalized.z > KITCHEN_RULES.dimensions.lowerHeight) return "upper";
+    return "lower";
+  }
+
+  function runLayerLabel(layer) {
+    if (layer === "upper") return "吊櫃";
+    if (layer === "tall") return "高櫃";
+    return "下櫃";
+  }
+
   function validateProject(project) {
     const normalized = migrateProject(project, project && project.type);
     const result = [];
     normalized.walls.forEach((wall, index) => {
       result.push(...validateWall(wall));
-      const wallCabinets = normalized.cabinets.filter((cabinet) => !cabinet.wallId || cabinet.wallId === wall.id);
-      const layerWidths = wallCabinets.reduce((groups, cabinet) => {
-        const layer = cabinet.runLayer || "default";
-        groups[layer] = (groups[layer] || 0) + finiteNumber(cabinet.width, 0, 0, 30000);
+      const wallCabinets = normalized.cabinets
+        .filter((cabinet) => !cabinet.wallId || cabinet.wallId === wall.id)
+        .map(normalizeCabinet);
+      const layerRows = wallCabinets.reduce((groups, cabinet) => {
+        const layer = cabinetRunLayer(cabinet);
+        if (!groups[layer]) groups[layer] = [];
+        groups[layer].push(cabinet);
         return groups;
       }, {});
+      const layerWidths = Object.entries(layerRows).reduce((groups, [layer, row]) => {
+        groups[layer] = row.reduce((sum, cabinet) => sum + finiteNumber(cabinet.width, 0, 0, 30000), 0);
+        return groups;
+      }, {});
+      Object.entries(layerWidths).forEach(([layer, usedWidth]) => {
+        if (usedWidth > finiteNumber(wall.width, 0, 0, 30000)) {
+          result.push(issue("wall-overflow", "error", `${wall.name || "牆面"} 的${runLayerLabel(layer)}總寬超出牆面 ${Math.round(usedWidth - wall.width)} mm，請減少該列櫃體寬度或刪除部分櫃體。`, wall.id));
+        }
+      });
       const used = Math.max(0, ...Object.values(layerWidths));
-      if (used > finiteNumber(wall.width, 0, 0, 30000)) result.push(issue("wall-overflow", "error", `${wall.name || "牆面"} 的櫃體總寬超出牆面 ${Math.round(used - wall.width)} mm，請減少櫃體寬度或刪除櫃體。`, wall.id));
       const remaining = finiteNumber(wall.width, 0, 0, 30000) - used;
       if (remaining >= 20 && remaining < 150) result.push(issue("filler-suggestion", "warning", `目前剩餘 ${Math.round(remaining)} mm，建議設定為補板。`, wall.id));
       wallCabinets.forEach((cabinet) => result.push(...validateCabinet(cabinet, wall)));
-      const ordered = wallCabinets.filter((cabinet) => (cabinet.runLayer || "default") !== "upper").map(normalizeCabinet).sort((a,b)=>a.x-b.x);
-      for (let cursor = 1; cursor < ordered.length; cursor += 1) {
-        const previous = ordered[cursor - 1];
-        const current = ordered[cursor];
-        if (current.x < previous.x + previous.width - 0.5) result.push(issue("cabinet-overlap", "error", `${current.name} 與 ${previous.name} 發生重疊，請調整位置或寬度。`, current.id));
-      }
+      Object.entries(layerRows).forEach(([layer, row]) => {
+        const ordered = row.slice().sort((a, b) => a.x - b.x || a.orderIndex - b.orderIndex);
+        for (let cursor = 1; cursor < ordered.length; cursor += 1) {
+          const previous = ordered[cursor - 1];
+          const current = ordered[cursor];
+          if (current.x < previous.x + previous.width - 0.5) {
+            result.push(issue("cabinet-overlap", "error", `${runLayerLabel(layer)}列的 ${current.name} 與 ${previous.name} 發生重疊，請調整位置或寬度。`, current.id));
+          }
+        }
+      });
     });
     return result;
   }

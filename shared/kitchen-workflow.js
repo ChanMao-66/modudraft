@@ -65,8 +65,8 @@
     upperHeight: DIMENSIONS.upperHeight,
     upperDepth: DIMENSIONS.upperDepth,
     counterDepth: DIMENSIONS.counterDepth,
-    sinkPosition: "middle",
-    stovePosition: "right",
+    sinkPosition: "right",
+    stovePosition: "left",
     fridgePosition: "none",
     upperMode: "full",
     hoodMode: "follow",
@@ -112,26 +112,56 @@
     return STRAIGHT_RULES.defaultEdgeFillerWidth;
   }
 
+  function modularFloor(value, unit = 5) {
+    const safe = Math.max(0, Math.round(Number(value) || 0));
+    return Math.floor(safe / unit) * unit;
+  }
+
+  function cleanSplitWidths(available, count, unit = 5) {
+    const safeAvailable = Math.max(0, Math.round(Number(available) || 0));
+    const safeCount = Math.max(1, Math.round(Number(count) || 1));
+    const baseWidth = modularFloor(safeAvailable / safeCount, unit);
+    if (baseWidth < STRAIGHT_RULES.minimumStorageWidth) {
+      return { widths: [], remainder: safeAvailable };
+    }
+    const widths = Array.from({ length: safeCount }, () => baseWidth);
+    return { widths, remainder: safeAvailable - baseWidth * safeCount };
+  }
+
   function splitStorageWidth(total, label, layer, variant = 0) {
     const available = Math.max(0, Math.round(total));
     if (available < STRAIGHT_RULES.minimumStorageWidth) return { cabinets: [], remainder: available };
     let widths = [];
+    let splitRemainder = 0;
     if (variant % 3 === 1 && available >= 900) {
-      const first = Math.min(STRAIGHT_RULES.preferredStorageWidth, available - STRAIGHT_RULES.minimumStorageWidth);
-      widths = [first, available - first].filter((width) => width > 0);
+      const count = Math.max(2, Math.ceil(available / STRAIGHT_RULES.preferredStorageMaxWidth));
+      const reserveForRest = STRAIGHT_RULES.minimumStorageWidth * (count - 1);
+      const first = Math.min(
+        STRAIGHT_RULES.preferredStorageWidth,
+        modularFloor(available - reserveForRest)
+      );
+      const rest = cleanSplitWidths(available - first, count - 1);
+      if (first >= STRAIGHT_RULES.minimumStorageWidth && rest.widths.length) {
+        widths = [first, ...rest.widths];
+        splitRemainder = rest.remainder;
+      } else {
+        const fallback = cleanSplitWidths(available, count);
+        widths = fallback.widths;
+        splitRemainder = fallback.remainder;
+      }
     } else {
       const maxWidth = variant % 3 === 2
         ? Math.max(650, STRAIGHT_RULES.preferredStorageMaxWidth - 100)
         : STRAIGHT_RULES.preferredStorageMaxWidth;
       const count = Math.max(1, Math.ceil(available / maxWidth));
-      const base = Math.floor(available / count);
-      let remainder = available - base * count;
-      widths = Array.from({ length: count }, () => base + (remainder-- > 0 ? 1 : 0));
+      const split = cleanSplitWidths(available, count);
+      widths = split.widths;
+      splitRemainder = split.remainder;
     }
     if (widths.some((width) => width < STRAIGHT_RULES.minimumStorageWidth)) return { cabinets: [], remainder: available };
     return {
       cabinets: widths.map((width, index) => cabinet(`${label}${widths.length > 1 ? ` ${index + 1}` : ""}`, width, layer, layer === "lower" ? "drawer" : "general", layer === "lower" ? "two-small-one-large" : "double-door")),
-      remainder: 0
+      remainder: splitRemainder
     };
   }
 
@@ -197,8 +227,8 @@
   }
 
   function normalizedPositions(config) {
-    const sink = config.sinkPosition || "middle";
-    let stove = config.stovePosition || "right";
+    const sink = config.sinkPosition || "right";
+    let stove = config.stovePosition || "left";
     const requestedStove = stove;
     let adjusted = false;
     if (stove === sink) stove = sink === "left" ? "right" : "left";
@@ -260,14 +290,15 @@
       };
     }
 
-    const remainingAfterMiddle = storageWidth - STRAIGHT_RULES.minimumMiddleWidth;
-    if (remainingAfterMiddle >= STRAIGHT_RULES.preferredSinkWidth - sinkWidth) {
-      sinkWidth = STRAIGHT_RULES.preferredSinkWidth;
-      storageWidth -= STRAIGHT_RULES.preferredSinkWidth - STRAIGHT_RULES.minimumSinkWidth;
-    }
-    if (storageWidth - STRAIGHT_RULES.minimumMiddleWidth >= STRAIGHT_RULES.preferredCooktopWidth - stoveWidth) {
-      stoveWidth = STRAIGHT_RULES.preferredCooktopWidth;
-      storageWidth -= STRAIGHT_RULES.preferredCooktopWidth - STRAIGHT_RULES.minimumCooktopWidth;
+    const sharedApplianceWidth = Math.min(
+      STRAIGHT_RULES.preferredSinkWidth,
+      STRAIGHT_RULES.preferredCooktopWidth
+    );
+    const sharedUpgrade = Math.max(0, sharedApplianceWidth - STRAIGHT_RULES.minimumSinkWidth);
+    if (storageWidth - STRAIGHT_RULES.minimumMiddleWidth >= sharedUpgrade * 2) {
+      sinkWidth = sharedApplianceWidth;
+      stoveWidth = sharedApplianceWidth;
+      storageWidth -= sharedUpgrade * 2;
     }
 
     const storage = splitStorageWidth(storageWidth, "備餐抽屜櫃", "lower", variant);
@@ -306,6 +337,7 @@
     }
 
     if (!storage.cabinets.length && storage.remainder > 0) warnings.push(`剩餘 ${storage.remainder} mm 不足以形成標準中間櫃，已併入右側補板或收邊。`);
+    if (storage.cabinets.length && storage.remainder > 0) warnings.push(`備餐櫃已依 5 mm 模數等分，剩餘 ${storage.remainder} mm 併入右側補板。`);
     if (storageWidth < STRAIGHT_RULES.minimumMiddleWidth) warnings.push("牆面空間不足以加入 500 mm 中間櫃，系統保留水槽與爐台固定尺寸並以補板收尾。");
     if (positions.adjusted) warnings.push("水槽與爐台位置重複，系統已自動將爐台移到另一側。");
     if (positions.mirrored) warnings.push("已切換為鏡像配置：水槽與爐台方向互換，方便比較不同現場條件。");
