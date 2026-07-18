@@ -1446,6 +1446,99 @@
     @media(max-width:1120px){.status-bar,.design-dock{left:calc(78px + 50%)}.design-dock{width:min(760px,calc(100vw - 420px));min-width:600px}.status-bar{width:min(650px,calc(100vw - 520px));min-width:480px}}
     @media(max-width:760px){.workspace{padding-bottom:144px}.design-dock{left:50%;bottom:8px;width:calc(100vw - 16px);min-width:0;grid-template-columns:repeat(10,minmax(64px,1fr));overflow-x:auto}.design-dock button{min-width:64px}.status-bar{left:50%;bottom:80px;width:calc(100vw - 24px);min-width:0}}
   </style>
+  <style>
+    /* 左側專業工具列 V4：桌面把大工具移到左側，保留手機底部工具列 */
+    @media (min-width: 761px) {
+      body { padding-left: 286px; }
+      .brand-rail { width: 78px; }
+      .app { padding: 8px 10px 10px 0; }
+      .toolbar {
+        display: grid;
+        grid-template-columns: minmax(260px, .86fr) minmax(560px, 1.7fr);
+        align-items: stretch;
+        gap: 10px;
+        min-height: 86px;
+        margin-bottom: 6px;
+      }
+      .toolbar .actions {
+        position: absolute !important;
+        width: 1px !important;
+        height: 1px !important;
+        overflow: hidden !important;
+        clip: rect(0 0 0 0) !important;
+        pointer-events: none !important;
+      }
+      .tool-group.stack { gap: 8px; }
+      .measure-strip { justify-content: flex-start; }
+      .workspace {
+        height: calc(100dvh - 142px);
+        padding: 8px 4px 86px;
+      }
+      .view { width: min(100%, 1440px); }
+      .design-dock {
+        left: 96px;
+        top: 8px;
+        bottom: 10px;
+        width: 176px;
+        min-width: 0;
+        display: grid;
+        grid-template-columns: 1fr;
+        grid-auto-rows: minmax(45px, auto);
+        align-content: start;
+        gap: 6px;
+        padding: 7px;
+        border-radius: 10px;
+        overflow-y: auto;
+        overflow-x: hidden;
+        transform: none;
+        scrollbar-width: thin;
+        scrollbar-color: rgba(210, 162, 106, .62) rgba(255, 255, 255, .06);
+      }
+      .design-dock button {
+        display: grid;
+        grid-template-columns: 30px minmax(0, 1fr);
+        place-items: center start;
+        gap: 8px;
+        min-height: 45px;
+        min-width: 0;
+        padding: 7px 10px;
+        border-radius: 8px;
+        text-align: left;
+      }
+      .design-dock span { font-size: 17px; }
+      .design-dock b {
+        width: 100%;
+        overflow: hidden;
+        font-size: 11px;
+        line-height: 1.18;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      .design-dock .dock-primary {
+        border-color: rgba(149, 178, 139, .48);
+        background: linear-gradient(145deg, rgba(118, 147, 112, .94), rgba(82, 112, 84, .88));
+        color: #fff8ed;
+      }
+      .design-dock .dock-danger {
+        border-color: rgba(168, 111, 105, .30);
+        background: rgba(119, 66, 62, .50);
+      }
+      .status-bar {
+        left: calc(286px + (100vw - 286px) / 2);
+        bottom: 14px;
+        width: min(760px, calc(100vw - 360px));
+        min-width: 0;
+      }
+    }
+    @media (min-width: 761px) and (max-height: 760px) {
+      .design-dock { grid-auto-rows: minmax(40px, auto); }
+      .design-dock button { min-height: 40px; padding-block: 5px; }
+      .design-dock b { font-size: 10px; }
+    }
+    @media (max-width: 760px) {
+      .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
+    }
+  </style>
 </head>
 <body>
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -1655,17 +1748,23 @@
       <div class="metric" id="metricUpperHeight">吊櫃高：<b>0 mm</b></div>
     </section>
 
-    <nav class="design-dock" aria-label="主要設計工具">
-      <button type="button" onclick="document.getElementById('addWallBtn').click()"><span>▱</span><b>新增牆面</b></button>
-      <button type="button" onclick="document.getElementById('addCabinetBtn').click()"><span>▥</span><b>新增櫃體</b></button>
-      <button type="button" onclick="document.getElementById('viewFloor').click()"><span>⌗</span><b>平面圖</b></button>
-      <button type="button" onclick="document.getElementById('viewElevation').click()"><span>▤</span><b>立面圖</b></button>
-      <button type="button" onclick="document.getElementById('viewThree').click()"><span>◇</span><b>3D</b></button>
-      <button type="button" onclick="document.getElementById('aiAssistBtn').click()"><span>✦</span><b>AI 構圖</b></button>
-      <button type="button" onclick="document.getElementById('equalizeBtn').click()"><span>⌘</span><b>輔助等分</b></button>
-      <button type="button" onclick="document.getElementById('materialRenderBtn').click()"><span>◉</span><b>普通渲染</b></button>
-      <button type="button" onclick="document.getElementById('renderViewBtn').click()"><span>✦</span><b>AI 進階</b></button>
-      <button type="button" onclick="document.getElementById('exportBtn').click()"><span>⇧</span><b>匯出方案</b></button>
+    <nav class="design-dock" aria-label="廚具操作工具">
+      <button class="dock-primary" type="button" onclick="document.getElementById('autoLayoutBtn').click()" data-help-id="auto-layout"><span>⚑</span><b>自動配置</b></button>
+      <button type="button" onclick="document.getElementById('addCabinetBtn').click()" data-help-id="add-cabinet"><span>▥</span><b>新增櫃體</b></button>
+      <button type="button" onclick="document.getElementById('standardCabinetLibraryBtn').click()" data-help-id="standard-cabinet-library"><span>▧</span><b>標準櫃體庫</b></button>
+      <button type="button" onclick="document.getElementById('beginnerModeBtn').click()" data-help-id="beginner-workflow"><span>◫</span><b>新手流程</b></button>
+      <button type="button" onclick="document.getElementById('aiAssistBtn').click()" data-help-id="ai-layout"><span>✦</span><b>AI 輔助構圖</b></button>
+      <button type="button" onclick="document.getElementById('equalizeBtn').click()" data-help-id="equal-split"><span>⌘</span><b>輔助等分</b></button>
+      <button type="button" onclick="document.getElementById('materialRenderBtn').click()" data-help-id="render-basic"><span>◉</span><b>普通材質渲染</b></button>
+      <button type="button" onclick="document.getElementById('renderViewBtn').click()" data-help-id="render-ai"><span>✦</span><b>AI 進階渲染</b></button>
+      <button type="button" onclick="document.getElementById('cabinetListBtn').click()" data-help-id="cabinet-list"><span>☷</span><b>櫃體清單</b></button>
+      <button type="button" onclick="document.getElementById('exportBtn').click()" data-help-id="export"><span>⇧</span><b>匯出</b></button>
+      <button type="button" onclick="document.getElementById('installAppBtn').click()" data-help-id="share"><span>⌁</span><b>分享</b></button>
+      <button type="button" onclick="document.querySelector('.md-estimate-open')?.click()" data-help-id="estimate"><span>NT$</span><b>估價</b></button>
+      <button type="button" onclick="kitchenProductSuiteController?.open()" data-help-id="project-center"><span>▣</span><b>專案中心</b></button>
+      <button type="button" onclick="document.getElementById('resetViewBtn').click()" data-help-id="reset-view"><span>⟲</span><b>重設視圖</b></button>
+      <button class="dock-danger" type="button" onclick="document.getElementById('clearWallBtn').click()" data-help-id="clear-wall"><span>⌫</span><b>清空牆面</b></button>
+      <button type="button" onclick="document.querySelector('.md-help-button')?.click()" data-help-id="teaching-mode"><span>?</span><b>教學模式</b></button>
     </nav>
 
     <nav id="mobileScrollRail" class="mobile-scroll-rail" aria-label="手機頁面捲動">
@@ -2017,7 +2116,7 @@
     </section>
   </div>
 
-  <script src="./shared/modudraft-core.js?v=20260718-straight-rules-v1"></script>
+  <script src="./shared/modudraft-core.js?v=20260718-kitchen-flow-v2"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
   <script src="./shared/help-system.js?v=20260706-blind-corner-v1"></script>
@@ -2025,7 +2124,7 @@
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-mobile.js?v=20260706-blind-corner-v1"></script>
   <script src="./shared/estimate.js?v=20260706-blind-corner-v1"></script>
-  <script src="./shared/kitchen-workflow.js?v=20260718-straight-rules-v1"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260718-kitchen-flow-v2"></script>
   <script>
     const state = {
       walls: [],
@@ -2058,6 +2157,7 @@
     const kitchenRules = window.MODUDRAFTCore?.KITCHEN_RULES || {};
     const kitchenDimensions = kitchenRules.dimensions || {};
     const kitchenStraightRules = kitchenRules.straight || {};
+    const kitchenSinkRules = kitchenRules.sink || {};
     const suggestedSinkStoveDistance = kitchenRules.sinkStove?.suggestedMinimumDistance || 300;
 
     const sizes = {
@@ -2699,6 +2799,30 @@
       return sizes.upperDepth + sizes.doorThickness;
     }
 
+    function sinkSpecForCabinet(cabinet) {
+      const maxLengthByCabinet = Math.max(260, (Number(cabinet?.width) || 600) - 70);
+      const maxDepthByCounter = Math.max(320, sizes.counterDepth - 130);
+      const preferredLength = kitchenSinkRules.outerLengthPreferred || 680;
+      const preferredDepth = kitchenSinkRules.outerDepthPreferred || 440;
+      const length = clampNumber(
+        Math.min(preferredLength, maxLengthByCabinet),
+        260,
+        kitchenSinkRules.outerLengthMax || 750,
+        preferredLength
+      );
+      const depth = clampNumber(
+        Math.min(preferredDepth, maxDepthByCounter),
+        300,
+        kitchenSinkRules.outerDepthMax || 450,
+        preferredDepth
+      );
+      return {
+        length: Math.max(Math.min(kitchenSinkRules.outerLengthMin || 580, maxLengthByCabinet), length),
+        depth: Math.max(Math.min(kitchenSinkRules.outerDepthMin || 430, maxDepthByCounter), depth),
+        bowlDepth: clampNumber(kitchenSinkRules.bowlDepthPreferred || 200, kitchenSinkRules.bowlDepthMin || 180, kitchenSinkRules.bowlDepthMax || 220, 200)
+      };
+    }
+
     function upperMachineSpec(cabinet) {
       if (!cabinet || cabinet.type !== "upper") return null;
       if (cabinet.purpose === "hood") {
@@ -3004,7 +3128,7 @@
           normalizeCabinet(cabinet);
           const type = cabinet.type === "upper" ? "upper" : "lower";
           cabinet.type = type;
-          const minWidth = cabinet.name.includes("補邊") || cabinet.name.includes("封板") ? 10 : 50;
+          const minWidth = cabinet.purpose === "filler" || cabinet.name.includes("補邊") || cabinet.name.includes("補板") || cabinet.name.includes("封板") ? 10 : 50;
           cabinet.width = Math.max(minWidth, Number(cabinet.width) || minWidth);
         });
 
@@ -3965,6 +4089,9 @@
       if (Math.abs(x2 - x1) < 3) return;
       const key = dimensionTargetKey(target);
       const highlighted = key && state.assist.hoverDimensionKey === key;
+      const lineX1 = Math.round(x1) + 0.5;
+      const lineX2 = Math.round(x2) + 0.5;
+      const lineY = Math.round(y) + 0.5;
       context.save();
       context.strokeStyle = highlighted ? "#b66f18" : color;
       context.fillStyle = highlighted ? "#b66f18" : color;
@@ -3974,33 +4101,33 @@
       context.textBaseline = "middle";
 
       context.beginPath();
-      context.moveTo(x1, y);
-      context.lineTo(x2, y);
-      context.moveTo(x1, y - 6);
-      context.lineTo(x1, y + 6);
-      context.moveTo(x2, y - 6);
-      context.lineTo(x2, y + 6);
+      context.moveTo(lineX1, lineY);
+      context.lineTo(lineX2, lineY);
+      context.moveTo(lineX1, lineY - 6);
+      context.lineTo(lineX1, lineY + 6);
+      context.moveTo(lineX2, lineY - 6);
+      context.lineTo(lineX2, lineY + 6);
       context.stroke();
 
       const labelWidth = context.measureText(text).width + 10;
-      const labelX = (x1 + x2) / 2;
+      const labelX = Math.round((x1 + x2) / 2);
       context.fillStyle = highlighted ? "#f1d4aa" : "#f7efe1";
-      context.fillRect(labelX - labelWidth / 2, y - 9, labelWidth, 18);
+      context.fillRect(labelX - labelWidth / 2, lineY - 9, labelWidth, 18);
       context.fillStyle = highlighted ? "#6d3c07" : color;
-      context.fillText(text, labelX, y + 0.5);
+      context.fillText(text, labelX, lineY);
       context.restore();
       if (target) {
         registerDimensionHit(viewName, {
           orientation: "horizontal",
-          x1: Math.min(x1, x2),
-          x2: Math.max(x1, x2),
-          y1: y,
-          y2: y,
+          x1: Math.min(lineX1, lineX2),
+          x2: Math.max(lineX1, lineX2),
+          y1: lineY,
+          y2: lineY,
           textBounds: {
             left: labelX - labelWidth / 2,
             right: labelX + labelWidth / 2,
-            top: y - 9,
-            bottom: y + 9
+            top: lineY - 9,
+            bottom: lineY + 9
           },
           target
         });
@@ -4460,11 +4587,14 @@
           index === state.selectedIndex || state.assist.equalizeSelectedIds.includes(cabinet.id),
           wall
         );
+        const dimensionY = cabinet.type === "upper"
+          ? box.y + box.height + 13
+          : baseY + 28;
         drawDimension(
           ctx.elevation,
           box.x,
           box.x + box.width,
-          box.y + box.height + 16,
+          dimensionY,
           `${cabinet.width}`,
           "#354151",
           {
@@ -4908,12 +5038,22 @@
       }
 
       if (cabinet.purpose === "sink" && cabinet.type === "lower" && box.width > 48) {
-        const basinWidth = box.width * 0.58;
+        const sinkSpec = sinkSpecForCabinet(cabinet);
+        const mmToX = box.width / Math.max(1, Number(cabinet.width) || sinkSpec.length);
+        const basinWidth = Math.max(34, Math.min(box.width - 14, sinkSpec.length * mmToX));
         const basinX = box.x + (box.width - basinWidth) / 2;
-        const basinDepth = Math.min(box.height * 0.2, 48);
+        const basinDepth = Math.min(box.height * 0.22, Math.max(28, sinkSpec.bowlDepth * scaleY * 0.68));
         const mountY = cabinet.sinkMount === "topmount"
           ? box.y - 2
           : (cabinet.sinkMount === "flush" ? box.y + 1 : box.y + Math.max(3, counterH * 0.55));
+        context.fillStyle = "rgba(74, 93, 105, 0.14)";
+        context.beginPath();
+        context.moveTo(basinX + 5, mountY + 2);
+        context.lineTo(basinX + 12, box.y + counterH + basinDepth);
+        context.quadraticCurveTo(basinX + basinWidth / 2, box.y + counterH + basinDepth + 9, basinX + basinWidth - 12, box.y + counterH + basinDepth);
+        context.lineTo(basinX + basinWidth - 5, mountY + 2);
+        context.closePath();
+        context.fill();
         context.strokeStyle = "#667787";
         context.lineWidth = 1.5;
         context.beginPath();
@@ -5584,30 +5724,47 @@
       }
 
       if (cabinet.type === "lower" && cabinet.purpose === "sink") {
-        const sinkWidth = Math.max(180, Math.min(cabinet.width - 90, cabinet.width * 0.66));
-        const sinkDepth = Math.min(400, sizes.counterDepth * 0.58);
+        const sinkSpec = sinkSpecForCabinet(cabinet);
+        const sinkWidth = sinkSpec.length;
+        const sinkDepth = sinkSpec.depth;
+        const bowlDepth = sinkSpec.bowlDepth;
+        const centerX = cabinet.x + cabinet.width / 2;
+        const centerZ = sizes.counterDepth / 2;
         const sinkMaterial = new THREE.MeshStandardMaterial({ color: 0x75818a, roughness: 0.22, metalness: 0.72 });
-        const sinkGeometry = new THREE.BoxGeometry(sinkWidth * 0.9, 120, sinkDepth * 0.88);
-        const sink = new THREE.Mesh(sinkGeometry, sinkMaterial);
-        sink.position.set(cabinet.x + cabinet.width / 2, sizes.lowerHeight - 68, sizes.counterDepth / 2);
-        sink.userData.equipment = "sink";
-        sink.userData.sinkMount = cabinet.sinkMount;
-        parent.add(sink);
-        addEdges(parent, sinkGeometry, sink.position, 0xb8c0c6);
-
         const openingMaterial = new THREE.MeshStandardMaterial({ color: 0x27323a, roughness: 0.3, metalness: 0.34 });
         const opening = new THREE.Mesh(
-          new THREE.BoxGeometry(sinkWidth * 0.82, 5, sinkDepth * 0.8),
+          new THREE.BoxGeometry(sinkWidth - 26, 6, sinkDepth - 26),
           openingMaterial
         );
         opening.position.set(
-          cabinet.x + cabinet.width / 2,
-          cabinet.sinkMount === "topmount" ? sizes.lowerHeight + 4 : sizes.lowerHeight + 1,
-          sizes.counterDepth / 2
+          centerX,
+          cabinet.sinkMount === "topmount" ? sizes.lowerHeight + 7 : sizes.lowerHeight + 2,
+          centerZ
         );
         opening.userData.equipment = "sink-opening";
         opening.userData.sinkMount = cabinet.sinkMount;
         parent.add(opening);
+
+        const wallThickness = 14;
+        const basinTopY = sizes.lowerHeight - 10;
+        const basinCenterY = basinTopY - bowlDepth / 2;
+        const basinDepth = Math.max(220, sinkDepth - 42);
+        const basinWidth = Math.max(280, sinkWidth - 42);
+        const basinParts = [
+          { name: "sink-left-wall", geometry: new THREE.BoxGeometry(wallThickness, bowlDepth, basinDepth), position: [centerX - basinWidth / 2 + wallThickness / 2, basinCenterY, centerZ] },
+          { name: "sink-right-wall", geometry: new THREE.BoxGeometry(wallThickness, bowlDepth, basinDepth), position: [centerX + basinWidth / 2 - wallThickness / 2, basinCenterY, centerZ] },
+          { name: "sink-back-wall", geometry: new THREE.BoxGeometry(basinWidth, bowlDepth, wallThickness), position: [centerX, basinCenterY, centerZ - basinDepth / 2 + wallThickness / 2] },
+          { name: "sink-front-wall", geometry: new THREE.BoxGeometry(basinWidth, bowlDepth, wallThickness), position: [centerX, basinCenterY, centerZ + basinDepth / 2 - wallThickness / 2] },
+          { name: "sink-bottom", geometry: new THREE.BoxGeometry(basinWidth - wallThickness * 2, 10, basinDepth - wallThickness * 2), position: [centerX, basinTopY - bowlDepth + 5, centerZ] }
+        ];
+        basinParts.forEach((part) => {
+          const mesh = new THREE.Mesh(part.geometry, sinkMaterial);
+          mesh.position.set(part.position[0], part.position[1], part.position[2]);
+          mesh.userData.equipment = part.name;
+          mesh.userData.sinkMount = cabinet.sinkMount;
+          parent.add(mesh);
+          addEdges(parent, part.geometry, mesh.position, 0xb8c0c6);
+        });
 
         const rimY = cabinet.sinkMount === "topmount"
           ? sizes.lowerHeight + 10
@@ -5615,8 +5772,8 @@
         const rimThickness = cabinet.sinkMount === "topmount" ? 20 : (cabinet.sinkMount === "flush" ? 12 : 8);
         addSinkRim3D(
           parent,
-          cabinet.x + cabinet.width / 2,
-          sizes.counterDepth / 2,
+          centerX,
+          centerZ,
           sinkWidth,
           sinkDepth,
           rimY,
@@ -5628,17 +5785,17 @@
         const faucetSide = faucetSideForSink(wall, cabinet);
         const faucetX = cabinet.x + cabinet.width * (faucetSide === "right" ? 0.78 : 0.22);
         const faucetGroup = new THREE.Group();
-        faucetGroup.position.set(faucetX, 0, 112);
+        faucetGroup.position.set(faucetX, 0, Math.max(95, centerZ - sinkDepth / 2 + 30));
         faucetGroup.rotation.y = faucetSide === "right" ? Math.PI / 4 : -Math.PI / 4;
         faucetGroup.userData.equipment = "faucet";
         faucetGroup.userData.side = faucetSide;
         faucetGroup.userData.angleDegrees = 45;
-        const stem = new THREE.Mesh(new THREE.CylinderGeometry(14, 16, 155, 20), faucetMaterial);
-        stem.position.set(0, sizes.lowerHeight + 77, 0);
+        const stem = new THREE.Mesh(new THREE.CylinderGeometry(17, 19, 185, 24), faucetMaterial);
+        stem.position.set(0, sizes.lowerHeight + 92, 0);
         stem.userData.equipment = "faucet";
         faucetGroup.add(stem);
-        const arch = new THREE.Mesh(new THREE.TorusGeometry(78, 12, 12, 32, Math.PI), faucetMaterial);
-        arch.position.set(faucetSide === "right" ? -78 : 78, sizes.lowerHeight + 155, 0);
+        const arch = new THREE.Mesh(new THREE.TorusGeometry(94, 13, 14, 36, Math.PI), faucetMaterial);
+        arch.position.set(faucetSide === "right" ? -94 : 94, sizes.lowerHeight + 184, 0);
         if (faucetSide === "left") arch.rotation.y = Math.PI;
         arch.userData.equipment = "faucet";
         faucetGroup.add(arch);

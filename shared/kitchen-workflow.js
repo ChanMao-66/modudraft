@@ -22,7 +22,7 @@
     minimumStorageWidth: 250,
     preferredStorageWidth: 600,
     preferredStorageMaxWidth: 750,
-    defaultEdgeFillerWidth: 30,
+    defaultEdgeFillerWidth: 20,
     minimumUsefulFillerWidth: 20
   };
   const L_RULES = CORE_RULES.lShape || { blindCornerWidth: 1000, minWallWidth: 1200 };
@@ -71,7 +71,8 @@
     upperMode: "full",
     hoodMode: "follow",
     priority: "prep",
-    styleId: "modern"
+    styleId: "modern",
+    layoutVariant: 0
   });
 
   function safeNumber(value, fallback, min, max) {
@@ -108,22 +109,91 @@
   function edgeFillerWidthFor(config, width) {
     const configured = Number(config.edgeFillerWidth);
     if (Number.isFinite(configured) && configured >= 0) return Math.round(configured);
-    if (width < STRAIGHT_RULES.minWallWidth + 500) return 0;
     return STRAIGHT_RULES.defaultEdgeFillerWidth;
   }
 
-  function splitStorageWidth(total, label, layer) {
+  function splitStorageWidth(total, label, layer, variant = 0) {
     const available = Math.max(0, Math.round(total));
     if (available < STRAIGHT_RULES.minimumStorageWidth) return { cabinets: [], remainder: available };
-    const count = Math.max(1, Math.ceil(available / STRAIGHT_RULES.preferredStorageMaxWidth));
-    const base = Math.floor(available / count);
-    let remainder = available - base * count;
-    const widths = Array.from({ length: count }, () => base + (remainder-- > 0 ? 1 : 0));
+    let widths = [];
+    if (variant % 3 === 1 && available >= 900) {
+      const first = Math.min(STRAIGHT_RULES.preferredStorageWidth, available - STRAIGHT_RULES.minimumStorageWidth);
+      widths = [first, available - first].filter((width) => width > 0);
+    } else {
+      const maxWidth = variant % 3 === 2
+        ? Math.max(650, STRAIGHT_RULES.preferredStorageMaxWidth - 100)
+        : STRAIGHT_RULES.preferredStorageMaxWidth;
+      const count = Math.max(1, Math.ceil(available / maxWidth));
+      const base = Math.floor(available / count);
+      let remainder = available - base * count;
+      widths = Array.from({ length: count }, () => base + (remainder-- > 0 ? 1 : 0));
+    }
     if (widths.some((width) => width < STRAIGHT_RULES.minimumStorageWidth)) return { cabinets: [], remainder: available };
     return {
-      cabinets: widths.map((width, index) => cabinet(`${label}${count > 1 ? ` ${index + 1}` : ""}`, width, layer, layer === "lower" ? "drawer" : "general", layer === "lower" ? "two-small-one-large" : "double-door")),
+      cabinets: widths.map((width, index) => cabinet(`${label}${widths.length > 1 ? ` ${index + 1}` : ""}`, width, layer, layer === "lower" ? "drawer" : "general", layer === "lower" ? "two-small-one-large" : "double-door")),
       remainder: 0
     };
+  }
+
+  function layerWidth(items, layer) {
+    return (items || [])
+      .filter((item) => item.layer === layer)
+      .reduce((sum, item) => sum + safeNumber(item.width, 0, 0, 30000), 0);
+  }
+
+  function settleLayerWithinWall(items, layer, width, warnings) {
+    const layerItems = items.filter((item) => item.layer === layer);
+    let total = layerWidth(items, layer);
+    let over = total - width;
+    if (over <= 0) return true;
+    const fillers = layerItems.filter((item) => item.purpose === "filler").reverse();
+    fillers.forEach((item) => {
+      if (over <= 0) return;
+      const reducible = Math.max(0, item.width);
+      const cut = Math.min(reducible, over);
+      item.width -= cut;
+      over -= cut;
+    });
+    total = layerWidth(items, layer);
+    over = total - width;
+    if (over <= 0) {
+      warnings.push(`${layer === "upper" ? "吊櫃" : "下櫃"}原本超出牆面，系統已優先縮減補板避免超出。`);
+      return true;
+    }
+    const flexible = layerItems
+      .filter((item) => !["sink", "stove", "hood", "dish-dryer"].includes(item.purpose))
+      .sort((a, b) => b.width - a.width);
+    flexible.forEach((item) => {
+      if (over <= 0) return;
+      const minimum = item.purpose === "filler" ? 0 : STRAIGHT_RULES.minimumStorageWidth;
+      const reducible = Math.max(0, item.width - minimum);
+      const cut = Math.min(reducible, over);
+      item.width -= cut;
+      over -= cut;
+    });
+    if (over > 0) return false;
+    warnings.push(`${layer === "upper" ? "吊櫃" : "下櫃"}已依牆寬重新收斂，固定設備尺寸不變。`);
+    return true;
+  }
+
+  function variantPositions(config, variant) {
+    const base = normalizedPositions(config);
+    if (variant % 3 === 1) {
+      const mirror = (value) => value === "left" ? "right" : value === "right" ? "left" : value;
+      return { sink: mirror(base.sink), stove: mirror(base.stove), adjusted: base.adjusted, mirrored: true };
+    }
+    if (variant % 3 === 2 && base.sink === "middle") {
+      return { sink: "left", stove: "right", adjusted: base.adjusted, balanced: true };
+    }
+    return base;
+  }
+
+  function storageRankFor(positions) {
+    if (positions.sink === "middle" && positions.stove === "right") return 20;
+    if (positions.sink === "middle" && positions.stove === "left") return 80;
+    if (positions.stove === "middle" && positions.sink === "right") return 20;
+    if (positions.stove === "middle" && positions.sink === "left") return 80;
+    return 50;
   }
 
   function normalizedPositions(config) {
@@ -136,17 +206,10 @@
     return { sink, stove, adjusted };
   }
 
-  function storageRankFor(positions) {
-    if (positions.sink === "middle" && positions.stove === "right") return 20;
-    if (positions.sink === "middle" && positions.stove === "left") return 80;
-    if (positions.stove === "middle" && positions.sink === "right") return 20;
-    if (positions.stove === "middle" && positions.sink === "left") return 80;
-    return 50;
-  }
-
   function buildStraightPlan(input) {
     const config = Object.assign({}, DEFAULT_CONFIG, input || {});
     const width = safeNumber(config.mainWallWidth, DEFAULT_CONFIG.mainWallWidth, STRAIGHT_RULES.minWallWidth, 12000);
+    const variant = Math.max(0, Math.floor(Number(config.layoutVariant) || 0));
     let leftFiller = edgeFillerWidthFor(config, width);
     let rightFiller = leftFiller;
     const minimum = minimumStraightWidth(config, leftFiller);
@@ -174,6 +237,17 @@
       storageWidth = width - fridgeWidth - sinkWidth - stoveWidth;
     }
 
+    if (
+      storageWidth < STRAIGHT_RULES.minimumMiddleWidth
+      && (leftFiller || rightFiller)
+      && width - fridgeWidth - sinkWidth - stoveWidth >= STRAIGHT_RULES.minimumMiddleWidth
+    ) {
+      warnings.push(`牆面寬度剛好不足以保留 ${STRAIGHT_RULES.minimumMiddleWidth} mm 中間櫃，系統先取消左右預設補板，避免把中間櫃壓縮成不合理尺寸。`);
+      leftFiller = 0;
+      rightFiller = 0;
+      storageWidth = width - fridgeWidth - sinkWidth - stoveWidth;
+    }
+
     if (storageWidth < 0) {
       errors.push(`牆面寬度 ${width} mm 不足，至少需要 ${minimum.fixedOnly} mm 才能放入 ${STRAIGHT_RULES.minimumSinkWidth} mm 水槽櫃與 ${STRAIGHT_RULES.minimumCooktopWidth} mm 爐台櫃。`);
       return {
@@ -196,9 +270,9 @@
       storageWidth -= STRAIGHT_RULES.preferredCooktopWidth - STRAIGHT_RULES.minimumCooktopWidth;
     }
 
-    const storage = splitStorageWidth(storageWidth, "備餐抽屜櫃", "lower");
+    const storage = splitStorageWidth(storageWidth, "備餐抽屜櫃", "lower", variant);
     rightFiller += storage.remainder;
-    const positions = normalizedPositions(config);
+    const positions = variantPositions(config, variant);
     const rank = { left: 10, middle: 50, right: 90 };
     const storageRank = storageRankFor(positions);
     const core = [
@@ -234,15 +308,21 @@
     if (!storage.cabinets.length && storage.remainder > 0) warnings.push(`剩餘 ${storage.remainder} mm 不足以形成標準中間櫃，已併入右側補板或收邊。`);
     if (storageWidth < STRAIGHT_RULES.minimumMiddleWidth) warnings.push("牆面空間不足以加入 500 mm 中間櫃，系統保留水槽與爐台固定尺寸並以補板收尾。");
     if (positions.adjusted) warnings.push("水槽與爐台位置重複，系統已自動將爐台移到另一側。");
+    if (positions.mirrored) warnings.push("已切換為鏡像配置：水槽與爐台方向互換，方便比較不同現場條件。");
+    if (positions.balanced) warnings.push("已切換為均衡配置：水槽靠左、爐台靠右，中間保留備餐與收納區。");
     const activeMinimum = minimumStraightWidth(Object.assign({}, config, { fridgePosition: fridgeWidth ? config.fridgePosition : "none" }), leftFiller);
     if (width < activeMinimum.withMiddleAndFillers) warnings.push(`牆面短於完整基本配置 ${activeMinimum.withMiddleAndFillers} mm，部分補板或中間櫃會被調整。`);
+    const allCabinets = lower.concat(upper);
+    const lowerOk = settleLayerWithinWall(allCabinets, "lower", width, warnings);
+    const upperOk = settleLayerWithinWall(allCabinets, "upper", width, warnings);
+    if (!lowerOk || !upperOk) errors.push(`配置總寬仍超出牆面 ${width} mm，系統已阻止輸出錯誤尺寸，請減少櫃體或調整牆寬。`);
     return {
       type: "straight",
-      walls: [{ width, alignment: "left", cabinets: lower.concat(upper) }],
+      walls: [{ width, alignment: "left", cabinets: allCabinets }],
       warnings,
       errors,
       assumptions,
-      summary: summarizePlan([{ cabinets: lower.concat(upper) }])
+      summary: summarizePlan([{ cabinets: allCabinets }])
     };
   }
 
@@ -579,6 +659,8 @@
         if (box) box.innerHTML = errors.map((message) => `<p>${escapeHtml(message)}</p>`).join("");
         return;
       }
+      const wasGenerated = generated;
+      if (wasGenerated) config.layoutVariant = ((Number(config.layoutVariant) || 0) + 1) % 3;
       latestPlan = buildPlan(config);
       if (latestPlan.errors?.length) {
         generated = false;
@@ -590,7 +672,7 @@
       generated = true;
       persist();
       render();
-      adapter.showToast("已產生基礎廚具配置");
+      adapter.showToast(wasGenerated ? "已切換下一套基礎配置" : "已產生基礎廚具配置");
     }
 
     overlay.addEventListener("input", (event) => {

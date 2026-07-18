@@ -59,8 +59,19 @@
       minimumStorageWidth: 250,
       preferredStorageWidth: 600,
       preferredStorageMaxWidth: 750,
-      defaultEdgeFillerWidth: 30,
+      defaultEdgeFillerWidth: 20,
       minimumUsefulFillerWidth: 20
+    }),
+    sink: Object.freeze({
+      outerLengthMin: 580,
+      outerLengthPreferred: 680,
+      outerLengthMax: 750,
+      outerDepthMin: 430,
+      outerDepthPreferred: 440,
+      outerDepthMax: 450,
+      bowlDepthMin: 180,
+      bowlDepthPreferred: 200,
+      bowlDepthMax: 220
     }),
     lShape: Object.freeze({
       blindCornerWidth: 1000,

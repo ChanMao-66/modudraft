@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v36-straight-rules";
+const CACHE_NAME = "modudraft-pwa-v37-kitchen-flow";
 const APP_ASSETS = [
   "./",
   "./index.html",
