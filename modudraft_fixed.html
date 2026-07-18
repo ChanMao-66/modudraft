@@ -18,7 +18,7 @@
   <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-estimate-v1">
   <link rel="stylesheet" href="./shared/estimate.css?v=20260705-v1">
-  <link rel="stylesheet" href="./shared/kitchen-workflow.css?v=20260706-blind-corner-v1">
+  <link rel="stylesheet" href="./shared/kitchen-workflow.css?v=20260718-straight-rules-v1">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -2017,7 +2017,7 @@
     </section>
   </div>
 
-  <script src="./shared/modudraft-core.js?v=20260706-blind-corner-v1"></script>
+  <script src="./shared/modudraft-core.js?v=20260718-straight-rules-v1"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
   <script src="./shared/help-system.js?v=20260706-blind-corner-v1"></script>
@@ -2025,7 +2025,7 @@
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-mobile.js?v=20260706-blind-corner-v1"></script>
   <script src="./shared/estimate.js?v=20260706-blind-corner-v1"></script>
-  <script src="./shared/kitchen-workflow.js?v=20260706-blind-corner-v1"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260718-straight-rules-v1"></script>
   <script>
     const state = {
       walls: [],
@@ -2055,21 +2055,26 @@
       workflowConfig: null
     };
 
+    const kitchenRules = window.MODUDRAFTCore?.KITCHEN_RULES || {};
+    const kitchenDimensions = kitchenRules.dimensions || {};
+    const kitchenStraightRules = kitchenRules.straight || {};
+    const suggestedSinkStoveDistance = kitchenRules.sinkStove?.suggestedMinimumDistance || 300;
+
     const sizes = {
-      lowerHeight: 860,
-      toeKickHeight: 120,
-      lowerBodyHeight: 700,
-      middleGap: 700,
-      lowerDepth: 580,
-      counterDepth: 600,
-      upperDepth: 370,
-      upperHeight: 700,
-      wallThickness: 120,
-      counterThickness: 40,
-      backsplashHeight: 80,
-      backsplashThickness: 20,
-      sidePanelThickness: 20,
-      doorThickness: 20
+      lowerHeight: kitchenDimensions.lowerHeight || 860,
+      toeKickHeight: kitchenDimensions.toeKickHeight || 120,
+      lowerBodyHeight: kitchenDimensions.lowerBodyHeight || 700,
+      middleGap: kitchenDimensions.middleGap || 700,
+      lowerDepth: kitchenDimensions.lowerDepth || 580,
+      counterDepth: kitchenDimensions.counterDepth || 600,
+      upperDepth: kitchenDimensions.upperDepth || 370,
+      upperHeight: kitchenDimensions.upperHeight || 700,
+      wallThickness: kitchenDimensions.wallThickness || 120,
+      counterThickness: kitchenDimensions.counterThickness || 40,
+      backsplashHeight: kitchenDimensions.backsplashHeight || 80,
+      backsplashThickness: kitchenDimensions.backsplashThickness || 20,
+      sidePanelThickness: kitchenDimensions.sidePanelThickness || 20,
+      doorThickness: kitchenDimensions.doorThickness || 20
     };
 
     const el = {
@@ -2809,6 +2814,32 @@
       });
     }
 
+    function cabinetFromPlanItem(item = {}) {
+      const created = makeCabinet(
+        item.name || (item.layer === "upper" ? "標準吊櫃" : "標準下櫃"),
+        item.width,
+        item.layer === "upper" ? "upper" : "lower",
+        item.purpose || "general",
+        item.frontStyle,
+        item.handleStyle
+      );
+      Object.assign(created, {
+        applianceType: item.applianceType || "",
+        isCornerReserve: item.isCornerReserve === true,
+        includeInQuote: item.includeInQuote !== false,
+        priceRuleId: item.priceRuleId || "",
+        hasCountertop: item.hasCountertop !== false,
+        hasToeKick: item.hasToeKick !== false,
+        notes: item.notes || ""
+      });
+      if (Number.isFinite(Number(item.height))) created.customHeight = Number(item.height);
+      if (Number.isFinite(Number(item.depth))) created.customDepth = Number(item.depth);
+      if (item.cornerType === "blindCorner" || item.purpose === "blind-corner") {
+        Object.assign(created, window.MODUDRAFTCore.normalizeBlindCorner(item));
+      }
+      return normalizeCabinet(created);
+    }
+
     function setCurrentLayer(layer, options = {}) {
       const nextLayer = layer === "upper" ? "upper" : "lower";
       state.currentLayer = nextLayer;
@@ -3055,6 +3086,42 @@
     function autoGenerateKitchen() {
       const wall = activeWall();
       if (!wall) return;
+
+      const workflow = window.MODUDRAFTKitchenWorkflow;
+      if (workflow?.buildStraightPlan) {
+        const config = Object.assign({}, state.workflowConfig || {}, {
+          kitchenType: "straight",
+          mainWallWidth: wall.width,
+          ceilingHeight: wall.height,
+          lowerHeight: sizes.lowerHeight,
+          lowerDepth: sizes.lowerDepth,
+          upperHeight: sizes.upperHeight,
+          upperDepth: sizes.upperDepth,
+          counterDepth: sizes.counterDepth,
+          upperMode: state.workflowConfig?.upperMode || "full",
+          hoodMode: "follow"
+        });
+        const plan = workflow.buildStraightPlan(config);
+        if (plan.errors?.length) {
+          showKitchenToast(plan.errors[0], "error");
+          state.workflowConfig = cleanClone(config);
+          return;
+        }
+        commitKitchenMutation("自動配置一字型廚具", () => {
+          const generatedWall = plan.walls[0] || { cabinets: [] };
+          wall.cabinets = (generatedWall.cabinets || []).map(cabinetFromPlanItem);
+          wall.alignment = wall.alignment || generatedWall.alignment || "left";
+          state.workflowConfig = cleanClone(Object.assign({}, config, {
+            lastGeneratedAt: new Date().toISOString(),
+            lastWarnings: plan.warnings || [],
+            lastAssumptions: plan.assumptions || []
+          }));
+        });
+        setCurrentLayer("lower", { syncAssist: false });
+        renderAll();
+        showKitchenToast(plan.warnings?.[0] || "已依一字型廚具規則重新配置");
+        return;
+      }
 
       const width = wall.width;
       const lower = [];
@@ -6359,31 +6426,17 @@
     function applyBeginnerKitchenPlan(config, plan) {
       if (!plan?.walls?.length) throw new Error("無法產生廚具配置，請檢查輸入尺寸。");
       const sharedHeight = clampNumber(config.ceilingHeight, 2000, 4200, 2400);
-      sizes.lowerHeight = clampNumber(config.lowerHeight, 720, 1000, 850);
-      sizes.lowerDepth = clampNumber(config.lowerDepth, 500, 700, 560);
-      sizes.upperHeight = clampNumber(config.upperHeight, 400, 1000, 700);
-      sizes.upperDepth = clampNumber(config.upperDepth, 280, 450, 350);
-      sizes.counterDepth = clampNumber(config.counterDepth, sizes.lowerDepth, 750, 600);
+      sizes.lowerHeight = clampNumber(config.lowerHeight, 720, 1000, kitchenDimensions.lowerHeight || 860);
+      sizes.lowerDepth = clampNumber(config.lowerDepth, 500, 700, kitchenDimensions.lowerDepth || 580);
+      sizes.upperHeight = clampNumber(config.upperHeight, 400, 1000, kitchenDimensions.upperHeight || 700);
+      sizes.upperDepth = clampNumber(config.upperDepth, 280, 450, kitchenDimensions.upperDepth || 370);
+      sizes.counterDepth = clampNumber(config.counterDepth, sizes.lowerDepth, 750, kitchenDimensions.counterDepth || 600);
       sizes.lowerBodyHeight = Math.max(500, sizes.lowerHeight - sizes.toeKickHeight - sizes.counterThickness);
 
       state.walls = plan.walls.map((wallPlan, wallIndex) => {
         const wall = createWall(clampNumber(wallPlan.width, 1200, 12000, 2700), sharedHeight, wallIndex);
         wall.alignment = wallPlan.alignment === "right" ? "right" : "left";
-        wall.cabinets = (wallPlan.cabinets || []).map((item) => {
-          const created = makeCabinet(item.name, item.width, item.layer === "upper" ? "upper" : "lower", item.purpose, item.frontStyle, item.handleStyle);
-          Object.assign(created, {
-            applianceType: item.applianceType || "",
-            isCornerReserve: item.isCornerReserve === true,
-            includeInQuote: item.includeInQuote !== false,
-            priceRuleId: item.priceRuleId || "",
-            hasCountertop: item.hasCountertop !== false,
-            notes: item.notes || ""
-          });
-          if (item.cornerType === "blindCorner" || item.purpose === "blind-corner") {
-            Object.assign(created, window.MODUDRAFTCore.normalizeBlindCorner(item));
-          }
-          return normalizeCabinet(created);
-        });
+        wall.cabinets = (wallPlan.cabinets || []).map(cabinetFromPlanItem);
         return wall;
       });
       state.activeWallIndex = 0;
@@ -7285,6 +7338,18 @@
             if (row[index].x < row[index - 1].x + row[index - 1].width - 0.5) issues.push({ id: `overlap-${wallIndex}-${index}`, code: "cabinet-overlap", level: "error", message: `${wallName} 的 ${row[index - 1].name} 與 ${row[index].name} 發生重疊。`, target: row[index].id });
           }
         });
+        [["lower", lower, "下櫃"], ["upper", upper, "吊櫃"]].forEach(([layer, row, label]) => {
+          const usedWidth = row.reduce((sum, cabinet) => sum + Number(cabinet.width || 0), 0);
+          if (usedWidth > wall.width + 0.5) {
+            issues.push({
+              id: `overflow-${layer}-${wallIndex}`,
+              code: "wall-overflow",
+              level: "error",
+              message: `${wallName} 的${label}總寬 ${Math.round(usedWidth)} mm，已超出牆面 ${Math.round(usedWidth - wall.width)} mm，請減少櫃體寬度或刪除部分櫃體。`,
+              target: wall.id
+            });
+          }
+        });
         if (sizes.lowerHeight < 800 || sizes.lowerHeight > 920) issues.push({ id: `lower-height-${wallIndex}`, code: "lower-height", level: "warning", message: `下櫃完成高度 ${sizes.lowerHeight} mm，請確認是否符合使用者身高與設備。`, target: wall.id });
         if (sizes.lowerDepth < 520 || sizes.lowerDepth > 650) issues.push({ id: `lower-depth-${wallIndex}`, code: "lower-depth", level: "warning", message: `下櫃深度 ${sizes.lowerDepth} mm，請確認檯面與設備安裝需求。`, target: wall.id });
         const unevenLower = lower.find((cabinet) => cabinet.purpose !== "filler" && Math.abs(cabinetHeight(cabinet, wall) - sizes.lowerHeight) > 1);
@@ -7296,11 +7361,11 @@
         if (stove && stove.width < 600) issues.push({ id: `stove-width-${wallIndex}`, code: "stove-width", level: "warning", message: `${wallName} 的爐台櫃寬度 ${stove.width} mm，建議至少 600 mm。`, target: stove.id });
         if (sink && stove) {
           const gap = Math.max(0, Math.max(sink.x, stove.x) - Math.min(sink.x + sink.width, stove.x + stove.width));
-          if (gap < 300) issues.push({ id: `kitchen-gap-${wallIndex}`, code: "sink-stove-gap", level: "warning", message: `牆 ${wallIndex + 1} 的水槽與爐台工作距離少於 300 mm`, target: sink.id });
+          if (gap < suggestedSinkStoveDistance) issues.push({ id: `kitchen-gap-${wallIndex}`, code: "sink-stove-gap", level: "warning", message: `牆 ${wallIndex + 1} 的水槽與爐台工作距離少於建議值 ${suggestedSinkStoveDistance} mm`, target: sink.id });
           const stoveIndex = lower.indexOf(stove);
           const leftPrep = lower[stoveIndex - 1] && !["filler", "sink"].includes(lower[stoveIndex - 1].purpose) ? lower[stoveIndex - 1].width : 0;
           const rightPrep = lower[stoveIndex + 1] && !["filler", "sink"].includes(lower[stoveIndex + 1].purpose) ? lower[stoveIndex + 1].width : 0;
-          if (Math.max(leftPrep, rightPrep) < 300) issues.push({ id: `stove-prep-${wallIndex}`, code: "stove-prep", level: "warning", message: `${wallName} 的爐台左右備餐空間不足 300 mm，請確認是否符合使用需求。`, target: stove.id });
+          if (Math.max(leftPrep, rightPrep) < suggestedSinkStoveDistance) issues.push({ id: `stove-prep-${wallIndex}`, code: "stove-prep", level: "warning", message: `${wallName} 的爐台左右備餐空間不足建議值 ${suggestedSinkStoveDistance} mm，請確認是否符合使用需求。`, target: stove.id });
           const hood = upper.find((cabinet) => cabinet.purpose === "hood");
           if (!hood) issues.push({ id: `hood-missing-${wallIndex}`, code: "hood-missing", level: "warning", message: `${wallName} 的爐台上方尚未配置排油煙機吊櫃。`, target: stove.id });
           else if (Math.abs(hood.x - stove.x) > 2 || Math.abs(hood.width - stove.width) > 2) issues.push({ id: `hood-align-${wallIndex}`, code: "hood-align", level: "error", message: `${wallName} 的抽油煙機吊櫃未對齊爐台櫃，請檢查位置。`, target: hood.id });

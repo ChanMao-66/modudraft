@@ -4,32 +4,54 @@
   const STORAGE_KEY = "modudraft:kitchen-workflow:v1";
   const START_DISMISSED_KEY = "modudraft:kitchen-start-dismissed";
   const START_MODE_KEY = "modudraft:kitchen-start-mode";
+  const CORE_RULES = global.MODUDRAFTCore?.KITCHEN_RULES || {};
+  const DIMENSIONS = CORE_RULES.dimensions || {
+    lowerHeight: 860,
+    lowerDepth: 580,
+    upperHeight: 700,
+    upperDepth: 370,
+    counterDepth: 600
+  };
+  const STRAIGHT_RULES = CORE_RULES.straight || {
+    minWallWidth: 1200,
+    minimumSinkWidth: 600,
+    preferredSinkWidth: 800,
+    minimumCooktopWidth: 600,
+    preferredCooktopWidth: 700,
+    minimumMiddleWidth: 500,
+    minimumStorageWidth: 250,
+    preferredStorageWidth: 600,
+    preferredStorageMaxWidth: 750,
+    defaultEdgeFillerWidth: 30,
+    minimumUsefulFillerWidth: 20
+  };
+  const L_RULES = CORE_RULES.lShape || { blindCornerWidth: 1000, minWallWidth: 1200 };
 
   const STANDARD_CABINETS = Object.freeze([
-    { id: "base-300", name: "標準下櫃 300", layer: "lower", purpose: "general", width: 300, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "base-400", name: "標準下櫃 400", layer: "lower", purpose: "general", width: 400, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "base-450", name: "標準下櫃 450", layer: "lower", purpose: "general", width: 450, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "base-600", name: "標準下櫃 600", layer: "lower", purpose: "general", width: 600, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "base-800", name: "標準下櫃 800", layer: "lower", purpose: "general", width: 800, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "drawer-600", name: "抽屜下櫃 600", layer: "lower", purpose: "drawer", width: 600, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetMediumPerCm" },
-    { id: "sink-600", name: "水槽下櫃 600", layer: "lower", purpose: "sink", width: 600, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "sink-800", name: "水槽下櫃 800", layer: "lower", purpose: "sink", width: 800, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "stove-600", name: "爐台下櫃 600", layer: "lower", purpose: "stove", width: 600, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "stove-700", name: "爐台下櫃 700", layer: "lower", purpose: "stove", width: 700, height: 850, depth: 560, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
-    { id: "blind-corner-1000", name: "盲角轉角下櫃 1000", layer: "lower", purpose: "blind-corner", width: 1000, totalWidth: 1000, height: 850, depth: 560, cornerType: "blindCorner", cornerHanding: "left", adjacentCabinetDepthRef: 560, adjacentDoorReferencePanelWidth: 20, hingeMountPanelWidth: 20, frontDoorWidth: 400, hasCornerShelf: true, cornerShelfCount: 1, hasCornerHardware: false, cornerHardwareType: "none", showInternalStructure: true, hasCountertop: true, hasToeKick: true, frontStyle: "single-door", priceRuleId: "baseCabinetBasicPerCm", description: "560 / 20 / 20 / 400 結構；雙 20 板分別作為門板對位與鉸鏈安裝。" },
-    { id: "wall-300", name: "標準吊櫃 300", layer: "upper", purpose: "general", width: 300, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
-    { id: "wall-400", name: "標準吊櫃 400", layer: "upper", purpose: "general", width: 400, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
-    { id: "wall-600", name: "標準吊櫃 600", layer: "upper", purpose: "general", width: 600, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
-    { id: "wall-800", name: "標準吊櫃 800", layer: "upper", purpose: "general", width: 800, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
-    { id: "hood-700", name: "排油煙機吊櫃 700", layer: "upper", purpose: "hood", width: 700, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
-    { id: "wall-open-600", name: "開放吊櫃 600", layer: "upper", purpose: "open", width: 600, height: 700, depth: 350, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "base-300", name: "標準下櫃 300", layer: "lower", purpose: "general", width: 300, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "base-400", name: "標準下櫃 400", layer: "lower", purpose: "general", width: 400, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "base-450", name: "標準下櫃 450", layer: "lower", purpose: "general", width: 450, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "base-600", name: "標準下櫃 600", layer: "lower", purpose: "general", width: 600, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "base-800", name: "標準下櫃 800", layer: "lower", purpose: "general", width: 800, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "drawer-600", name: "抽屜下櫃 600", layer: "lower", purpose: "drawer", width: 600, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetMediumPerCm" },
+    { id: "sink-600", name: "水槽下櫃 600", layer: "lower", purpose: "sink", width: 600, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "sink-800", name: "水槽下櫃 800", layer: "lower", purpose: "sink", width: 800, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "stove-600", name: "爐台下櫃 600", layer: "lower", purpose: "stove", width: 600, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "stove-700", name: "爐台下櫃 700", layer: "lower", purpose: "stove", width: 700, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
+    { id: "blind-corner-1000", name: "盲角轉角下櫃 1000", layer: "lower", purpose: "blind-corner", width: L_RULES.blindCornerWidth, totalWidth: L_RULES.blindCornerWidth, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, cornerType: "blindCorner", cornerHanding: "left", adjacentCabinetDepthRef: 560, adjacentDoorReferencePanelWidth: 20, hingeMountPanelWidth: 20, frontDoorWidth: 400, hasCornerShelf: true, cornerShelfCount: 1, hasCornerHardware: false, cornerHardwareType: "none", showInternalStructure: true, hasCountertop: true, hasToeKick: true, frontStyle: "single-door", priceRuleId: "baseCabinetBasicPerCm", description: "560 / 20 / 20 / 400 結構；雙 20 板分別作為門板對位與鉸鏈安裝。" },
+    { id: "wall-300", name: "標準吊櫃 300", layer: "upper", purpose: "general", width: 300, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "wall-400", name: "標準吊櫃 400", layer: "upper", purpose: "general", width: 400, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "wall-600", name: "標準吊櫃 600", layer: "upper", purpose: "general", width: 600, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "wall-800", name: "標準吊櫃 800", layer: "upper", purpose: "general", width: 800, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "hood-700", name: "排油煙機吊櫃 700", layer: "upper", purpose: "hood", width: 700, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "wall-open-600", name: "開放吊櫃 600", layer: "upper", purpose: "open", width: 600, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "tall-600", name: "高櫃 600", layer: "tall", purpose: "general", width: 600, height: 2400, depth: 600, priceRuleId: "tallCabinetPerCm" },
     { id: "tall-appliance-600", name: "電器高櫃 600", layer: "tall", purpose: "appliance", width: 600, height: 2400, depth: 600, priceRuleId: "tallCabinetPerCm" },
     { id: "tall-fridge-600", name: "冰箱旁高櫃 600", layer: "tall", purpose: "appliance", width: 600, height: 2400, depth: 600, priceRuleId: "fridgeCabinetPerCm" },
-    { id: "filler-left", name: "左補板", layer: "lower", purpose: "filler", width: 30, height: 850, depth: 580, priceRuleId: "fillerPanelPerPiece" },
-    { id: "filler-right", name: "右補板", layer: "lower", purpose: "filler", width: 30, height: 850, depth: 580, priceRuleId: "fillerPanelPerPiece" },
-    { id: "filler-top", name: "頂部補板", layer: "upper", purpose: "filler", width: 600, height: 300, depth: 370, priceRuleId: "fillerPanelPerPiece" },
-    { id: "finished-end", name: "側封板", layer: "lower", purpose: "filler", width: 20, height: 870, depth: 600, priceRuleId: "sidePanelPerPiece" }
+    { id: "filler-left", name: "左補板", layer: "lower", purpose: "filler", width: STRAIGHT_RULES.defaultEdgeFillerWidth, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, priceRuleId: "fillerPanelPerPiece" },
+    { id: "filler-right", name: "右補板", layer: "lower", purpose: "filler", width: STRAIGHT_RULES.defaultEdgeFillerWidth, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, priceRuleId: "fillerPanelPerPiece" },
+    { id: "filler-top", name: "頂部補板", layer: "upper", purpose: "filler", width: 600, height: 300, depth: DIMENSIONS.upperDepth, priceRuleId: "fillerPanelPerPiece" },
+    { id: "finished-end", name: "側封板", layer: "lower", purpose: "filler", width: 20, height: DIMENSIONS.lowerHeight + (DIMENSIONS.sidePanelThickness || 20), depth: DIMENSIONS.counterDepth, priceRuleId: "sidePanelPerPiece" }
   ]);
 
   const DEFAULT_CONFIG = Object.freeze({
@@ -38,11 +60,11 @@
     sideWallWidth: 1800,
     ceilingHeight: 2400,
     turnDirection: "left",
-    lowerHeight: 850,
-    lowerDepth: 560,
-    upperHeight: 700,
-    upperDepth: 350,
-    counterDepth: 600,
+    lowerHeight: DIMENSIONS.lowerHeight,
+    lowerDepth: DIMENSIONS.lowerDepth,
+    upperHeight: DIMENSIONS.upperHeight,
+    upperDepth: DIMENSIONS.upperDepth,
+    counterDepth: DIMENSIONS.counterDepth,
     sinkPosition: "middle",
     stovePosition: "right",
     fridgePosition: "none",
@@ -74,14 +96,30 @@
     }, extra || {});
   }
 
+  function minimumStraightWidth(config, edgeFillerWidth) {
+    const fridgeWidth = config.fridgePosition === "none" ? 0 : 600;
+    return {
+      fixedOnly: STRAIGHT_RULES.minimumSinkWidth + STRAIGHT_RULES.minimumCooktopWidth + fridgeWidth,
+      withMiddle: STRAIGHT_RULES.minimumSinkWidth + STRAIGHT_RULES.minimumCooktopWidth + STRAIGHT_RULES.minimumMiddleWidth + fridgeWidth,
+      withMiddleAndFillers: STRAIGHT_RULES.minimumSinkWidth + STRAIGHT_RULES.minimumCooktopWidth + STRAIGHT_RULES.minimumMiddleWidth + fridgeWidth + edgeFillerWidth * 2
+    };
+  }
+
+  function edgeFillerWidthFor(config, width) {
+    const configured = Number(config.edgeFillerWidth);
+    if (Number.isFinite(configured) && configured >= 0) return Math.round(configured);
+    if (width < STRAIGHT_RULES.minWallWidth + 500) return 0;
+    return STRAIGHT_RULES.defaultEdgeFillerWidth;
+  }
+
   function splitStorageWidth(total, label, layer) {
     const available = Math.max(0, Math.round(total));
-    if (available < 250) return { cabinets: [], remainder: available };
-    const count = Math.max(1, Math.ceil(available / 750));
+    if (available < STRAIGHT_RULES.minimumStorageWidth) return { cabinets: [], remainder: available };
+    const count = Math.max(1, Math.ceil(available / STRAIGHT_RULES.preferredStorageMaxWidth));
     const base = Math.floor(available / count);
     let remainder = available - base * count;
     const widths = Array.from({ length: count }, () => base + (remainder-- > 0 ? 1 : 0));
-    if (widths.some((width) => width < 250)) return { cabinets: [], remainder: available };
+    if (widths.some((width) => width < STRAIGHT_RULES.minimumStorageWidth)) return { cabinets: [], remainder: available };
     return {
       cabinets: widths.map((width, index) => cabinet(`${label}${count > 1 ? ` ${index + 1}` : ""}`, width, layer, layer === "lower" ? "drawer" : "general", layer === "lower" ? "two-small-one-large" : "double-door")),
       remainder: 0
@@ -91,40 +129,82 @@
   function normalizedPositions(config) {
     const sink = config.sinkPosition || "middle";
     let stove = config.stovePosition || "right";
+    const requestedStove = stove;
+    let adjusted = false;
     if (stove === sink) stove = sink === "left" ? "right" : "left";
-    return { sink, stove };
+    adjusted = stove !== requestedStove;
+    return { sink, stove, adjusted };
+  }
+
+  function storageRankFor(positions) {
+    if (positions.sink === "middle" && positions.stove === "right") return 20;
+    if (positions.sink === "middle" && positions.stove === "left") return 80;
+    if (positions.stove === "middle" && positions.sink === "right") return 20;
+    if (positions.stove === "middle" && positions.sink === "left") return 80;
+    return 50;
   }
 
   function buildStraightPlan(input) {
     const config = Object.assign({}, DEFAULT_CONFIG, input || {});
-    const width = safeNumber(config.mainWallWidth, 2700, 1200, 12000);
-    const fillerBase = width >= 1800 ? 30 : 20;
-    let fridgeWidth = config.fridgePosition === "none" ? 0 : Math.min(700, Math.max(600, Math.round(width * 0.24)));
-    let sinkWidth = width - fridgeWidth >= 2200 ? 800 : 600;
-    let stoveWidth = width - fridgeWidth >= 2000 ? 700 : 600;
-    let leftFiller = fillerBase;
-    let rightFiller = fillerBase;
+    const width = safeNumber(config.mainWallWidth, DEFAULT_CONFIG.mainWallWidth, STRAIGHT_RULES.minWallWidth, 12000);
+    let leftFiller = edgeFillerWidthFor(config, width);
+    let rightFiller = leftFiller;
+    const minimum = minimumStraightWidth(config, leftFiller);
+    const warnings = [];
+    const errors = [];
+    const assumptions = [
+      `下櫃完成高採 ${DIMENSIONS.lowerHeight} mm（踢腳 ${global.MODUDRAFTCore?.KITCHEN_RULES?.dimensions?.toeKickHeight || 120} / 桶身 ${global.MODUDRAFTCore?.KITCHEN_RULES?.dimensions?.lowerBodyHeight || 700} / 檯面 ${global.MODUDRAFTCore?.KITCHEN_RULES?.dimensions?.counterThickness || 40}）。`,
+      `下櫃深度採 ${DIMENSIONS.lowerDepth} mm，檯面深度採 ${DIMENSIONS.counterDepth} mm。`
+    ];
+
+    let fridgeWidth = config.fridgePosition === "none" ? 0 : 600;
+    if (fridgeWidth && width < minimum.withMiddle) {
+      warnings.push("牆面寬度不足以同時放入冰箱預留與基本廚具，系統先移除冰箱預留，請於專業模式另行確認。");
+      fridgeWidth = 0;
+    }
+
+    let sinkWidth = STRAIGHT_RULES.minimumSinkWidth;
+    let stoveWidth = STRAIGHT_RULES.minimumCooktopWidth;
     let storageWidth = width - fridgeWidth - sinkWidth - stoveWidth - leftFiller - rightFiller;
-    if (storageWidth < 250 && sinkWidth > 600) { sinkWidth = 600; storageWidth += 200; }
-    if (storageWidth < 250 && stoveWidth > 600) { stoveWidth = 600; storageWidth += 100; }
-    if (storageWidth < 0) {
+
+    if (storageWidth < 0 && (leftFiller || rightFiller)) {
+      warnings.push("牆面較短，系統先取消左右預設補板，保留水槽櫃與爐台櫃固定尺寸。");
       leftFiller = 0;
       rightFiller = 0;
       storageWidth = width - fridgeWidth - sinkWidth - stoveWidth;
     }
+
     if (storageWidth < 0) {
-      fridgeWidth = 0;
-      storageWidth = width - sinkWidth - stoveWidth;
+      errors.push(`牆面寬度 ${width} mm 不足，至少需要 ${minimum.fixedOnly} mm 才能放入 ${STRAIGHT_RULES.minimumSinkWidth} mm 水槽櫃與 ${STRAIGHT_RULES.minimumCooktopWidth} mm 爐台櫃。`);
+      return {
+        type: "straight",
+        walls: [{ width, alignment: "left", cabinets: [] }],
+        warnings,
+        errors,
+        assumptions,
+        summary: summarizePlan([{ cabinets: [] }])
+      };
+    }
+
+    const remainingAfterMiddle = storageWidth - STRAIGHT_RULES.minimumMiddleWidth;
+    if (remainingAfterMiddle >= STRAIGHT_RULES.preferredSinkWidth - sinkWidth) {
+      sinkWidth = STRAIGHT_RULES.preferredSinkWidth;
+      storageWidth -= STRAIGHT_RULES.preferredSinkWidth - STRAIGHT_RULES.minimumSinkWidth;
+    }
+    if (storageWidth - STRAIGHT_RULES.minimumMiddleWidth >= STRAIGHT_RULES.preferredCooktopWidth - stoveWidth) {
+      stoveWidth = STRAIGHT_RULES.preferredCooktopWidth;
+      storageWidth -= STRAIGHT_RULES.preferredCooktopWidth - STRAIGHT_RULES.minimumCooktopWidth;
     }
 
     const storage = splitStorageWidth(storageWidth, "備餐抽屜櫃", "lower");
     rightFiller += storage.remainder;
     const positions = normalizedPositions(config);
     const rank = { left: 10, middle: 50, right: 90 };
+    const storageRank = storageRankFor(positions);
     const core = [
       { rank: rank[positions.sink], priority: 1, item: cabinet("水槽下櫃", sinkWidth, "lower", "sink", "double-door") },
       { rank: rank[positions.stove], priority: 3, item: cabinet("爐台下櫃", stoveWidth, "lower", "stove", "double-door") },
-      ...storage.cabinets.map((item, index) => ({ rank: 50, priority: 2 + index / 10, item }))
+      ...storage.cabinets.map((item, index) => ({ rank: storageRank, priority: 2 + index / 10, item }))
     ];
     if (fridgeWidth) core.push({ rank: config.fridgePosition === "left" ? 0 : 100, priority: 0, item: cabinet("冰箱預留", fridgeWidth, "lower", "appliance", "appliance", { applianceType: "fridge", hasCountertop: false }) });
     core.sort((a, b) => a.rank - b.rank || a.priority - b.priority);
@@ -151,33 +231,36 @@
       });
     }
 
-    const warnings = [];
-    if (storageWidth < 300) warnings.push("水槽與爐台間的備餐空間偏小，請在專業模式確認是否符合使用需求。");
-    if (positions.sink === positions.stove) warnings.push("水槽與爐台位置重複，系統已自動將爐台移到另一側。");
-    if (width < 1800) warnings.push("牆面較短，僅能建立精簡配置，建議確認設備實際尺寸。");
+    if (!storage.cabinets.length && storage.remainder > 0) warnings.push(`剩餘 ${storage.remainder} mm 不足以形成標準中間櫃，已併入右側補板或收邊。`);
+    if (storageWidth < STRAIGHT_RULES.minimumMiddleWidth) warnings.push("牆面空間不足以加入 500 mm 中間櫃，系統保留水槽與爐台固定尺寸並以補板收尾。");
+    if (positions.adjusted) warnings.push("水槽與爐台位置重複，系統已自動將爐台移到另一側。");
+    const activeMinimum = minimumStraightWidth(Object.assign({}, config, { fridgePosition: fridgeWidth ? config.fridgePosition : "none" }), leftFiller);
+    if (width < activeMinimum.withMiddleAndFillers) warnings.push(`牆面短於完整基本配置 ${activeMinimum.withMiddleAndFillers} mm，部分補板或中間櫃會被調整。`);
     return {
       type: "straight",
       walls: [{ width, alignment: "left", cabinets: lower.concat(upper) }],
       warnings,
+      errors,
+      assumptions,
       summary: summarizePlan([{ cabinets: lower.concat(upper) }])
     };
   }
 
   function buildStorageWall(width, config) {
-    const filler = width >= 1200 ? 30 : 20;
-    const corner = 1000;
+    const filler = width >= L_RULES.minWallWidth ? STRAIGHT_RULES.defaultEdgeFillerWidth : STRAIGHT_RULES.minimumUsefulFillerWidth;
+    const corner = L_RULES.blindCornerWidth;
     const usable = Math.max(0, width - corner - filler);
     const split = splitStorageWidth(usable, "側牆收納櫃", "lower");
     const lower = [cabinet("盲角轉角下櫃 1000", corner, "lower", "blind-corner", "single-door", {
       cornerType: "blindCorner",
       cornerHanding: config.turnDirection === "right" ? "right" : "left",
-      totalWidth: 1000,
+      totalWidth: L_RULES.blindCornerWidth,
       adjacentCabinetDepthRef: 560,
       adjacentDoorReferencePanelWidth: 20,
       hingeMountPanelWidth: 20,
       frontDoorWidth: 400,
-      depth: 560,
-      height: config.lowerHeight || 850,
+      depth: DIMENSIONS.lowerDepth,
+      height: config.lowerHeight || DIMENSIONS.lowerHeight,
       hasCornerShelf: true,
       cornerShelfCount: 1,
       hasCornerHardware: false,
@@ -196,7 +279,7 @@
   function buildLPlan(input) {
     const config = Object.assign({}, DEFAULT_CONFIG, input || {}, { kitchenType: "L" });
     const main = buildStraightPlan(config);
-    const sideWidth = safeNumber(config.sideWallWidth, 1800, 1200, 8000);
+    const sideWidth = safeNumber(config.sideWallWidth, DEFAULT_CONFIG.sideWallWidth, L_RULES.minWallWidth, 8000);
     const sideCabinets = buildStorageWall(sideWidth, config);
     const walls = [
       { width: main.walls[0].width, alignment: config.turnDirection === "right" ? "right" : "left", cabinets: main.walls[0].cabinets },
@@ -206,6 +289,8 @@
       type: "L",
       walls,
       warnings: main.warnings.concat("L 型已使用 560 / 20 / 20 / 400 盲角轉角下櫃；施工前請依現場確認左右方向與五金。"),
+      errors: main.errors || [],
+      assumptions: main.assumptions || [],
       summary: summarizePlan(walls)
     };
   }
@@ -425,7 +510,7 @@
     function renderStep4() {
       body.innerHTML = `${stepHeader("STEP 4 / 7", "自動生成基礎配置", "系統會依尺寸、設備位置與上下櫃規則建立第一版，確認後仍可進專業模式細修。")}
         <button class="md-kw-generate" type="button" data-kw-action="generate" data-help-id="auto-layout">${generated ? "換一種配置" : "產生基礎配置"}</button>
-        <div class="md-kw-generation">${latestPlan ? `<h4>已產生${latestPlan.type === "L" ? " L 型" : "一字型"}基礎廚具</h4>${renderSummary(latestPlan)}${latestPlan.warnings.length ? `<ul>${latestPlan.warnings.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul>` : ""}<div class="md-kw-inline-actions"><button data-kw-action="back-conditions">返回修改條件</button><button data-kw-action="enter-pro">進入專業編輯</button></div>` : `<p>按下產生後，平面圖、立面圖與 3D 會共用同一份櫃體資料。</p>`}</div>`;
+        <div class="md-kw-generation">${latestPlan ? `<h4>${latestPlan.errors?.length ? "暫時無法產生可靠配置" : `已產生${latestPlan.type === "L" ? " L 型" : "一字型"}基礎廚具`}</h4>${renderSummary(latestPlan)}${latestPlan.errors?.length ? `<ul class="md-kw-errors">${latestPlan.errors.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul>` : ""}${latestPlan.warnings?.length ? `<ul>${latestPlan.warnings.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul>` : ""}${latestPlan.assumptions?.length ? `<details class="md-kw-advanced" open><summary>本次使用的尺寸假設</summary><ul>${latestPlan.assumptions.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul></details>` : ""}<div class="md-kw-inline-actions"><button data-kw-action="back-conditions">返回修改條件</button>${latestPlan.errors?.length ? "" : `<button data-kw-action="enter-pro">進入專業編輯</button>`}</div>` : `<p>按下產生後，平面圖、立面圖與 3D 會共用同一份櫃體資料。</p>`}</div>`;
     }
 
     function renderStep5() {
@@ -495,6 +580,12 @@
         return;
       }
       latestPlan = buildPlan(config);
+      if (latestPlan.errors?.length) {
+        generated = false;
+        render();
+        adapter.showToast(latestPlan.errors[0], "error");
+        return;
+      }
       await adapter.generate(config, latestPlan);
       generated = true;
       persist();
@@ -594,5 +685,5 @@
     return { open, close, openLibrary, closeLibrary, buildPlan, getConfig: () => clone(config), cabinetList: () => cabinetList(adapter.getProject()), standardCabinets: STANDARD_CABINETS };
   }
 
-  global.MODUDRAFTKitchenWorkflow = Object.freeze({ mount, buildPlan, buildStraightPlan, buildLPlan, summarizePlan, cabinetList, listToText, listToCsv, STANDARD_CABINETS, DEFAULT_CONFIG });
+  global.MODUDRAFTKitchenWorkflow = Object.freeze({ mount, buildPlan, buildStraightPlan, buildLPlan, summarizePlan, cabinetList, listToText, listToCsv, STANDARD_CABINETS, DEFAULT_CONFIG, KITCHEN_RULES: CORE_RULES });
 })(window);

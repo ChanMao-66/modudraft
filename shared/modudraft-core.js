@@ -32,6 +32,46 @@
     installationBasePrice: 18000
   });
 
+  const KITCHEN_RULES = Object.freeze({
+    dimensions: Object.freeze({
+      lowerHeight: 860,
+      toeKickHeight: 120,
+      lowerBodyHeight: 700,
+      counterThickness: 40,
+      lowerDepth: 580,
+      counterDepth: 600,
+      upperHeight: 700,
+      upperDepth: 370,
+      middleGap: 700,
+      wallThickness: 120,
+      backsplashHeight: 80,
+      backsplashThickness: 20,
+      sidePanelThickness: 20,
+      doorThickness: 20
+    }),
+    straight: Object.freeze({
+      minWallWidth: 1200,
+      minimumSinkWidth: 600,
+      preferredSinkWidth: 800,
+      minimumCooktopWidth: 600,
+      preferredCooktopWidth: 700,
+      minimumMiddleWidth: 500,
+      minimumStorageWidth: 250,
+      preferredStorageWidth: 600,
+      preferredStorageMaxWidth: 750,
+      defaultEdgeFillerWidth: 30,
+      minimumUsefulFillerWidth: 20
+    }),
+    lShape: Object.freeze({
+      blindCornerWidth: 1000,
+      minWallWidth: 1200
+    }),
+    sinkStove: Object.freeze({
+      // 先作為提醒值，不作為阻止配置的硬性限制；待教學規則確認後可調整。
+      suggestedMinimumDistance: 300
+    })
+  });
+
   const MATERIALS = [
     { id: "door-mist-white", name: "霧面暖白", category: "door", color: "#e8e5df", roughness: 0.78, metalness: 0, price: 1380, note: "柔霧門板" },
     { id: "door-cream", name: "奶油米", category: "door", color: "#d9cdbd", roughness: 0.75, metalness: 0, price: 1480, note: "低飽和奶油色" },
@@ -437,6 +477,7 @@
     MATERIALS,
     STYLE_PRESETS,
     DEFAULT_PRICING,
+    KITCHEN_RULES,
     BLIND_CORNER_DEFAULTS,
     uid,
     finiteNumber,

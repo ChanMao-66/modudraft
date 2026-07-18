@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v35-blind-corner";
+const CACHE_NAME = "modudraft-pwa-v36-straight-rules";
 const APP_ASSETS = [
   "./",
   "./index.html",
