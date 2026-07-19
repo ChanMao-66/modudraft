@@ -1404,3 +1404,72 @@ body.modudraft-kitchen.modudraft-ui-v2 .modal-content {
   position: relative;
   z-index: 1;
 }
+
+/* Desktop split preview: use the empty right side as a live 3D pane while
+   keeping plan and elevation visible together for drafting. */
+@media (min-width: 1181px) {
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview {
+    display: grid;
+    grid-template-columns: minmax(520px, 1.18fr) minmax(420px, 0.82fr);
+    grid-template-rows: minmax(240px, 0.42fr) minmax(360px, 0.58fr);
+    grid-auto-rows: auto;
+    align-content: stretch;
+    align-items: stretch;
+    gap: 10px;
+    overflow: hidden;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #floorView {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #elevationView {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #threeView {
+    display: block;
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview .view {
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    min-height: 0;
+    aspect-ratio: auto;
+    justify-self: stretch;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview canvas,
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #threeCanvasContainer {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #threeView {
+    background:
+      linear-gradient(180deg, rgba(20, 31, 42, 0.82), rgba(22, 35, 42, 0.92)),
+      #1f2d3d;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #threeCanvasContainer {
+    border-radius: inherit;
+    background:
+      linear-gradient(180deg, #f4f1ea 0%, #dedbd2 100%);
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #floorView .view-label,
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #elevationView .view-label,
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) .workspace.desktop-split-preview #threeView .view-label {
+    top: 10px;
+    left: 10px;
+    max-width: calc(100% - 20px);
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+}

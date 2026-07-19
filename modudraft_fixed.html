@@ -1539,7 +1539,7 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
-  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-overlay-zfix-v1">
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-split-3d-v1">
 </head>
 <body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -3232,12 +3232,37 @@
       el.metricLower.style.borderColor = remain < 0 ? "#d75b51" : "#303a46";
     }
 
+    function isDesktopSplitPreviewEligible() {
+      const width = Math.max(window.innerWidth || 0, document.documentElement.clientWidth || 0);
+      return width >= 1181 && !document.body.classList.contains("mobile-workbench");
+    }
+
+    function isDesktopSplitPreviewActive() {
+      return isDesktopSplitPreviewEligible()
+        && Boolean(state.view.floor)
+        && Boolean(state.view.elevation);
+    }
+
+    function isThreePaneVisible() {
+      return Boolean(state.view.three || isDesktopSplitPreviewActive());
+    }
+
+    function visibleViewNames() {
+      const names = [];
+      if (state.view.floor) names.push("floor");
+      if (state.view.elevation) names.push("elevation");
+      if (isThreePaneVisible()) names.push("three");
+      return names;
+    }
+
     function updateViewLayout() {
       const workspace = document.getElementById("workspace");
-      const visibleCount = Number(state.view.floor) + Number(state.view.elevation) + Number(state.view.three);
+      const threeVisible = isThreePaneVisible();
+      const visibleCount = Number(state.view.floor) + Number(state.view.elevation) + Number(threeVisible);
       workspace.classList.toggle("single-view", visibleCount === 1);
       workspace.classList.toggle("triple-view", visibleCount === 3);
-      workspace.classList.toggle("three-only", visibleCount === 1 && state.view.three);
+      workspace.classList.toggle("desktop-split-preview", isDesktopSplitPreviewEligible() && visibleCount === 3);
+      workspace.classList.toggle("three-only", visibleCount === 1 && threeVisible);
     }
 
     function autoGenerateKitchen() {
@@ -3414,7 +3439,7 @@
       });
       el.floorView.classList.toggle("hidden", !state.view.floor);
       el.elevationView.classList.toggle("hidden", !state.view.elevation);
-      el.threeView.classList.toggle("hidden", !state.view.three);
+      el.threeView.classList.toggle("hidden", !isThreePaneVisible());
       updateViewLayout();
     }
 
@@ -3495,7 +3520,7 @@
       const originalView = { ...state.view };
       let originalRendererPixelRatio = null;
       const canReuseCurrent3D = viewName === "three"
-        && state.view.three
+        && isThreePaneVisible()
         && three.renderer
         && three.scene
         && three.camera;
@@ -3552,6 +3577,10 @@
       calculatePositions();
       syncWallInputs();
       updateMetrics();
+      el.floorView.classList.toggle("hidden", !state.view.floor);
+      el.elevationView.classList.toggle("hidden", !state.view.elevation);
+      el.threeView.classList.toggle("hidden", !isThreePaneVisible());
+      updateViewLayout();
       resizeCanvases();
       render2D();
       if (originalRendererPixelRatio !== null && three.renderer) {
@@ -3897,7 +3926,7 @@
           const names = [
             state.view.floor ? "平面" : null,
             state.view.elevation ? "立面" : null,
-            state.view.three ? "3D" : null
+            isThreePaneVisible() ? "3D" : null
           ].filter(Boolean);
           el.exportHint.textContent = `將依序合併目前點亮的視圖：${names.join(" → ") || "尚未點亮視圖"}。`;
         } else if (selection === "all") {
@@ -3925,7 +3954,7 @@
           if (selection === "visible" || selection === "all") {
             const viewNames = selection === "all"
               ? ["floor", "elevation", "three"]
-              : ["floor", "elevation", "three"].filter((name) => state.view[name]);
+              : visibleViewNames();
             await captureCombinedViews(viewNames, true, longEdge);
           } else {
             await captureViewImage(selection, true, longEdge);
@@ -3984,7 +4013,7 @@
       updateMetrics();
       resizeCanvases();
       render2D();
-      if (state.view.three) {
+      if (isThreePaneVisible()) {
         void render3D();
       }
       if (el.aiAssistPanel.classList.contains("open")) renderAiAssistResults();
@@ -5201,7 +5230,7 @@
 
     async function render3D() {
       const container = el.threeContainer;
-      if (!state.view.three || !container.offsetWidth || !container.offsetHeight) return;
+      if (!isThreePaneVisible() || !container.offsetWidth || !container.offsetHeight) return;
 
       if (three.unavailable) {
         drawFallback3D();
@@ -5219,7 +5248,7 @@
         }
       }
 
-      if (!state.view.three) return;
+      if (!isThreePaneVisible()) return;
       const previousCamera = three.camera && three.target
         ? {
             position: three.camera.position.clone(),
@@ -6187,7 +6216,7 @@
     }
 
     function pause3DRenderWhenHidden() {
-      const shouldPause = document.hidden || !state.view.three || el.threeView.classList.contains("hidden");
+      const shouldPause = document.hidden || !isThreePaneVisible() || el.threeView.classList.contains("hidden");
       if (shouldPause && three.animationId) {
         cancelAnimationFrame(three.animationId);
         three.animationId = null;
@@ -6817,12 +6846,7 @@
 
       Object.entries(el.viewButtons).forEach(([name, button]) => {
         button.addEventListener("click", () => {
-          state.view[name] = !state.view[name];
-          button.classList.toggle("active", state.view[name]);
-          el.floorView.classList.toggle("hidden", !state.view.floor);
-          el.elevationView.classList.toggle("hidden", !state.view.elevation);
-          el.threeView.classList.toggle("hidden", !state.view.three);
-          updateViewLayout();
+          applyViewState({ ...state.view, [name]: !state.view[name] });
           window.setTimeout(renderAll, 80);
         });
       });
@@ -6959,7 +6983,7 @@
       el.wallVisibilityToggle.addEventListener("change", () => {
         state.showWalls = el.wallVisibilityToggle.checked;
         update3DWallVisibility();
-        if (state.view.three && three.unavailable) {
+        if (isThreePaneVisible() && three.unavailable) {
           drawFallback3D();
         }
       });
@@ -6968,7 +6992,7 @@
         state.showTopFiller = el.topFillerVisibilityToggle.checked;
         update3DTopFillerVisibility();
         render2D();
-        if (state.view.three && three.unavailable) {
+        if (isThreePaneVisible() && three.unavailable) {
           drawFallback3D();
         }
       });
@@ -7033,7 +7057,7 @@
       });
       document.addEventListener("visibilitychange", () => {
         if (document.hidden) pause3DRenderWhenHidden();
-        else if (state.view.three && three.renderer && !three.animationId) animate3D();
+        else if (isThreePaneVisible() && three.renderer && !three.animationId) animate3D();
       });
 
       if (document.fonts) {
@@ -7895,14 +7919,14 @@
         const next = Boolean(enabled);
         if (lowPowerMobileMode === next) return;
         lowPowerMobileMode = next;
-        if (state.view.three) void render3D();
+        if (isThreePaneVisible()) void render3D();
       },
       onLayout: () => {
         cancelAnimationFrame(mobileCanvasLayoutFrame);
         mobileCanvasLayoutFrame = requestAnimationFrame(() => {
           resizeCanvases();
           render2D();
-          if (state.view.three && three.renderer) resize3DRenderer();
+          if (isThreePaneVisible() && three.renderer) resize3DRenderer();
         });
       },
       ensureSelectionVisible: () => {
