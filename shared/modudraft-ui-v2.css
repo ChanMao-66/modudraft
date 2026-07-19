@@ -1387,3 +1387,20 @@ body.modudraft-kitchen:not(.mobile-workbench) .rail-nav b {
     align-items: center;
   }
 }
+
+/* Overlay stacking guard: workspace toolbars are intentionally above the
+   canvas, but onboarding and modal overlays must always sit above them. */
+body.modudraft-kitchen.modudraft-ui-v2 .start-overlay,
+body.modudraft-kitchen.modudraft-ui-v2 .modal {
+  z-index: 2400;
+}
+
+body.modudraft-kitchen.modudraft-ui-v2 .start-overlay {
+  isolation: isolate;
+}
+
+body.modudraft-kitchen.modudraft-ui-v2 .start-card,
+body.modudraft-kitchen.modudraft-ui-v2 .modal-content {
+  position: relative;
+  z-index: 1;
+}
