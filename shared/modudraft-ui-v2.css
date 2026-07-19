@@ -50,7 +50,10 @@ body.modudraft-kitchen #aiRenderPrompt {
 }
 
 body.modudraft-kitchen #copyAiRenderPromptBtn,
-body.modudraft-kitchen #copyProjectJsonBtn {
+body.modudraft-kitchen #copyProjectJsonBtn,
+body.modudraft-kitchen #copySoftwareUrlBtn,
+body.modudraft-kitchen #startOpenSharedProjectBtn,
+body.modudraft-kitchen #startShareSoftwareBtn {
   min-height: 38px;
   border: 1px solid rgba(47, 111, 109, 0.22);
   border-radius: 10px;
@@ -63,6 +66,14 @@ body.modudraft-kitchen .mobile-access-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+body.modudraft-kitchen .project-share-card.is-disabled {
+  opacity: 0.62;
+}
+
+body.modudraft-kitchen .project-share-card.is-disabled button {
+  cursor: not-allowed;
 }
 
 body.modudraft-ui-v2,
@@ -770,6 +781,68 @@ body.modudraft-kitchen .mode-label {
   color: var(--color-primary);
 }
 
+body.modudraft-kitchen .start-share-panel {
+  margin-top: 14px;
+  padding: 14px;
+  border: 1px solid rgba(47, 111, 109, 0.16);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(232, 242, 241, 0.72), rgba(255, 255, 255, 0.92));
+}
+
+body.modudraft-kitchen .start-share-import {
+  display: grid;
+  gap: 8px;
+}
+
+body.modudraft-kitchen .start-share-import strong {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 850;
+}
+
+body.modudraft-kitchen .start-share-import p {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+body.modudraft-kitchen .start-share-import textarea {
+  width: 100%;
+  min-height: 74px;
+  resize: vertical;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+body.modudraft-kitchen .start-share-import textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(47, 111, 109, 0.12);
+  outline: none;
+}
+
+body.modudraft-kitchen .start-share-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.modudraft-kitchen .start-share-status {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+body.modudraft-kitchen .start-share-status.error {
+  color: var(--color-danger);
+  font-weight: 750;
+}
+
 /* System cabinet gets the same brand language without changing its app logic. */
 body.modudraft-system.modudraft-ui-v2 {
   background: var(--color-background);
@@ -1452,6 +1525,12 @@ body.modudraft-kitchen.modudraft-ui-v2 .start-card,
 body.modudraft-kitchen.modudraft-ui-v2 .modal-content {
   position: relative;
   z-index: 1;
+}
+
+body.modudraft-kitchen.modudraft-ui-v2 #startOverlay .start-card {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100dvh - 36px);
+  overflow: auto;
 }
 
 /* Desktop split preview: use the empty right side as a live 3D pane while

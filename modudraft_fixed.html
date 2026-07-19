@@ -1539,7 +1539,7 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
-  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-share-unit-dish-v1">
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-share-import-v1">
 </head>
 <body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -1566,6 +1566,18 @@
           <small>匯入之前保存的 MODUDRAFT JSON 專案檔。</small>
         </button>
       </div>
+      <section class="start-share-panel" aria-label="分享與載入專案">
+        <div class="start-share-import">
+          <strong>收到分享專案？</strong>
+          <p>貼上別人分享的專案連結或 JSON 備份，即可載入那份配置並繼續修改。</p>
+          <textarea id="startSharedProjectInput" rows="3" placeholder="貼上 https://...#mdk=... 或 MODUDRAFT JSON"></textarea>
+          <div class="start-share-actions">
+            <button id="startOpenSharedProjectBtn" type="button">載入分享專案</button>
+            <button id="startShareSoftwareBtn" type="button">複製軟體網址</button>
+          </div>
+          <span id="startShareStatus" class="start-share-status">分享專案是可編輯副本；目前不是即時雲端同步。</span>
+        </div>
+      </section>
       <div class="start-choice-footer"><label><input id="dismissStartChoice" type="checkbox"> 不再顯示開始方式</label><button id="startGuideBtn" type="button" data-help-id="full-guide">查看完整使用說明</button></div>
     </section>
   </div>
@@ -2026,20 +2038,31 @@
 
   <div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <section class="modal-content install-content">
-      <h2 id="installTitle">分享目前專案</h2>
+      <h2 id="installTitle">分享</h2>
       <div class="install-mark">
         <img src="./icons/modudraft-192-refined.png" alt="">
         <div>
           <strong>草圖魔方 ModuDraft</strong>
-          <span>分享目前廚具配置，對方開啟後可繼續編輯</span>
+          <span>分享軟體入口，或分享目前廚具配置給對方繼續編輯</span>
         </div>
       </div>
-      <p id="installStatus" class="install-status">複製連結後，對方會載入目前配置的一份可編輯副本。</p>
+      <p id="installStatus" class="install-status">請選擇要分享軟體本身，或分享目前專案。</p>
       <div class="mobile-access">
         <img src="./icons/mobile-access-qr.png" alt="分享 MODUDRAFT 的 QR Code">
         <div class="mobile-access-copy">
-          <strong>分享可編輯配置</strong>
-          <p>連結會包含目前牆面、櫃體、材質與視圖資料。這是連結協作副本，不是即時雲端同步。</p>
+          <strong>分享軟體</strong>
+          <p>適合傳給第一次使用的人。對方打開後可自行新建廚具或系統櫃專案。</p>
+          <code id="softwareShareUrl" class="mobile-url">https://chanmao-66.github.io/modudraft/</code>
+          <div class="mobile-access-actions">
+            <button type="button" id="copySoftwareUrlBtn">複製軟體網址</button>
+          </div>
+        </div>
+      </div>
+      <div class="mobile-access project-share-card">
+        <img src="./icons/mobile-access-qr.png" alt="分享目前專案的 QR Code">
+        <div class="mobile-access-copy">
+          <strong>分享目前專案</strong>
+          <p>連結會包含目前牆面、櫃體、材質與視圖資料。對方開啟後會得到可編輯副本。</p>
           <code id="mobileAccessUrl" class="mobile-url">https://chanmao-66.github.io/modudraft/</code>
           <div class="mobile-access-actions">
             <button type="button" id="copyMobileUrlBtn">複製專案連結</button>
@@ -2047,10 +2070,10 @@
           </div>
         </div>
       </div>
-      <p class="install-note">若專案很大導致連結過長，請改用 JSON 備份；未來接後端後可升級為真正多人即時協作。</p>
+      <p class="install-note">目前分享專案是可編輯副本，不是即時多人同步；未來接後端後可升級為真正共同協作。</p>
       <div class="modal-actions">
         <button type="button" class="muted-button" id="closeInstallBtn">關閉</button>
-        <button type="button" class="primary" id="installNowBtn">系統分享</button>
+        <button type="button" class="primary" id="installNowBtn">系統分享專案</button>
       </div>
     </section>
   </div>
@@ -2302,9 +2325,15 @@
       installModal: document.getElementById("installModal"),
       installStatus: document.getElementById("installStatus"),
       installNowBtn: document.getElementById("installNowBtn"),
+      softwareShareUrl: document.getElementById("softwareShareUrl"),
+      copySoftwareUrlBtn: document.getElementById("copySoftwareUrlBtn"),
       mobileAccessUrl: document.getElementById("mobileAccessUrl"),
       copyMobileUrlBtn: document.getElementById("copyMobileUrlBtn"),
       copyProjectJsonBtn: document.getElementById("copyProjectJsonBtn"),
+      startSharedProjectInput: document.getElementById("startSharedProjectInput"),
+      startOpenSharedProjectBtn: document.getElementById("startOpenSharedProjectBtn"),
+      startShareSoftwareBtn: document.getElementById("startShareSoftwareBtn"),
+      startShareStatus: document.getElementById("startShareStatus"),
       exportModal: document.getElementById("exportModal"),
       exportFormat: document.getElementById("exportFormat"),
       exportView: document.getElementById("exportView"),
@@ -2402,6 +2431,14 @@
       return defaultMobileAccessUrl;
     }
 
+    function currentSoftwareShareUrl() {
+      return currentMobileAccessUrl();
+    }
+
+    function hasShareableProject() {
+      return state.walls.some((wall) => (wall.cabinets || []).length > 0);
+    }
+
     function encodeSharePayload(value) {
       const json = JSON.stringify(value);
       const bytes = new TextEncoder().encode(json);
@@ -2419,24 +2456,58 @@
     }
 
     function currentProjectShareUrl() {
+      if (!hasShareableProject()) return "";
       const project = kitchenProjectSnapshot();
       const cleanProject = window.MODUDRAFTCore?.cleanData ? window.MODUDRAFTCore.cleanData(project) : project;
       const payload = encodeSharePayload({ schema: "modudraft-kitchen-share-v1", project: cleanProject });
       return `${currentMobileAccessUrl()}#mdk=${payload}`;
     }
 
+    function projectFromSharedText(rawText) {
+      const text = String(rawText || "").trim();
+      if (!text) throw new Error("請貼上分享連結或 JSON 專案檔");
+
+      if (text.startsWith("{")) {
+        const parsed = JSON.parse(text);
+        const project = parsed?.project || parsed;
+        return window.MODUDRAFTCore?.migrateProject
+          ? window.MODUDRAFTCore.migrateProject(project, "kitchen")
+          : project;
+      }
+
+      let payload = "";
+      try {
+        const url = new URL(text, currentSoftwareShareUrl());
+        const hash = url.hash.startsWith("#") ? url.hash.slice(1) : url.hash;
+        payload = new URLSearchParams(hash).get("mdk") || url.searchParams.get("mdk") || "";
+      } catch {
+        const match = text.match(/(?:^|[#?&])mdk=([^&]+)/);
+        payload = match ? match[1] : "";
+      }
+      if (!payload && /^[A-Za-z0-9_-]{80,}$/.test(text)) payload = text;
+      if (!payload) throw new Error("找不到分享專案資料");
+
+      const decoded = decodeSharePayload(decodeURIComponent(payload));
+      const project = decoded?.project || decoded;
+      return window.MODUDRAFTCore?.migrateProject
+        ? window.MODUDRAFTCore.migrateProject(project, "kitchen")
+        : project;
+    }
+
     function sharedProjectFromLocationHash() {
       if (!location.hash || !location.hash.includes("mdk=")) return null;
       try {
-        const params = new URLSearchParams(location.hash.slice(1));
-        const payload = params.get("mdk");
-        if (!payload) return null;
-        const decoded = decodeSharePayload(payload);
-        return decoded?.project || decoded;
+        return projectFromSharedText(location.href);
       } catch (error) {
         console.warn("Unable to load shared project", error);
         return null;
       }
+    }
+
+    function setStartShareStatus(message, isError = false) {
+      if (!el.startShareStatus) return;
+      el.startShareStatus.textContent = message;
+      el.startShareStatus.classList.toggle("error", Boolean(isError));
     }
 
     async function copyTextToClipboard(text) {
@@ -6763,9 +6834,24 @@
     function openInstallModal() {
       el.installModal.classList.add("open");
       const url = currentProjectShareUrl();
-      el.mobileAccessUrl.textContent = url.length > 260 ? `${url.slice(0, 260)}...` : url;
-      el.installStatus.textContent = "此連結會載入目前配置的一份可編輯副本。對方修改後會儲存在對方裝置。";
-      el.installNowBtn.disabled = false;
+      const softwareUrl = currentSoftwareShareUrl();
+      if (el.softwareShareUrl) el.softwareShareUrl.textContent = softwareUrl;
+      const projectCard = el.mobileAccessUrl?.closest(".project-share-card");
+      if (url) {
+        el.mobileAccessUrl.textContent = url.length > 260 ? `${url.slice(0, 260)}...` : url;
+        el.installStatus.textContent = "專案連結會載入目前配置的一份可編輯副本。對方修改後會儲存在對方裝置。";
+        projectCard?.classList.remove("is-disabled");
+        el.copyMobileUrlBtn.disabled = false;
+        el.copyProjectJsonBtn.disabled = false;
+        el.installNowBtn.disabled = false;
+      } else {
+        el.mobileAccessUrl.textContent = "尚未建立配置，請先建立櫃體後再分享專案。";
+        el.installStatus.textContent = "目前可先分享軟體網址；建立配置後可分享目前專案。";
+        projectCard?.classList.add("is-disabled");
+        el.copyMobileUrlBtn.disabled = true;
+        el.copyProjectJsonBtn.disabled = true;
+        el.installNowBtn.disabled = true;
+      }
     }
 
     function closeInstallModal() {
@@ -6774,6 +6860,10 @@
 
     async function copyMobileAccessUrl() {
       const url = currentProjectShareUrl();
+      if (!url) {
+        el.installStatus.textContent = "尚未建立配置，請先建立櫃體後再分享專案。";
+        return;
+      }
       await copyTextToClipboard(url);
       el.copyMobileUrlBtn.textContent = "已複製專案連結";
       el.installStatus.textContent = url.length > 7000
@@ -6784,7 +6874,25 @@
       }, 1600);
     }
 
+    async function copySoftwareAccessUrl() {
+      const url = currentSoftwareShareUrl();
+      await copyTextToClipboard(url);
+      if (el.softwareShareUrl) el.softwareShareUrl.textContent = url;
+      if (el.copySoftwareUrlBtn) {
+        el.copySoftwareUrlBtn.textContent = "已複製軟體網址";
+        window.setTimeout(() => {
+          el.copySoftwareUrlBtn.textContent = "複製軟體網址";
+        }, 1600);
+      }
+      if (el.installStatus) el.installStatus.textContent = "軟體網址已複製，對方打開後可自行建立或匯入專案。";
+      setStartShareStatus("軟體網址已複製。");
+    }
+
     async function copyProjectJsonBackup() {
+      if (!hasShareableProject()) {
+        el.installStatus.textContent = "尚未建立配置，請先建立櫃體後再複製 JSON 備份。";
+        return;
+      }
       const project = kitchenProjectSnapshot();
       const text = JSON.stringify(project, null, 2);
       await copyTextToClipboard(text);
@@ -6795,8 +6903,26 @@
       }, 1600);
     }
 
+    function importSharedProjectFromText() {
+      try {
+        const project = projectFromSharedText(el.startSharedProjectInput?.value || "");
+        importKitchenProject(project);
+        setStartShareStatus("已載入分享專案，可以查看並繼續修改。");
+        showKitchenToast("已載入分享專案，可查看並繼續修改。");
+      } catch (error) {
+        console.warn("Unable to import shared project from start page", error);
+        setStartShareStatus("無法讀取分享專案，請確認連結或 JSON 是否完整。", true);
+        showKitchenToast("無法讀取分享專案，請確認連結或 JSON 是否完整。", "error");
+      }
+    }
+
     async function shareApp() {
       const url = currentProjectShareUrl();
+      if (!url) {
+        el.installStatus.textContent = "尚未建立配置，已改為複製軟體網址。";
+        await copySoftwareAccessUrl();
+        return;
+      }
       if (navigator.share) {
         try {
           await navigator.share({
@@ -7200,8 +7326,17 @@
       el.globalHandleStyle.addEventListener("change", applyGlobalHandleStyle);
       document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
       el.installNowBtn.addEventListener("click", shareApp);
+      el.copySoftwareUrlBtn?.addEventListener("click", copySoftwareAccessUrl);
       el.copyMobileUrlBtn.addEventListener("click", copyMobileAccessUrl);
       el.copyProjectJsonBtn.addEventListener("click", copyProjectJsonBackup);
+      el.startShareSoftwareBtn?.addEventListener("click", copySoftwareAccessUrl);
+      el.startOpenSharedProjectBtn?.addEventListener("click", importSharedProjectFromText);
+      el.startSharedProjectInput?.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+          event.preventDefault();
+          importSharedProjectFromText();
+        }
+      });
       document.getElementById("closeExportBtn").addEventListener("click", closeExportModal);
       document.getElementById("confirmExportBtn").addEventListener("click", exportSelected);
       el.exportFormat.addEventListener("change", updateExportOptions);
