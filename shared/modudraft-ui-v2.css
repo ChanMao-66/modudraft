@@ -1178,3 +1178,58 @@ body.mobile-workbench.modudraft-kitchen .workspace.triple-view,
 body.mobile-workbench.modudraft-kitchen .workspace.three-only {
   top: calc(var(--mobile-safe-top) + var(--mobile-top-bar-height) + var(--mobile-view-switcher-height) + 18px);
 }
+
+/* Rail visibility repair: keep the left navigation dark and readable even
+   after the global v2 button skin is applied. */
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav {
+  display: grid;
+  width: 100%;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav a,
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav button {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  width: 100%;
+  min-height: 62px;
+  padding: 7px 4px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: transparent;
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.78);
+  text-decoration: none;
+}
+
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav a:hover,
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav button:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(47, 111, 109, 0.30);
+  color: #fff;
+}
+
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav a:first-child,
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav button:nth-child(2) {
+  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(47, 111, 109, 0.42);
+  color: #fff;
+}
+
+body.modudraft-kitchen:not(.mobile-workbench) .rail-symbol {
+  display: block;
+  color: inherit;
+  font-size: 23px;
+  line-height: 1;
+}
+
+body.modudraft-kitchen:not(.mobile-workbench) .rail-nav b {
+  display: block;
+  color: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.15;
+}
