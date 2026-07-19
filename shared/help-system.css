@@ -43,6 +43,11 @@
   backdrop-filter: blur(14px);
 }
 .md-help-backdrop.open { display: flex; }
+.md-help-backdrop.context-open {
+  background: rgba(31,45,61,.34);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 .md-help-dialog {
   display: grid;
   grid-template-columns: 210px minmax(0,1fr);
@@ -135,6 +140,40 @@
 .md-help-focus-ring { position: fixed; z-index: 1601; display: none; border: 2px solid #e3b888; border-radius: 10px; box-shadow: 0 0 0 5px rgba(221,174,128,.22),0 10px 30px rgba(0,0,0,.28); pointer-events: none; transition: left 180ms ease,top 180ms ease,width 180ms ease,height 180ms ease; }
 .md-help-focus-ring.open { display: block; }
 body.md-teaching-mode [data-help-id]:not([data-help-ui='true']) { cursor: help !important; }
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open {
+  align-items: center;
+  padding: 22px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open[data-target-side="left"] {
+  justify-content: flex-end;
+  padding-left: min(46vw, 560px);
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open[data-target-side="right"] {
+  justify-content: flex-start;
+  padding-right: min(46vw, 560px);
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-dialog {
+  grid-template-columns: 1fr;
+  width: min(640px, calc(100vw - 54px));
+  max-height: min(760px, calc(100vh - 44px));
+  border-radius: 14px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-nav {
+  display: none;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-head {
+  min-height: 58px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-content {
+  padding: 18px;
+}
 
 .md-help-toast { position: fixed; z-index: 1750; left: 50%; bottom: 22px; max-width: calc(100% - 24px); padding: 10px 14px; border: 1px solid rgba(255,255,255,.14); border-radius: 8px; background: rgba(31,32,30,.96); color: #f3ece4; opacity: 0; transform: translate(-50%,8px); pointer-events: none; transition: 180ms ease; font-size: 10px; }
 .md-help-toast.show { opacity: 1; transform: translate(-50%,0); }

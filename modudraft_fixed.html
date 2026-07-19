@@ -7,18 +7,18 @@
   <meta name="theme-color" content="#151a22">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="MODUDRAFT">
+  <meta name="apple-mobile-web-app-title" content="草圖魔方">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./icons/modudraft-192-refined.png" sizes="192x192">
   <link rel="apple-touch-icon" href="./icons/modudraft-192-refined.png">
   <link rel="stylesheet" href="./shared/design-system.css?v=20260703-v4">
   <link rel="stylesheet" href="./shared/product-suite.css?v=20260703-v4">
-  <link rel="stylesheet" href="./shared/help-system.css?v=20260706-blind-corner-v1">
+  <link rel="stylesheet" href="./shared/help-system.css?v=20260719-ui-polish-v2">
   <link rel="stylesheet" href="./shared/render-workflow.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-assist.css?v=20260704-v1">
   <link rel="stylesheet" href="./shared/kitchen-mobile.css?v=20260705-estimate-v1">
   <link rel="stylesheet" href="./shared/estimate.css?v=20260705-v1">
-  <link rel="stylesheet" href="./shared/kitchen-workflow.css?v=20260718-straight-rules-v1">
+  <link rel="stylesheet" href="./shared/kitchen-workflow.css?v=20260719-ui-polish-v2">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1539,7 +1539,7 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
-  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-ui-v1">
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-ui-polish-v2">
 </head>
 <body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -1683,7 +1683,7 @@
             <span>全案把手</span>
             <select id="globalHandleStyle">
               <option value="none">無把手</option>
-              <option value="bevel">斜把手</option>
+              <option value="bevel">45°斜切把手</option>
               <option value="c-channel">內嵌 C 型</option>
               <option value="bar">G 型／明把手</option>
             </select>
@@ -1957,7 +1957,7 @@
           把手形式
           <select id="editHandleStyle">
             <option value="none">無把手</option>
-            <option value="bevel">斜把手</option>
+            <option value="bevel">45°斜切把手</option>
             <option value="c-channel">內嵌 C 型把手</option>
             <option value="bar">G 型／明把手</option>
           </select>
@@ -2129,12 +2129,12 @@
   <script src="./shared/modudraft-core.js?v=20260718-kitchen-flow-v5"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
-  <script src="./shared/help-system.js?v=20260706-blind-corner-v1"></script>
+  <script src="./shared/help-system.js?v=20260719-ui-polish-v2"></script>
   <script src="./shared/render-workflow.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-mobile.js?v=20260706-blind-corner-v1"></script>
-  <script src="./shared/estimate.js?v=20260706-blind-corner-v1"></script>
-  <script src="./shared/kitchen-workflow.js?v=20260718-kitchen-flow-v5"></script>
+  <script src="./shared/estimate.js?v=20260719-ui-polish-v2"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260719-ui-polish-v2"></script>
   <script>
     const state = {
       walls: [],
@@ -4122,32 +4122,39 @@
       if (Math.abs(x2 - x1) < 3) return;
       const key = dimensionTargetKey(target);
       const highlighted = key && state.assist.hoverDimensionKey === key;
+      const span = Math.abs(x2 - x1);
+      const fontSize = span < 46 ? 9 : span < 74 ? 10 : 11;
       const lineX1 = Math.round(x1) + 0.5;
       const lineX2 = Math.round(x2) + 0.5;
       const lineY = Math.round(y) + 0.5;
       context.save();
-      context.strokeStyle = highlighted ? "#b66f18" : color;
-      context.fillStyle = highlighted ? "#b66f18" : color;
-      context.lineWidth = highlighted ? 2 : 1;
-      context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
+      context.strokeStyle = highlighted ? "#2f6f6d" : color;
+      context.fillStyle = highlighted ? "#2f6f6d" : color;
+      context.lineWidth = highlighted ? 1.8 : 1;
+      context.font = `700 ${fontSize}px Rajdhani, Noto Sans TC, sans-serif`;
       context.textAlign = "center";
       context.textBaseline = "middle";
 
       context.beginPath();
       context.moveTo(lineX1, lineY);
       context.lineTo(lineX2, lineY);
-      context.moveTo(lineX1, lineY - 6);
-      context.lineTo(lineX1, lineY + 6);
-      context.moveTo(lineX2, lineY - 6);
-      context.lineTo(lineX2, lineY + 6);
+      context.moveTo(lineX1, lineY - 7);
+      context.lineTo(lineX1, lineY + 7);
+      context.moveTo(lineX2, lineY - 7);
+      context.lineTo(lineX2, lineY + 7);
       context.stroke();
 
-      const labelWidth = context.measureText(text).width + 10;
+      const labelWidth = context.measureText(text).width + 8;
       const labelX = Math.round((x1 + x2) / 2);
-      context.fillStyle = highlighted ? "#f1d4aa" : "#f7efe1";
-      context.fillRect(labelX - labelWidth / 2, lineY - 9, labelWidth, 18);
-      context.fillStyle = highlighted ? "#6d3c07" : color;
-      context.fillText(text, labelX, lineY);
+      const labelHeight = fontSize + 8;
+      const labelY = lineY - 11;
+      context.fillStyle = highlighted ? "rgba(232, 242, 241, 0.96)" : "rgba(255, 255, 255, 0.92)";
+      context.strokeStyle = highlighted ? "rgba(47, 111, 109, 0.55)" : "rgba(31, 45, 61, 0.16)";
+      context.lineWidth = 1;
+      context.fillRect(labelX - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+      context.strokeRect(labelX - labelWidth / 2, labelY - labelHeight / 2, labelWidth, labelHeight);
+      context.fillStyle = highlighted ? "#1f4d4b" : color;
+      context.fillText(text, labelX, labelY + 0.5);
       context.restore();
       if (target) {
         registerDimensionHit(viewName, {
@@ -4159,8 +4166,8 @@
           textBounds: {
             left: labelX - labelWidth / 2,
             right: labelX + labelWidth / 2,
-            top: lineY - 9,
-            bottom: lineY + 9
+            top: labelY - labelHeight / 2,
+            bottom: labelY + labelHeight / 2
           },
           target
         });
@@ -4171,30 +4178,36 @@
       if (Math.abs(y2 - y1) < 3) return;
       const key = dimensionTargetKey(target);
       const highlighted = key && state.assist.hoverDimensionKey === key;
+      const span = Math.abs(y2 - y1);
+      const fontSize = span < 46 ? 9 : span < 74 ? 10 : 11;
       context.save();
-      context.strokeStyle = highlighted ? "#b66f18" : color;
-      context.fillStyle = highlighted ? "#b66f18" : color;
-      context.lineWidth = highlighted ? 2 : 1;
-      context.font = "700 12px Rajdhani, Noto Sans TC, sans-serif";
+      context.strokeStyle = highlighted ? "#2f6f6d" : color;
+      context.fillStyle = highlighted ? "#2f6f6d" : color;
+      context.lineWidth = highlighted ? 1.8 : 1;
+      context.font = `700 ${fontSize}px Rajdhani, Noto Sans TC, sans-serif`;
       context.textAlign = "center";
       context.textBaseline = "middle";
 
       context.beginPath();
       context.moveTo(x, y1);
       context.lineTo(x, y2);
-      context.moveTo(x - 6, y1);
-      context.lineTo(x + 6, y1);
-      context.moveTo(x - 6, y2);
-      context.lineTo(x + 6, y2);
+      context.moveTo(x - 7, y1);
+      context.lineTo(x + 7, y1);
+      context.moveTo(x - 7, y2);
+      context.lineTo(x + 7, y2);
       context.stroke();
 
       const midY = (y1 + y2) / 2;
-      context.translate(x - 12, midY);
+      context.translate(x - 15, midY);
       context.rotate(-Math.PI / 2);
-      const labelWidth = context.measureText(text).width + 10;
-      context.fillStyle = highlighted ? "#f1d4aa" : "#f7efe1";
-      context.fillRect(-labelWidth / 2, -9, labelWidth, 18);
-      context.fillStyle = highlighted ? "#6d3c07" : color;
+      const labelWidth = context.measureText(text).width + 8;
+      const labelHeight = fontSize + 8;
+      context.fillStyle = highlighted ? "rgba(232, 242, 241, 0.96)" : "rgba(255, 255, 255, 0.92)";
+      context.strokeStyle = highlighted ? "rgba(47, 111, 109, 0.55)" : "rgba(31, 45, 61, 0.16)";
+      context.lineWidth = 1;
+      context.fillRect(-labelWidth / 2, -labelHeight / 2, labelWidth, labelHeight);
+      context.strokeRect(-labelWidth / 2, -labelHeight / 2, labelWidth, labelHeight);
+      context.fillStyle = highlighted ? "#1f4d4b" : color;
       context.fillText(text, 0, 0.5);
       context.restore();
       if (target) {
@@ -4206,8 +4219,8 @@
           y1: Math.min(y1, y2),
           y2: Math.max(y1, y2),
           textBounds: {
-            left: x - 21,
-            right: x - 3,
+            left: x - 24,
+            right: x - 6,
             top: midY - labelWidth / 2,
             bottom: midY + labelWidth / 2
           },
@@ -4621,8 +4634,8 @@
           wall
         );
         const dimensionY = cabinet.type === "upper"
-          ? box.y + box.height + 13
-          : baseY + 28;
+          ? box.y + box.height + 24
+          : baseY + 44;
         drawDimension(
           ctx.elevation,
           box.x,
@@ -4661,7 +4674,7 @@
         ctx.elevation,
         offsetX,
         offsetX + wallWidth,
-        wallTopY - 14,
+        wallTopY - 34,
         `牆寬 ${wall.width}`,
         "#151a22",
         {
@@ -4678,7 +4691,7 @@
       );
       drawVerticalDimension(
         ctx.elevation,
-        offsetX - 14,
+        offsetX - 36,
         wallTopY,
         baseY,
         `牆高 ${wall.height}`,
@@ -4695,10 +4708,10 @@
         },
         "elevation"
       );
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 12, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 28, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
-      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 44, upperCabinetTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
-      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 38, "elevation");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 28, lowerTopY, baseY, `下櫃 ${sizes.lowerHeight}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 56, upperBottomY, lowerTopY, `中段 ${sizes.middleGap}`, "#6d4a20");
+      drawVerticalDimension(ctx.elevation, offsetX + wallWidth + 84, upperCabinetTopY, upperBottomY, `吊櫃 ${upperH}`, "#6d4a20");
+      drawLayerRemainder(ctx.elevation, wall, "lower", offsetX, baseScaleX, baseY + 66, "elevation");
       ctx.elevation.restore();
     }
 
@@ -5008,39 +5021,34 @@
         context.lineTo(panel.x + panel.width - 4, edgeY);
         context.stroke();
       } else if (handleStyle === "bevel") {
-        const stripHeight = Math.max(5, Math.min(12, panel.height * 0.09));
+        const stripHeight = Math.max(4, Math.min(10, panel.height * 0.07));
         const stripY = cabinet.type === "upper"
-          ? panel.y + panel.height - stripHeight - 1
-          : panel.y + 1;
+          ? panel.y + panel.height - stripHeight - 2
+          : panel.y + 2;
         const gradient = context.createLinearGradient(0, stripY, 0, stripY + stripHeight);
         if (cabinet.type === "upper") {
-          gradient.addColorStop(0, "rgba(245,245,241,0.18)");
-          gradient.addColorStop(1, "rgba(54,61,67,0.82)");
+          gradient.addColorStop(0, "rgba(255,255,255,0.05)");
+          gradient.addColorStop(0.55, "rgba(36,45,54,0.28)");
+          gradient.addColorStop(1, "rgba(36,45,54,0.62)");
         } else {
-          gradient.addColorStop(0, "rgba(54,61,67,0.82)");
-          gradient.addColorStop(1, "rgba(245,245,241,0.18)");
+          gradient.addColorStop(0, "rgba(36,45,54,0.62)");
+          gradient.addColorStop(0.45, "rgba(36,45,54,0.28)");
+          gradient.addColorStop(1, "rgba(255,255,255,0.05)");
         }
         context.fillStyle = gradient;
+        context.fillRect(panel.x + 3, stripY, Math.max(1, panel.width - 6), stripHeight);
+        context.strokeStyle = "rgba(42,48,53,0.50)";
+        context.lineWidth = 1.15;
         context.beginPath();
-        if (cabinet.type === "upper") {
-          context.moveTo(panel.x + 2, stripY);
-          context.lineTo(panel.x + panel.width - 2, stripY + 2);
-          context.lineTo(panel.x + panel.width - 2, stripY + stripHeight);
-          context.lineTo(panel.x + 2, stripY + stripHeight);
-        } else {
-          context.moveTo(panel.x + 2, stripY);
-          context.lineTo(panel.x + panel.width - 2, stripY);
-          context.lineTo(panel.x + panel.width - 2, stripY + stripHeight - 2);
-          context.lineTo(panel.x + 2, stripY + stripHeight);
-        }
-        context.closePath();
-        context.fill();
-        context.strokeStyle = "rgba(42,48,53,0.72)";
-        context.lineWidth = 1;
+        const shadowY = cabinet.type === "upper" ? stripY + stripHeight - 0.5 : stripY + 0.5;
+        context.moveTo(panel.x + 4, shadowY);
+        context.lineTo(panel.x + panel.width - 4, shadowY);
+        context.stroke();
+        context.strokeStyle = "rgba(255,255,255,0.46)";
         context.beginPath();
-        const shadowY = cabinet.type === "upper" ? stripY + stripHeight : stripY;
-        context.moveTo(panel.x + 2, shadowY);
-        context.lineTo(panel.x + panel.width - 2, shadowY);
+        const highlightY = cabinet.type === "upper" ? stripY + 1.5 : stripY + stripHeight - 1.5;
+        context.moveTo(panel.x + 5, highlightY);
+        context.lineTo(panel.x + panel.width - 5, highlightY);
         context.stroke();
       } else {
         const handleWidth = Math.min(panel.width * 0.36, 34);
@@ -5690,30 +5698,52 @@
     function addHandle3D(parent, cabinet, panel, z) {
       const handleStyle = cabinet.handleStyle;
       if (handleStyle === "none" || panel.width < 40 || panel.height < 40) return;
+      if (handleStyle === "bevel") {
+        addIntegratedBevelHandle3D(parent, cabinet, panel, z - 4);
+        return;
+      }
       const material = new THREE.MeshStandardMaterial({
-        color: projectMaterialColor("handle", handleStyle === "bevel" ? 0x8d9499 : (handleStyle === "bar" ? 0x9ba2a8 : 0x30383f)),
-        roughness: handleStyle === "bevel" ? 0.42 : 0.26,
-        metalness: handleStyle === "bevel" ? 0.24 : 0.62
+        color: projectMaterialColor("handle", handleStyle === "bar" ? 0x9ba2a8 : 0x30383f),
+        roughness: 0.26,
+        metalness: 0.62
       });
       const width = handleStyle === "bar"
         ? Math.min(180, panel.width * 0.38)
         : Math.max(20, panel.width - 28);
-      const height = handleStyle === "bevel" ? 10 : 14;
-      const geometry = handleStyle === "bevel"
-        ? createBevelHandleGeometry(width, Math.min(42, Math.max(24, panel.height * 0.09)), 24, cabinet.type === "upper")
-        : new THREE.BoxGeometry(width, height, 18);
+      const height = 14;
+      const geometry = new THREE.BoxGeometry(width, height, 18);
       const handle = new THREE.Mesh(geometry, material);
-      const profileHeight = Math.min(42, Math.max(24, panel.height * 0.09));
       const edgeY = cabinet.type === "upper"
-        ? panel.y + (handleStyle === "bevel" ? profileHeight / 2 : (handleStyle === "bar" ? 42 : 18))
-        : panel.y + panel.height - (handleStyle === "bevel" ? profileHeight / 2 : (handleStyle === "bar" ? 42 : 18));
+        ? panel.y + (handleStyle === "bar" ? 42 : 18)
+        : panel.y + panel.height - (handleStyle === "bar" ? 42 : 18);
       handle.position.set(
         panel.x + panel.width / 2,
         edgeY,
-        handleStyle === "bevel" ? z - 4 : z
+        z
       );
-      if (handleStyle === "bevel") handle.userData.bevelHandleProfile = true;
       parent.add(handle);
+    }
+
+    function addIntegratedBevelHandle3D(parent, cabinet, panel, doorFrontZ) {
+      const width = Math.max(22, panel.width - 18);
+      const profileHeight = Math.min(34, Math.max(18, panel.height * 0.07));
+      const grooveHeight = Math.max(5, profileHeight * 0.24);
+      const grooveDepth = 2;
+      const material = new THREE.MeshStandardMaterial({
+        color: shadeThreeColor(projectMaterialColor("door", 0xf5f4f0), 0.52),
+        roughness: 0.82,
+        metalness: 0.02
+      });
+      const geometry = new THREE.BoxGeometry(width, grooveHeight, grooveDepth);
+      const groove = new THREE.Mesh(geometry, material);
+      const edgeY = cabinet.type === "upper"
+        ? panel.y + profileHeight / 2
+        : panel.y + panel.height - profileHeight / 2;
+      groove.position.set(panel.x + panel.width / 2, edgeY, doorFrontZ + 0.8);
+      groove.userData.bevelHandleProfile = true;
+      groove.userData.integratedDoorEdgeHandle = true;
+      parent.add(groove);
+      addEdges(parent, geometry, groove.position, 0x5d6973);
     }
 
     function createBevelHandleGeometry(width, height, depth, isUpper) {

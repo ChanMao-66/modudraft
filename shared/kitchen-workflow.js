@@ -2,7 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "modudraft:kitchen-workflow:v1";
-  const CONFIG_VERSION = 2;
+  const CONFIG_VERSION = 3;
   const START_DISMISSED_KEY = "modudraft:kitchen-start-dismissed";
   const START_MODE_KEY = "modudraft:kitchen-start-mode";
   const CORE_RULES = global.MODUDRAFTCore?.KITCHEN_RULES || {};
@@ -74,6 +74,7 @@
     priority: "prep",
     styleId: "modern",
     layoutVariant: 0,
+    confirmedDefaultDimensions: false,
     workflowVersion: CONFIG_VERSION
   });
 
@@ -106,6 +107,7 @@
     next.priority = ["storage", "prep", "symmetry"].includes(next.priority) ? next.priority : DEFAULT_CONFIG.priority;
     next.styleId = next.styleId || DEFAULT_CONFIG.styleId;
     next.layoutVariant = Math.max(0, Math.floor(Number(next.layoutVariant) || 0));
+    next.confirmedDefaultDimensions = next.confirmedDefaultDimensions === true;
 
     ["mainWallWidth", "sideWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"].forEach((key) => {
       next[key] = safeNumber(next[key], DEFAULT_CONFIG[key], 1, 30000);
@@ -267,12 +269,8 @@
 
   function variantPositions(config, variant) {
     const base = normalizedPositions(config);
-    if (variant % 3 === 1) {
-      const mirror = (value) => value === "left" ? "right" : value === "right" ? "left" : value;
-      return { sink: mirror(base.sink), stove: mirror(base.stove), adjusted: base.adjusted, mirrored: true };
-    }
     if (variant % 3 === 2) {
-      return { sink: base.sink, stove: base.stove, adjusted: base.adjusted, balanced: true };
+      return { ...base, refinedStorage: true };
     }
     return base;
   }
@@ -425,8 +423,7 @@
     if (storage.cabinets.length && storage.remainder > 0) warnings.push(`備餐櫃已依 5 mm 模數等分，剩餘 ${storage.remainder} mm 併入右側補板。`);
     if (storageWidth < STRAIGHT_RULES.minimumMiddleWidth) warnings.push("牆面空間不足以加入 500 mm 中間櫃，系統保留水槽與爐台固定尺寸並以補板收尾。");
     if (positions.adjusted) warnings.push("水槽與爐台原本距離過近，系統已自動分到左右兩側，避免水火相鄰。");
-    if (positions.mirrored) warnings.push("已切換為鏡像配置：水槽與爐台方向互換，方便比較不同現場條件。");
-    if (positions.balanced) warnings.push("已切換為均衡配置：水槽靠左、爐台靠右，中間保留備餐與收納區。");
+    if (positions.refinedStorage) warnings.push("已保留水槽與爐台在左右兩端，只調整中間備餐收納的分割方式。");
     const activeMinimum = minimumStraightWidth(Object.assign({}, config, { fridgePosition: fridgeWidth ? config.fridgePosition : "none" }), leftFiller);
     if (width < activeMinimum.withMiddleAndFillers) warnings.push(`牆面短於完整基本配置 ${activeMinimum.withMiddleAndFillers} mm，部分補板或中間櫃會被調整。`);
     const allCabinets = lower.concat(upper);
@@ -649,6 +646,7 @@
     function fieldValue(name, value) {
       const numericFields = new Set(["mainWallWidth", "sideWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"]);
       config[name] = numericFields.has(name) ? Number(value) : value;
+      if (numericFields.has(name)) config.confirmedDefaultDimensions = false;
       if (name === "sinkPosition" || name === "stovePosition") config.layoutVariant = 0;
       persist();
     }
@@ -660,6 +658,68 @@
       if (!Number.isFinite(config.ceilingHeight) || config.ceilingHeight < 2000) errors.push("天花高度不可小於 2000 mm。");
       if (![config.lowerHeight, config.lowerDepth, config.upperHeight, config.upperDepth, config.counterDepth].every(Number.isFinite)) errors.push("請輸入有效的數字。");
       return errors;
+    }
+
+    function defaultDimensionFields() {
+      const fields = ["mainWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"];
+      if (config.kitchenType === "L") fields.push("sideWallWidth");
+      return fields;
+    }
+
+    function isUsingDefaultDimensions() {
+      return defaultDimensionFields().every((key) => Math.round(Number(config[key]) || 0) === Math.round(Number(DEFAULT_CONFIG[key]) || 0));
+    }
+
+    function confirmDefaultDimensionsIfNeeded() {
+      if (!isUsingDefaultDimensions() || config.confirmedDefaultDimensions) return true;
+      const message = "目前仍使用系統預設尺寸。\n\n若只是先試玩，可以直接使用預設尺寸；若要做你家的廚具，建議先改成現場丈量尺寸。\n\n要先使用預設尺寸繼續嗎？";
+      const accepted = window.confirm(message);
+      if (accepted) {
+        config.confirmedDefaultDimensions = true;
+        persist();
+      }
+      return accepted;
+    }
+
+    function planLayerWidth(plan, layer) {
+      const wall = plan?.walls?.[0] || {};
+      return (wall.cabinets || [])
+        .filter((item) => item.layer === layer)
+        .reduce((sum, item) => sum + safeNumber(item.width, 0, 0, 30000), 0);
+    }
+
+    function renderBeginnerChecks() {
+      if (!latestPlan) {
+        return [{ level: "warning", message: "尚未產生配置。請回到「生成」步驟，按下「產生基礎配置」。" }];
+      }
+      const issues = [];
+      const wallWidth = safeNumber(latestPlan.walls?.[0]?.width, config.mainWallWidth, 0, 30000);
+      const lowerWidth = planLayerWidth(latestPlan, "lower");
+      const upperWidth = planLayerWidth(latestPlan, "upper");
+      if (latestPlan.errors?.length) {
+        latestPlan.errors.forEach((message) => issues.push({ level: "error", message }));
+      } else {
+        const used = Math.max(lowerWidth, upperWidth);
+        const remain = Math.round(wallWidth - used);
+        if (used > wallWidth + 0.5) {
+          issues.push({ level: "error", message: `目前櫃體總寬 ${Math.round(used)} mm，已超出牆面 ${Math.round(used - wallWidth)} mm。` });
+        } else {
+          issues.push({ level: "success", message: `櫃體總寬 ${Math.round(used)} mm，牆寬 ${Math.round(wallWidth)} mm，配置已收斂在牆面內。` });
+          issues.push({ level: "success", message: remain > 0 ? `剩餘 ${remain} mm 已保留給補板或收邊。` : "牆面寬度已完整使用，沒有額外剩餘空間。" });
+        }
+        const lower = (latestPlan.walls?.[0]?.cabinets || []).filter((item) => item.layer === "lower");
+        const sinkIndex = lower.findIndex((item) => item.purpose === "sink");
+        const stoveIndex = lower.findIndex((item) => item.purpose === "stove");
+        if (sinkIndex >= 0 && stoveIndex >= 0) {
+          if (Math.abs(sinkIndex - stoveIndex) <= 1) {
+            issues.push({ level: "warning", message: "水槽與爐台仍偏近。建議回到設備步驟，保持一左一右，讓中間留下備餐區。" });
+          } else {
+            issues.push({ level: "success", message: "水槽與爐台已分在左右兩端，中間保留備餐與收納區。" });
+          }
+        }
+      }
+      (latestPlan.warnings || []).slice(0, 2).forEach((message) => issues.push({ level: "warning", message }));
+      return issues;
     }
 
     function stepHeader(kicker, title, text) {
@@ -677,7 +737,7 @@
     }
 
     function renderStep2() {
-      body.innerHTML = `${stepHeader("STEP 2 / 7", "輸入空間尺寸", "只填必要尺寸即可；進階欄位已提供安全預設值。")}
+      body.innerHTML = `${stepHeader("STEP 2 / 7", "輸入空間尺寸", "請先輸入現場牆寬與天花高度。欄位內有預設值，下一步會再次確認是否要直接沿用。")}
         <div class="md-kw-form-grid">
           <label data-help-id="wall-width">${config.kitchenType === "L" ? "主牆寬度" : "牆面寬度"}<span><input data-kw-field="mainWallWidth" type="number" inputmode="numeric" min="1200" max="12000" value="${config.mainWallWidth}"><b>mm</b></span></label>
           ${config.kitchenType === "L" ? `<label>側牆寬度<span><input data-kw-field="sideWallWidth" type="number" inputmode="numeric" min="1200" max="8000" value="${config.sideWallWidth}"><b>mm</b></span></label><label>轉角位置<select data-kw-field="turnDirection"><option value="left" ${config.turnDirection === "left" ? "selected" : ""}>左轉</option><option value="right" ${config.turnDirection === "right" ? "selected" : ""}>右轉</option></select></label>` : ""}
@@ -689,13 +749,13 @@
           <label>吊櫃高度<span><input data-kw-field="upperHeight" type="number" value="${config.upperHeight}"><b>mm</b></span></label>
           <label>吊櫃深度<span><input data-kw-field="upperDepth" type="number" value="${config.upperDepth}"><b>mm</b></span></label>
           <label>檯面深度<span><input data-kw-field="counterDepth" type="number" value="${config.counterDepth}"><b>mm</b></span></label>
-        </div></details><div class="md-kw-errors" aria-live="polite"></div>`;
+        </div></details><p class="md-kw-note">預設尺寸只適合快速試用；實際案件請輸入丈量後的牆寬與天花高度。</p><div class="md-kw-errors" aria-live="polite"></div>`;
     }
 
     function renderStep3() {
       const helpByField = { sinkPosition: "sink-cabinet", stovePosition: "stove-cabinet", fridgePosition: "cabinet-purpose", upperMode: "wall-cabinet", hoodMode: "wall-cabinet", priority: "auto-layout" };
       const select = (field, label, values) => `<label data-help-id="${helpByField[field] || "beginner-workflow"}">${label}<select data-kw-field="${field}">${values.map(([value, text]) => `<option value="${value}" ${config[field] === value ? "selected" : ""}>${text}</option>`).join("")}</select></label>`;
-      body.innerHTML = `${stepHeader("STEP 3 / 7", "設定設備與配置重點", "不必拖曳設備。選擇大致位置，系統會產生穩定草稿並修正衝突。")}
+      body.innerHTML = `${stepHeader("STEP 3 / 7", "設定設備與配置重點", "這裡先用預設條件快速建立。若不清楚現場水電位置，可以直接使用預設，之後仍可細修。")}
         <div class="md-kw-form-grid">
           ${select("sinkPosition", "水槽位置", [["left","左側"],["middle","中間"],["right","右側"]])}
           ${select("stovePosition", "爐台位置", [["left","左側"],["middle","中間"],["right","右側"]])}
@@ -712,17 +772,17 @@
     }
 
     function renderStep4() {
-      body.innerHTML = `${stepHeader("STEP 4 / 7", "自動生成基礎配置", "系統會依尺寸、設備位置與上下櫃規則建立第一版，確認後仍可進專業模式細修。")}
+      body.innerHTML = `${stepHeader("STEP 4 / 7", "自動生成與配置摘要", "先產生一版能放進牆面的基本廚具；下一步只會顯示新手看得懂的重點檢查。")}
         <button class="md-kw-generate" type="button" data-kw-action="generate" data-help-id="auto-layout">${generated ? "換一種配置" : "產生基礎配置"}</button>
         <div class="md-kw-generation">${latestPlan ? `<h4>${latestPlan.errors?.length ? "暫時無法產生可靠配置" : `已產生${latestPlan.type === "L" ? " L 型" : "一字型"}基礎廚具`}</h4>${renderSummary(latestPlan)}${latestPlan.errors?.length ? `<ul class="md-kw-errors">${latestPlan.errors.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul>` : ""}${latestPlan.warnings?.length ? `<ul>${latestPlan.warnings.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul>` : ""}${latestPlan.assumptions?.length ? `<details class="md-kw-advanced" open><summary>本次使用的尺寸假設</summary><ul>${latestPlan.assumptions.map((message) => `<li>${escapeHtml(message)}</li>`).join("")}</ul></details>` : ""}<div class="md-kw-inline-actions"><button data-kw-action="back-conditions">返回修改條件</button>${latestPlan.errors?.length ? "" : `<button data-kw-action="enter-pro">進入專業編輯</button>`}</div>` : `<p>按下產生後，平面圖、立面圖與 3D 會共用同一份櫃體資料。</p>`}</div>`;
     }
 
     function renderStep5() {
-      const issues = adapter.validate() || [];
+      const issues = renderBeginnerChecks();
       const errors = issues.filter((item) => item.level === "error").length;
       const warnings = issues.filter((item) => item.level === "warning").length;
       const rows = issues.length ? issues.map((item) => `<li class="${item.level}"><b>${item.level === "error" ? "需要修正" : item.level === "warning" ? "建議注意" : "正常"}</b><span>${escapeHtml(item.message)}</span></li>`).join("") : `<li class="success"><b>正常</b><span>目前沒有發現尺寸或配置衝突。</span></li>`;
-      body.innerHTML = `${stepHeader("STEP 5 / 7", "尺寸與合理性檢查", "錯誤需要修正；警告可以保留，但要依現場與設備規格確認。")}
+      body.innerHTML = `${stepHeader("STEP 5 / 7", "配置重點檢查", "這裡只列出新手需要先理解的重點；完整工程檢查可進入專業模式查看。")}
         <div class="md-kw-check-summary"><span><b>${errors}</b> 錯誤</span><span><b>${warnings}</b> 警告</span><span><b>${issues.length}</b> 全部</span></div><ul class="md-kw-checks">${rows}</ul>
         <button type="button" class="md-kw-secondary" data-kw-action="open-checks" data-help-id="design-check">開啟完整設計檢查</button>`;
     }
@@ -740,7 +800,7 @@
       body.innerHTML = `${stepHeader("STEP 7 / 7", "輸出、清單與 AI 提案", "設計資料仍以 MODUDRAFT 的尺寸與清單為準；AI 圖只作為客戶提案視覺參考。")}
         <div class="md-kw-output-grid">
           <button data-kw-export="floor" data-help-id="export"><b>下載平面圖</b><span>檢查深度與左右位置</span></button><button data-kw-export="elevation" data-help-id="export"><b>下載立面圖</b><span>檢查高度與門片</span></button><button data-kw-export="three" data-help-id="export"><b>下載 3D 圖</b><span>目前相機視角</span></button>
-          <button data-kw-action="estimate" data-help-id="estimate"><b>查看粗估價</b><span>櫃身、檯面、設備與人工</span></button><button data-kw-action="project" data-help-id="project-center"><b>專案與材質</b><span>JSON 備份與完整檢查</span></button><button data-kw-action="enter-pro" data-help-id="pro-mode"><b>進入專業模式</b><span>繼續精準細修</span></button>
+          <button data-kw-action="estimate" data-help-id="estimate"><b>查看粗估價</b><span>櫃身、檯面、設備與人工</span></button><button data-kw-action="project" data-help-id="project-center"><b>專案與材質</b><span>JSON 備份與完整檢查</span></button><button data-kw-action="enter-pro" data-help-id="pro-mode"><b>先進入查看</b><span>打開工作台看平面、立面與 3D</span></button>
         </div>
         <section class="md-kw-list" data-help-id="cabinet-list"><header><div><span>櫃體清單</span><b>${list.length} 項</b></div><div><button data-kw-action="copy-list">複製文字</button><button data-kw-action="csv-list">CSV</button><button data-kw-action="json-list">JSON</button></div></header><div>${list.length ? list.map((item) => `<article><span>${item.no}</span><div><b>${escapeHtml(item.name)}</b><small>${Math.round(item.width)} × ${Math.round(item.height)} × ${Math.round(item.depth)} mm</small></div><em>${escapeHtml(item.door)}</em></article>`).join("") : "尚未建立櫃體"}</div></section>
         <section class="md-kw-prompt" data-help-id="ai-proposal"><header><b>AI 提案助手</b><button data-kw-action="copy-prompt">複製提示詞</button></header><textarea readonly>${escapeHtml(prompt)}</textarea><p>請將下載的白模或普通材質圖與提示詞一起上傳到 ChatGPT、Gemini 或其他 AI 工具。AI 圖不可取代工程尺寸。</p></section>`;
@@ -756,7 +816,7 @@
       if (step === 6) renderStep6();
       if (step === 7) renderStep7();
       backButton.disabled = step === 1;
-      nextButton.textContent = step === 7 ? "完成並進入專業模式" : "下一步";
+      nextButton.textContent = step === 7 ? "先進入查看" : "下一步";
       nextButton.disabled = step === 4 && !generated;
       overlay.querySelector(".md-kw-body").scrollTop = 0;
     }
@@ -825,6 +885,7 @@
           const errors = validateDimensions();
           const box = body.querySelector(".md-kw-errors");
           if (errors.length) { if (box) box.innerHTML = errors.map((message) => `<p>${escapeHtml(message)}</p>`).join(""); return; }
+          if (!confirmDefaultDimensionsIfNeeded()) return;
         }
         if (step === 7) { close(); adapter.enterProfessional({ preserve: true }); return; }
         step = Math.min(7, step + 1); render();

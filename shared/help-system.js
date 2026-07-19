@@ -194,7 +194,7 @@
   defineHelp("door-style-open", "開放式", "門片與五金", "不生成門片，顯示內部空間。", "開放櫃或展示格使用。", ["門片選開放式。", "檢查內部層板。"], ["開放式會直接看到櫃身材質。"], "窄格放置調味罐。", ["purpose-open"]);
   defineHelp("door-style-panel", "素面補板", "門片與五金", "以單片素面板表示補板或側封。", "補邊、封板與見光側板使用。", ["用途選補板。", "門片選素面補板。"], ["補板不應出現把手。"], "牆邊 50 mm 素面補板。", ["purpose-filler"]);
   defineHelp("handle-style-none", "無把手", "門片與五金", "門片正面不顯示明把手。", "極簡門片或使用按壓、斜把手結構時使用。", ["進入把手分頁。", "選無把手。"], ["實際開門方式仍需確認。"], "現代平板門使用無把手。", ["handle-style-bevel"]);
-  defineHelp("handle-style-bevel", "斜把手", "門片與五金", "門片上緣或下緣做斜切抓手。", "要維持平整外觀又方便開門時使用。", ["選斜把手。", "立面與 3D 會顯示斜把手帶。"], ["吊櫃把手通常位於下方，下櫃位於上方。"], "木紋門片搭配斜把手。", ["handle-style-none", "handle-style-c-channel"]);
+  defineHelp("handle-style-bevel", "45°斜切把手", "門片與五金", "門片上緣或下緣直接做斜切抓手，不是另外裝一支凸出的把手。", "要維持平整外觀、減少外凸五金，同時保留可抓取邊緣時使用。", ["選擇 45°斜切把手。", "立面會顯示門片邊緣斜切陰影線。", "3D 會顯示貼近門片的內建導角線，不會生成外掛把手。"], ["吊櫃把手通常位於門片下緣，下櫃位於門片上緣。", "實際斜切角度與型材尺寸仍需依門板廠或五金供應商規格確認。"], "木紋或素色平板門片搭配 45°斜切把手，可維持乾淨線條。", ["handle-style-none", "handle-style-c-channel"]);
   defineHelp("handle-style-c-channel", "內嵌 C 型把手", "門片與五金", "在門片邊緣配置連續 C 型鋁把手。", "現代廚具需要水平連續線條時使用。", ["選內嵌 C 型。", "檢查全案把手方向。"], ["實際型材尺寸依供應商規格。"], "整排下櫃使用黑色 C 型把手。", ["handle-style-bevel"]);
   defineHelp("handle-style-bar", "G 型／明把手", "門片與五金", "在門片正面配置可見把手。", "需要明確抓握或特定風格時使用。", ["選 G 型／明把手。", "檢查位置與門片分割。"], ["把手突出量會影響動線。"], "鄉村風門片搭配金屬明把手。", ["handle-style-none"]);
   defineHelp("global-handle", "全案把手", "門片與五金", "一次套用目前專案所有一般櫃體的把手形式。", "要快速統一整案風格時使用。", ["選擇全案把手。", "檢查排油煙機、烘碗機與補板仍維持無把手。"], ["個別櫃體之後仍可單獨修改。"], "全案先套斜把手，再把設備櫃改為無把手。", ["handle-style-bevel"]);
@@ -528,12 +528,23 @@
       showToast.timer = window.setTimeout(() => toast.classList.remove("show"), duration);
     }
 
+    function focusElementForControl(control) {
+      if (!control || !document.documentElement.contains(control)) return null;
+      const rect = control.getBoundingClientRect();
+      const isHuge = rect.width > window.innerWidth * 0.56 || rect.height > window.innerHeight * 0.48;
+      if (!isHuge) return control;
+      return control.querySelector?.(".view-label, .rail-brand, button, a, input, select, textarea, [role='button']")
+        || control.closest?.("button, a, [role='button']")
+        || control;
+    }
+
     function updateFocusRing(control) {
       if (!control || !document.documentElement.contains(control)) {
         focusRing.classList.remove("open");
         return;
       }
-      const rect = control.getBoundingClientRect();
+      const target = focusElementForControl(control);
+      const rect = target.getBoundingClientRect();
       focusRing.style.left = `${Math.max(2, rect.left - 6)}px`;
       focusRing.style.top = `${Math.max(2, rect.top - 6)}px`;
       focusRing.style.width = `${Math.max(20, rect.width + 12)}px`;
@@ -582,7 +593,7 @@
       backdrop.classList.add("context-open");
       teachingModeState.overlayVisible = true;
       document.documentElement.style.overflow = "hidden";
-      positionHelpCard(control?.getBoundingClientRect?.());
+      positionHelpCard(focusElementForControl(control)?.getBoundingClientRect?.());
       return true;
     }
 

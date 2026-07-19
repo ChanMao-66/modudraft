@@ -161,7 +161,7 @@
       sinkBasic: "基本水槽", faucetBasic: "基本龍頭", sinkFaucetSetStandard: "標準水槽龍頭組"
     },
     handle: {
-      uHandlePerCm: "ㄇ型把手／cm", jHandlePerCm: "J 型把手／cm", aluminumCHandlePerCm: "鋁 C 型把手／cm", aluminumGHandlePerCm: "鋁 G 型把手／cm", bevelHandlePerCm: "斜把手／cm", hangingRodPerCm: "吊衣桿／cm"
+      uHandlePerCm: "ㄇ型把手／cm", jHandlePerCm: "J 型把手／cm", aluminumCHandlePerCm: "鋁 C 型把手／cm", aluminumGHandlePerCm: "鋁 G 型把手／cm", bevelHandlePerCm: "45°斜切把手／cm", hangingRodPerCm: "吊衣桿／cm"
     },
     hardware: {
       woodDrawerSet: "木抽屜／組", aluminumHighDrawerWithRail: "鋁高抽＋高桿／組", aluminumLowDrawer: "鋁低抽／組", sidePullBasketBasic: "側拉籃基本款", sidePullBasketPremium: "側拉籃升級款", cutleryTray: "餐具盤", appliancePullOutTray: "電器抽盤", seasoningTallPullBasket: "調味品高櫃拉籃"
@@ -176,7 +176,7 @@
       wallCabinetOpenPerCm: "吊櫃開放式／cm", wallCabinetWithWoodDoorPerCm: "吊櫃木門／cm", lowCabinetOpenPerCm: "矮櫃開放式／cm", lowCabinetWithWoodDoorPerCm: "矮櫃木門／cm", halfHeightCabinetOpenPerCm: "半高櫃開放式／cm", halfHeightCabinetWithWoodDoorPerCm: "半高櫃木門／cm", tallCabinetOpenPerCm: "高櫃開放式／cm", tallCabinetWithWoodDoorPerCm: "高櫃木門／cm", tallCabinetWoodAndGlassDoorPerCm: "高櫃木門＋玻璃／cm", tvCabinetOpenPerCm: "電視櫃開放式／cm", tvCabinetWithWoodDoorPerCm: "電視櫃木門／cm", deskPerCm: "書桌／cm", doubleSlidingBookcasePerCm: "雙推拉書櫃／cm", bedsideCabinetOpenPerCm: "床頭櫃開放式／cm", wardrobeOpenPerCm: "衣櫃開放式／cm", wardrobeWithWoodDoorPerCm: "衣櫃木門／cm", slidingDoorWardrobePerCm: "推拉門衣櫃／cm", aluminumGlassSlidingWardrobePerCm: "鋁框玻璃推拉衣櫃／cm"
     },
     systemAccessory: {
-      shelf18mm20x30: "18 mm 層板／片", shelf25mm20x30: "25 mm 層板／片", mirror18mm20x30: "18 mm 鏡面／片", mirror25mm20x30: "25 mm 鏡面／片", uHandlePerCm: "ㄇ型把手／cm", jHandlePerCm: "J 型把手／cm", aluminumCHandlePerCm: "鋁 C 型把手／cm", aluminumGHandlePerCm: "鋁 G 型把手／cm", bevelHandlePerCm: "斜把手／cm", hangingRodPerCm: "吊衣桿／cm", outerDrawerSmall: "外抽小", outerDrawerMedium: "外抽中", outerDrawerLarge: "外抽大", innerDrawerSmall: "內抽小", innerDrawerMedium: "內抽中", innerDrawerLarge: "內抽大", makeupDeskDrawerCabinet: "化妝台抽屜櫃", keyboardTray: "鍵盤架", rotatingMirror: "旋轉鏡", pullBasket: "拉籃", woodenTieRack: "木製領帶架", woodenHangingRodRack: "木製吊衣架", rotatingTieTray: "旋轉領帶盤", drawer: "抽屜", lock: "鎖", fillerPanelPerPiece: "系統櫃補板／片", finishedEndPerPiece: "見光側板／片"
+      shelf18mm20x30: "18 mm 層板／片", shelf25mm20x30: "25 mm 層板／片", mirror18mm20x30: "18 mm 鏡面／片", mirror25mm20x30: "25 mm 鏡面／片", uHandlePerCm: "ㄇ型把手／cm", jHandlePerCm: "J 型把手／cm", aluminumCHandlePerCm: "鋁 C 型把手／cm", aluminumGHandlePerCm: "鋁 G 型把手／cm", bevelHandlePerCm: "45°斜切把手／cm", hangingRodPerCm: "吊衣桿／cm", outerDrawerSmall: "外抽小", outerDrawerMedium: "外抽中", outerDrawerLarge: "外抽大", innerDrawerSmall: "內抽小", innerDrawerMedium: "內抽中", innerDrawerLarge: "內抽大", makeupDeskDrawerCabinet: "化妝台抽屜櫃", keyboardTray: "鍵盤架", rotatingMirror: "旋轉鏡", pullBasket: "拉籃", woodenTieRack: "木製領帶架", woodenHangingRodRack: "木製吊衣架", rotatingTieTray: "旋轉領帶盤", drawer: "抽屜", lock: "鎖", fillerPanelPerPiece: "系統櫃補板／片", finishedEndPerPiece: "見光側板／片"
     }
   });
 
@@ -402,7 +402,7 @@
     const handleInfo = {
       "c-channel": ["鋁 C 型把手", "aluminumCHandlePerCm"],
       bar: ["G 型／明把手", "aluminumGHandlePerCm"],
-      bevel: ["斜把手", "bevelHandlePerCm"],
+      bevel: ["45°斜切把手", "bevelHandlePerCm"],
       j: ["J 型把手", "jHandlePerCm"],
       u: ["ㄇ型把手", "uHandlePerCm"]
     };
