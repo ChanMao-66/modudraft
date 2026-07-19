@@ -1539,7 +1539,7 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
-  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-share-import-v1">
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260720-compact-share-v1">
 </head>
 <body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -2048,7 +2048,7 @@
       </div>
       <p id="installStatus" class="install-status">請選擇要分享軟體本身，或分享目前專案。</p>
       <div class="mobile-access">
-        <img src="./icons/mobile-access-qr.png" alt="分享 MODUDRAFT 的 QR Code">
+        <img id="softwareShareQr" src="./icons/mobile-access-qr.png" alt="分享草圖魔方軟體的 QR Code">
         <div class="mobile-access-copy">
           <strong>分享軟體</strong>
           <p>適合傳給第一次使用的人。對方打開後可自行新建廚具或系統櫃專案。</p>
@@ -2059,7 +2059,7 @@
         </div>
       </div>
       <div class="mobile-access project-share-card">
-        <img src="./icons/mobile-access-qr.png" alt="分享目前專案的 QR Code">
+        <img id="projectShareQr" src="./icons/mobile-access-qr.png" alt="分享目前專案的 QR Code">
         <div class="mobile-access-copy">
           <strong>分享目前專案</strong>
           <p>連結會包含目前牆面、櫃體、材質與視圖資料。對方開啟後會得到可編輯副本。</p>
@@ -2326,8 +2326,10 @@
       installStatus: document.getElementById("installStatus"),
       installNowBtn: document.getElementById("installNowBtn"),
       softwareShareUrl: document.getElementById("softwareShareUrl"),
+      softwareShareQr: document.getElementById("softwareShareQr"),
       copySoftwareUrlBtn: document.getElementById("copySoftwareUrlBtn"),
       mobileAccessUrl: document.getElementById("mobileAccessUrl"),
+      projectShareQr: document.getElementById("projectShareQr"),
       copyMobileUrlBtn: document.getElementById("copyMobileUrlBtn"),
       copyProjectJsonBtn: document.getElementById("copyProjectJsonBtn"),
       startSharedProjectInput: document.getElementById("startSharedProjectInput"),
@@ -2439,31 +2441,202 @@
       return state.walls.some((wall) => (wall.cabinets || []).length > 0);
     }
 
+    const shareAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
+    function bytesToBinaryString(bytes) {
+      let binary = "";
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return binary;
+    }
+
+    function lzwPackCodes(codes, widths) {
+      let output = "";
+      let buffer = 0;
+      let bitCount = 0;
+      codes.forEach((code, index) => {
+        const width = widths[index];
+        buffer = (buffer << width) | code;
+        bitCount += width;
+        while (bitCount >= 6) {
+          bitCount -= 6;
+          output += shareAlphabet[(buffer >> bitCount) & 63];
+        }
+        buffer &= (1 << bitCount) - 1;
+      });
+      if (bitCount > 0) output += shareAlphabet[(buffer << (6 - bitCount)) & 63];
+      return output;
+    }
+
+    function lzwUnpackCode(reader, width) {
+      while (reader.bitCount < width && reader.index < reader.text.length) {
+        reader.buffer = (reader.buffer << 6) | shareAlphabet.indexOf(reader.text[reader.index]);
+        reader.bitCount += 6;
+        reader.index += 1;
+      }
+      if (reader.bitCount < width) return null;
+      reader.bitCount -= width;
+      const code = (reader.buffer >> reader.bitCount) & ((1 << width) - 1);
+      reader.buffer &= (1 << reader.bitCount) - 1;
+      return code;
+    }
+
+    function lzwCompressBytes(bytes) {
+      const input = bytesToBinaryString(bytes);
+      if (!input) return "";
+      const dictionary = new Map();
+      for (let i = 0; i < 256; i += 1) dictionary.set(String.fromCharCode(i), i);
+      let nextCode = 256;
+      let width = 9;
+      let w = "";
+      const codes = [];
+      const widths = [];
+      for (const c of input) {
+        const wc = w + c;
+        if (dictionary.has(wc)) {
+          w = wc;
+        } else {
+          codes.push(dictionary.get(w));
+          widths.push(width);
+          if (nextCode < 65535) {
+            dictionary.set(wc, nextCode);
+            nextCode += 1;
+            if (nextCode === (1 << width) && width < 16) width += 1;
+          }
+          w = c;
+        }
+      }
+      if (w) {
+        codes.push(dictionary.get(w));
+        widths.push(width);
+      }
+      return lzwPackCodes(codes, widths);
+    }
+
+    function lzwDecompressBytes(packed, expectedByteLength) {
+      if (!packed) return new Uint8Array();
+      const dictionary = new Map();
+      for (let i = 0; i < 256; i += 1) dictionary.set(i, String.fromCharCode(i));
+      let nextCode = 256;
+      let width = 9;
+      const reader = { text: String(packed), index: 0, buffer: 0, bitCount: 0 };
+      const firstCode = lzwUnpackCode(reader, width);
+      if (firstCode === null) return new Uint8Array();
+      let w = dictionary.get(firstCode) || "";
+      let output = w;
+      while (output.length < expectedByteLength) {
+        const code = lzwUnpackCode(reader, width);
+        if (code === null) break;
+        let entry = dictionary.get(code);
+        if (!entry && code === nextCode) entry = w + w[0];
+        if (!entry) break;
+        output += entry;
+        if (nextCode < 65535) {
+          dictionary.set(nextCode, w + entry[0]);
+          nextCode += 1;
+          if (nextCode === (1 << width) && width < 16) width += 1;
+        }
+        w = entry;
+      }
+      const sliced = output.slice(0, expectedByteLength);
+      return Uint8Array.from(sliced, (char) => char.charCodeAt(0));
+    }
+
     function encodeSharePayload(value) {
       const json = JSON.stringify(value);
       const bytes = new TextEncoder().encode(json);
-      let binary = "";
-      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
-      return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      return btoa(bytesToBinaryString(bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
     }
 
     function decodeSharePayload(payload) {
-      const normalized = String(payload || "").replace(/-/g, "+").replace(/_/g, "/");
+      const value = String(payload || "");
+      if (value.startsWith("z1.")) {
+        const [, lengthPart, packed] = value.split(".");
+        const expectedLength = parseInt(lengthPart || "0", 36);
+        if (!Number.isFinite(expectedLength) || expectedLength < 0) throw new Error("分享資料長度異常");
+        return JSON.parse(new TextDecoder().decode(lzwDecompressBytes(packed || "", expectedLength)));
+      }
+      const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
       const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
       const binary = atob(padded);
       const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
       return JSON.parse(new TextDecoder().decode(bytes));
     }
 
+    function bytesToBase64Url(bytes) {
+      return btoa(bytesToBinaryString(bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    }
+
+    function base64UrlToBytes(payload) {
+      const normalized = String(payload || "").replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+      const binary = atob(padded);
+      return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+    }
+
+    async function gzipCompressText(text) {
+      if (!("CompressionStream" in window)) return null;
+      const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
+      return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+
+    async function gzipDecompressText(bytes) {
+      if (!("DecompressionStream" in window)) throw new Error("此瀏覽器不支援壓縮分享連結，請改貼 JSON 備份。");
+      const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream("gzip"));
+      return await new Response(stream).text();
+    }
+
+    function compactKitchenShareProject() {
+      const core = window.MODUDRAFTCore;
+      const project = kitchenProjectSnapshot();
+      const compact = {
+        type: "kitchen",
+        name: project.name || "分享廚具配置",
+        schemaVersion: project.schemaVersion,
+        editorMode: state.editorMode,
+        kitchenType: state.walls.length > 1 ? "L" : "straight",
+        stylePreset: state.projectStyle || project.stylePreset,
+        materialAssignments: state.materialPalette || project.materialAssignments || null,
+        sourceState: {
+          kitchen: {
+            walls: state.walls,
+            activeWallIndex: state.activeWallIndex,
+            currentLayer: state.currentLayer,
+            showWalls: state.showWalls,
+            showTopFiller: state.showTopFiller,
+            globalHandleStyle: state.globalHandleStyle,
+            materialPalette: state.materialPalette || null,
+            renderMode: state.renderMode,
+            renderStyle: state.renderStyle,
+            editorMode: state.editorMode,
+            workflowConfig: state.workflowConfig || null,
+            sizes
+          }
+        }
+      };
+      return core?.cleanData ? core.cleanData(compact) : compact;
+    }
+
     function currentProjectShareUrl() {
       if (!hasShareableProject()) return "";
-      const project = kitchenProjectSnapshot();
-      const cleanProject = window.MODUDRAFTCore?.cleanData ? window.MODUDRAFTCore.cleanData(project) : project;
+      const cleanProject = compactKitchenShareProject();
       const payload = encodeSharePayload({ schema: "modudraft-kitchen-share-v1", project: cleanProject });
       return `${currentMobileAccessUrl()}#mdk=${payload}`;
     }
 
-    function projectFromSharedText(rawText) {
+    async function currentProjectShareUrlAsync() {
+      if (!hasShareableProject()) return "";
+      const cleanProject = compactKitchenShareProject();
+      const shareData = { schema: "modudraft-kitchen-share-v2", compression: "gzip", project: cleanProject };
+      const json = JSON.stringify(shareData);
+      const compressed = await gzipCompressText(json);
+      if (!compressed) return currentProjectShareUrl();
+      const gzipPayload = `g1.${bytesToBase64Url(compressed)}`;
+      const legacyPayload = encodeSharePayload(shareData);
+      const payload = gzipPayload.length < legacyPayload.length ? gzipPayload : legacyPayload;
+      return `${currentMobileAccessUrl()}#mdk=${payload}`;
+    }
+
+    async function projectFromSharedText(rawText) {
       const text = String(rawText || "").trim();
       if (!text) throw new Error("請貼上分享連結或 JSON 專案檔");
 
@@ -2487,17 +2660,26 @@
       if (!payload && /^[A-Za-z0-9_-]{80,}$/.test(text)) payload = text;
       if (!payload) throw new Error("找不到分享專案資料");
 
-      const decoded = decodeSharePayload(decodeURIComponent(payload));
+      const decoded = await decodeSharePayloadAsync(decodeURIComponent(payload));
       const project = decoded?.project || decoded;
       return window.MODUDRAFTCore?.migrateProject
         ? window.MODUDRAFTCore.migrateProject(project, "kitchen")
         : project;
     }
 
-    function sharedProjectFromLocationHash() {
+    async function decodeSharePayloadAsync(payload) {
+      const value = String(payload || "");
+      if (value.startsWith("g1.")) {
+        const json = await gzipDecompressText(base64UrlToBytes(value.slice(3)));
+        return JSON.parse(json);
+      }
+      return decodeSharePayload(value);
+    }
+
+    async function sharedProjectFromLocationHash() {
       if (!location.hash || !location.hash.includes("mdk=")) return null;
       try {
-        return projectFromSharedText(location.href);
+        return await projectFromSharedText(location.href);
       } catch (error) {
         console.warn("Unable to load shared project", error);
         return null;
@@ -2508,6 +2690,25 @@
       if (!el.startShareStatus) return;
       el.startShareStatus.textContent = message;
       el.startShareStatus.classList.toggle("error", Boolean(isError));
+    }
+
+    function setShareQrImage(image, url, label) {
+      if (!image) return;
+      if (!url) {
+        image.src = "./icons/mobile-access-qr.png";
+        image.alt = label || "草圖魔方 QR Code";
+        return;
+      }
+      image.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=12&data=${encodeURIComponent(url)}`;
+      image.alt = label || "草圖魔方 QR Code";
+      image.title = url.length > 2200 ? "連結較長，若 QR 無法辨識請改用複製連結或 JSON 備份。" : url;
+    }
+
+    function projectShareLengthHint(url) {
+      if (!url) return "";
+      if (url.length > 2600) return "連結已壓縮但仍偏長；若 QR 或通訊軟體無法辨識，請改用 JSON 備份。";
+      if (url.length > 1600) return "連結已壓縮；部分通訊軟體可能會截斷，建議同步保留 JSON 備份。";
+      return "連結已使用精簡壓縮格式，適合複製或掃描 QR 開啟。";
     }
 
     async function copyTextToClipboard(text) {
@@ -6831,21 +7032,24 @@
       el.tutorialModal.classList.remove("open");
     }
 
-    function openInstallModal() {
+    async function openInstallModal() {
       el.installModal.classList.add("open");
-      const url = currentProjectShareUrl();
+      const url = await currentProjectShareUrlAsync();
       const softwareUrl = currentSoftwareShareUrl();
       if (el.softwareShareUrl) el.softwareShareUrl.textContent = softwareUrl;
+      setShareQrImage(el.softwareShareQr, softwareUrl, "分享草圖魔方軟體的 QR Code");
       const projectCard = el.mobileAccessUrl?.closest(".project-share-card");
       if (url) {
         el.mobileAccessUrl.textContent = url.length > 260 ? `${url.slice(0, 260)}...` : url;
-        el.installStatus.textContent = "專案連結會載入目前配置的一份可編輯副本。對方修改後會儲存在對方裝置。";
+        setShareQrImage(el.projectShareQr, url, "分享目前專案的 QR Code");
+        el.installStatus.textContent = `專案連結會載入目前配置的一份可編輯副本。${projectShareLengthHint(url)}`;
         projectCard?.classList.remove("is-disabled");
         el.copyMobileUrlBtn.disabled = false;
         el.copyProjectJsonBtn.disabled = false;
         el.installNowBtn.disabled = false;
       } else {
         el.mobileAccessUrl.textContent = "尚未建立配置，請先建立櫃體後再分享專案。";
+        setShareQrImage(el.projectShareQr, "", "尚未建立專案 QR Code");
         el.installStatus.textContent = "目前可先分享軟體網址；建立配置後可分享目前專案。";
         projectCard?.classList.add("is-disabled");
         el.copyMobileUrlBtn.disabled = true;
@@ -6859,7 +7063,7 @@
     }
 
     async function copyMobileAccessUrl() {
-      const url = currentProjectShareUrl();
+      const url = await currentProjectShareUrlAsync();
       if (!url) {
         el.installStatus.textContent = "尚未建立配置，請先建立櫃體後再分享專案。";
         return;
@@ -6868,7 +7072,7 @@
       el.copyMobileUrlBtn.textContent = "已複製專案連結";
       el.installStatus.textContent = url.length > 7000
         ? "專案連結已複製；若通訊軟體截斷網址，請改用 JSON 備份。"
-        : "專案連結已複製，對方開啟後可查看並繼續修改。";
+        : `專案連結已複製，對方開啟後可查看並繼續修改。${projectShareLengthHint(url)}`;
       window.setTimeout(() => {
         el.copyMobileUrlBtn.textContent = "複製專案連結";
       }, 1600);
@@ -6878,6 +7082,7 @@
       const url = currentSoftwareShareUrl();
       await copyTextToClipboard(url);
       if (el.softwareShareUrl) el.softwareShareUrl.textContent = url;
+      setShareQrImage(el.softwareShareQr, url, "分享草圖魔方軟體的 QR Code");
       if (el.copySoftwareUrlBtn) {
         el.copySoftwareUrlBtn.textContent = "已複製軟體網址";
         window.setTimeout(() => {
@@ -6903,9 +7108,9 @@
       }, 1600);
     }
 
-    function importSharedProjectFromText() {
+    async function importSharedProjectFromText() {
       try {
-        const project = projectFromSharedText(el.startSharedProjectInput?.value || "");
+        const project = await projectFromSharedText(el.startSharedProjectInput?.value || "");
         importKitchenProject(project);
         setStartShareStatus("已載入分享專案，可以查看並繼續修改。");
         showKitchenToast("已載入分享專案，可查看並繼續修改。");
@@ -6917,7 +7122,7 @@
     }
 
     async function shareApp() {
-      const url = currentProjectShareUrl();
+      const url = await currentProjectShareUrlAsync();
       if (!url) {
         el.installStatus.textContent = "尚未建立配置，已改為複製軟體網址。";
         await copySoftwareAccessUrl();
@@ -8065,10 +8270,10 @@
       }, 900);
     }
 
-    function initializeKitchenProductSuite() {
+    async function initializeKitchenProductSuite() {
       if (!window.MODUDRAFTCore || !window.MODUDRAFTSuite) return;
       const requestedId = new URLSearchParams(location.search).get("project");
-      const sharedProject = sharedProjectFromLocationHash();
+      const sharedProject = await sharedProjectFromLocationHash();
       if (sharedProject?.type === "kitchen" || sharedProject?.sourceState?.kitchen) {
         importKitchenProject(sharedProject);
         showKitchenToast("已載入分享專案，可查看並繼續修改。");
