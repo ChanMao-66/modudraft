@@ -310,3 +310,177 @@ body[data-device-mode="mobileLandscape"] .md-context-actions button {
   min-width: 0;
   min-height: 44px;
 }
+
+/* UI V2: contextual help cards should match the light ModuDraft workspace and anchor near the target. */
+.md-help-backdrop.context-open {
+  background: rgba(31, 45, 61, .18);
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+}
+
+.md-help-backdrop.context-open .md-help-dialog {
+  border: 1px solid rgba(31, 45, 61, .12);
+  background: #ffffff;
+  color: #1f2d3d;
+  box-shadow: 0 22px 60px rgba(31, 45, 61, .18);
+}
+
+.md-help-backdrop.context-open .md-help-head {
+  border-bottom: 1px solid #edf0f2;
+  background: linear-gradient(100deg, #ffffff 0%, #f6f2ec 100%);
+  color: #1f2d3d;
+}
+
+.md-help-backdrop.context-open .md-help-head small {
+  color: #66727d;
+}
+
+.md-help-backdrop.context-open .md-help-head h2 {
+  color: #1f2d3d;
+}
+
+.md-help-backdrop.context-open .md-help-close {
+  border-color: #e6e9ed;
+  background: #f5f6f7;
+  color: #1f2d3d;
+}
+
+.md-help-backdrop.context-open .md-help-close:hover {
+  border-color: rgba(47, 111, 109, .22);
+  background: #e8f2f1;
+  color: #2f6f6d;
+}
+
+.md-help-backdrop.context-open .md-help-content {
+  background: #ffffff;
+}
+
+.md-help-backdrop.context-open .md-context-card {
+  max-width: none;
+  margin: 0;
+}
+
+.md-help-backdrop.context-open .md-context-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-color: rgba(47, 111, 109, .18);
+  background: #e8f2f1;
+  color: #2f6f6d;
+}
+
+.md-help-backdrop.context-open .md-context-category {
+  border-color: rgba(47, 111, 109, .18);
+  background: #e8f2f1;
+  color: #2f6f6d;
+}
+
+.md-help-backdrop.context-open .md-context-card h3 {
+  color: #1f2d3d;
+  font-size: 20px;
+}
+
+.md-help-backdrop.context-open .md-context-card > p,
+.md-help-backdrop.context-open .md-context-related,
+.md-help-backdrop.context-open .md-context-grid p,
+.md-help-backdrop.context-open .md-context-grid ol,
+.md-help-backdrop.context-open .md-context-grid ul,
+.md-help-backdrop.context-open .md-context-intro p {
+  color: #66727d;
+}
+
+.md-help-backdrop.context-open .md-context-intro,
+.md-help-backdrop.context-open .md-context-grid section {
+  border-color: #e6e9ed;
+  background: #faf8f6;
+}
+
+.md-help-backdrop.context-open .md-context-intro h4,
+.md-help-backdrop.context-open .md-context-grid h4,
+.md-help-backdrop.context-open .md-context-related b {
+  color: #2f6f6d;
+}
+
+.md-help-backdrop.context-open .md-context-related span {
+  border-color: #e6e9ed;
+  background: #ffffff;
+  color: #66727d;
+}
+
+.md-help-backdrop.context-open .md-context-actions {
+  border-top-color: #edf0f2;
+}
+
+.md-help-backdrop.context-open .md-context-actions button {
+  border-color: #e6e9ed;
+  background: #ffffff;
+  color: #1f2d3d;
+}
+
+.md-help-backdrop.context-open .md-context-actions button:hover {
+  border-color: rgba(47, 111, 109, .22);
+  background: #e8f2f1;
+  color: #2f6f6d;
+}
+
+.md-help-backdrop.context-open .md-context-actions button:nth-child(2) {
+  border-color: transparent;
+  background: #f2a24b;
+  color: #ffffff;
+}
+
+.md-help-backdrop.context-open .md-context-actions button:nth-child(2):hover {
+  background: #df8e38;
+  color: #ffffff;
+}
+
+.md-help-focus-ring {
+  border-color: #2f6f6d;
+  box-shadow: 0 0 0 4px rgba(47, 111, 109, .16), 0 8px 24px rgba(31, 45, 61, .16);
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open {
+  display: block;
+  padding: 0;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open[data-target-side="left"],
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open[data-target-side="right"] {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-dialog {
+  position: fixed;
+  left: var(--help-card-left, 24px);
+  top: var(--help-card-top, 76px);
+  width: var(--help-card-width, min(520px, calc(100vw - 36px)));
+  max-height: min(72vh, 680px);
+  display: grid;
+  grid-template-columns: 1fr;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-head {
+  min-height: 56px;
+  padding: 12px 16px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-help-content {
+  padding: 16px;
+}
+
+body:not([data-device-mode="mobilePortrait"]):not([data-device-mode="mobileLandscape"]) .md-help-backdrop.context-open .md-context-grid {
+  grid-template-columns: 1fr;
+}
+
+body[data-device-mode="mobilePortrait"] .md-help-backdrop.context-open .md-help-dialog::before,
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-help-dialog::before {
+  border-color: rgba(31, 45, 61, .12);
+  background: #ffffff;
+}
+
+body[data-device-mode="mobileLandscape"] .md-help-backdrop.context-open .md-context-actions {
+  background: #ffffff;
+}

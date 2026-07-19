@@ -530,6 +530,10 @@
 
     function focusElementForControl(control) {
       if (!control || !document.documentElement.contains(control)) return null;
+      if (control.tagName === "CANVAS") {
+        const viewLabel = control.closest?.(".view")?.querySelector?.(".view-label");
+        if (viewLabel) return viewLabel;
+      }
       const rect = control.getBoundingClientRect();
       const isHuge = rect.width > window.innerWidth * 0.56 || rect.height > window.innerHeight * 0.48;
       if (!isHuge) return control;
@@ -617,6 +621,24 @@
       backdrop.style.setProperty("--help-arrow-x", `${Math.max(8, Math.min(92, targetCenter / Math.max(1, innerWidth) * 100))}%`);
       backdrop.style.setProperty("--help-arrow-y", `${Math.max(10, Math.min(90, targetMiddle / Math.max(1, innerHeight) * 100))}%`);
       backdrop.dataset.targetSide = targetCenter < innerWidth / 2 ? "left" : "right";
+      if (mode !== "mobilePortrait" && mode !== "mobileLandscape") {
+        const margin = 18;
+        const cardWidth = Math.min(520, Math.max(360, dialog.offsetWidth || 460), innerWidth - margin * 2);
+        const cardHeight = Math.min(dialog.offsetHeight || 540, innerHeight - margin * 2);
+        const canPlaceRight = targetRect.right + margin + cardWidth <= innerWidth;
+        const canPlaceLeft = targetRect.left - margin - cardWidth >= 0;
+        let left = canPlaceRight
+          ? targetRect.right + margin
+          : canPlaceLeft
+            ? targetRect.left - margin - cardWidth
+            : Math.min(innerWidth - cardWidth - margin, Math.max(margin, targetCenter - cardWidth / 2));
+        let top = targetMiddle - Math.min(cardHeight * 0.38, 220);
+        top = Math.min(innerHeight - cardHeight - margin, Math.max(margin, top));
+        left = Math.min(innerWidth - cardWidth - margin, Math.max(margin, left));
+        backdrop.style.setProperty("--help-card-left", `${left}px`);
+        backdrop.style.setProperty("--help-card-top", `${top}px`);
+        backdrop.style.setProperty("--help-card-width", `${cardWidth}px`);
+      }
     }
 
     function toggleTeachingMode(force) {

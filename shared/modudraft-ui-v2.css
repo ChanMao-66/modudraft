@@ -1233,3 +1233,157 @@ body.modudraft-kitchen:not(.mobile-workbench) .rail-nav b {
   font-weight: 800;
   line-height: 1.15;
 }
+
+/* Desktop frame repair: the left dock is fixed, so the drawing area should
+   start exactly after it instead of leaving a dead blank column. */
+@media (min-width: 761px) {
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) {
+    --kitchen-rail-left: 8px;
+    --kitchen-rail-width: 80px;
+    --kitchen-dock-left: 96px;
+    --kitchen-dock-width: 176px;
+    --kitchen-frame-gap: 10px;
+    --kitchen-content-left: 282px;
+    --kitchen-top-height: 118px;
+    padding-left: var(--kitchen-content-left);
+    overflow: hidden;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .brand-rail {
+    left: var(--kitchen-rail-left);
+    width: var(--kitchen-rail-width);
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .app {
+    width: calc(100vw - var(--kitchen-content-left));
+    height: 100dvh;
+    padding: 8px 8px 78px 0;
+    overflow: hidden;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar {
+    position: relative;
+    z-index: 24;
+    min-height: 96px;
+    margin: 0 0 8px;
+    display: grid;
+    grid-template-columns: minmax(390px, .85fr) minmax(620px, 1.15fr);
+    align-content: start;
+    gap: 8px;
+    padding: 8px;
+    overflow: visible;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .project-tools,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .wall-picker,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .wall-align-controls,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .measure-strip,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .layer-context-bar {
+    max-width: 100%;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .tool-group {
+    min-width: 0;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar button,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar select,
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar input {
+    min-height: 38px;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .actions {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    clip: rect(0 0 0 0) !important;
+    overflow: hidden !important;
+    pointer-events: none !important;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .workspace,
+  body.modudraft-kitchen:not(.mobile-workbench) .workspace.single-view,
+  body.modudraft-kitchen:not(.mobile-workbench) .workspace.triple-view,
+  body.modudraft-kitchen:not(.mobile-workbench) .workspace.three-only {
+    height: calc(100dvh - var(--kitchen-top-height) - 84px);
+    min-height: 0;
+    padding: 0 0 10px;
+    overflow: auto;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .view {
+    width: 100%;
+    max-width: none;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .design-dock {
+    left: var(--kitchen-dock-left);
+    right: auto;
+    top: 8px;
+    bottom: 10px;
+    width: var(--kitchen-dock-width);
+    min-width: 0;
+    max-height: none;
+    grid-template-columns: 1fr;
+    grid-auto-rows: minmax(45px, auto);
+    align-content: start;
+    gap: 6px;
+    padding: 7px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    transform: none;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .design-dock button {
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+    place-items: center start;
+    gap: 8px;
+    min-height: 45px;
+    min-width: 0;
+    padding: 7px 10px;
+    text-align: left;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .design-dock b {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .status-bar {
+    left: var(--kitchen-content-left);
+    right: 8px;
+    bottom: 10px;
+    width: auto;
+    min-width: 0;
+    transform: none;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 1180px) {
+  body.modudraft-kitchen.modudraft-ui-v2:not(.mobile-workbench) {
+    --kitchen-rail-width: 66px;
+    --kitchen-dock-left: 84px;
+    --kitchen-dock-width: 156px;
+    --kitchen-content-left: 250px;
+    --kitchen-top-height: 158px;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .actions {
+    left: var(--kitchen-dock-left);
+    width: var(--kitchen-dock-width);
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar {
+    grid-template-columns: 1fr;
+    min-height: 136px;
+  }
+
+  body.modudraft-kitchen:not(.mobile-workbench) .toolbar .project-tools {
+    display: grid;
+    grid-template-columns: minmax(220px, .8fr) minmax(360px, 1.2fr);
+    align-items: center;
+  }
+}
