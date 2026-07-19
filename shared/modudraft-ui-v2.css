@@ -1,0 +1,876 @@
+/*
+  ModuDraft / 草圖魔方 UI V2
+  Visual-only layer. It keeps the existing IDs, data attributes, storage,
+  canvas logic, 3D logic and event bindings intact.
+*/
+
+:root {
+  --color-primary: #2f6f6d;
+  --color-primary-hover: #285f5d;
+  --color-primary-soft: #e8f2f1;
+  --color-accent: #f2a24b;
+  --color-accent-hover: #df8e38;
+  --color-accent-soft: #fff3e4;
+  --color-sidebar: #1f2d3d;
+  --color-sidebar-hover: #293b4c;
+  --color-sidebar-active: #2f6f6d;
+  --color-text-primary: #1f2d3d;
+  --color-text-secondary: #66727d;
+  --color-text-muted: #8c969f;
+  --color-background: #faf8f6;
+  --color-surface: #ffffff;
+  --color-surface-secondary: #f5f6f7;
+  --color-border: #e6e9ed;
+  --color-divider: #edf0f2;
+  --color-success: #3e8b73;
+  --color-warning: #d99132;
+  --color-danger: #c95a54;
+  --color-info: #4d7f9c;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --shadow-sm: 0 2px 8px rgba(31, 45, 61, 0.06);
+  --shadow-md: 0 8px 24px rgba(31, 45, 61, 0.08);
+  --shadow-panel: 0 12px 32px rgba(31, 45, 61, 0.1);
+  font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+}
+
+body.modudraft-ui-v2,
+body.modudraft-ui-v2 button,
+body.modudraft-ui-v2 input,
+body.modudraft-ui-v2 select,
+body.modudraft-ui-v2 textarea {
+  font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
+  letter-spacing: 0;
+}
+
+body.modudraft-ui-v2 {
+  color: var(--color-text-primary);
+  background:
+    radial-gradient(circle at 8% 0%, rgba(47, 111, 109, 0.08), transparent 28%),
+    radial-gradient(circle at 100% 12%, rgba(242, 162, 75, 0.10), transparent 24%),
+    var(--color-background);
+}
+
+body.modudraft-ui-v2 button,
+body.modudraft-ui-v2 a,
+body.modudraft-ui-v2 input,
+body.modudraft-ui-v2 select,
+body.modudraft-ui-v2 textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body.modudraft-ui-v2 :focus-visible {
+  outline: 2px solid rgba(47, 111, 109, 0.72);
+  outline-offset: 2px;
+}
+
+body.modudraft-ui-v2 button {
+  min-height: 38px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-sm);
+  font-weight: 650;
+}
+
+body.modudraft-ui-v2 button:hover:not(:disabled) {
+  border-color: rgba(47, 111, 109, 0.26);
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+}
+
+body.modudraft-ui-v2 button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+body.modudraft-ui-v2 button.primary,
+body.modudraft-ui-v2 .dock-primary,
+body.modudraft-ui-v2 .primary-command,
+body.modudraft-ui-v2 .md-kw-generate {
+  border-color: transparent;
+  background: linear-gradient(180deg, #f5ad61, var(--color-accent));
+  color: #fff;
+  box-shadow: 0 10px 22px rgba(242, 162, 75, 0.24);
+}
+
+body.modudraft-ui-v2 button.primary:hover:not(:disabled),
+body.modudraft-ui-v2 .dock-primary:hover:not(:disabled),
+body.modudraft-ui-v2 .primary-command:hover:not(:disabled),
+body.modudraft-ui-v2 .md-kw-generate:hover:not(:disabled) {
+  background: linear-gradient(180deg, #f2a24b, var(--color-accent-hover));
+  color: #fff;
+}
+
+body.modudraft-ui-v2 button.success {
+  border-color: rgba(62, 139, 115, 0.24);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+body.modudraft-ui-v2 button.danger,
+body.modudraft-ui-v2 .dock-danger {
+  border-color: rgba(201, 90, 84, 0.30);
+  background: rgba(201, 90, 84, 0.08);
+  color: #a7443f;
+}
+
+body.modudraft-ui-v2 input,
+body.modudraft-ui-v2 select,
+body.modudraft-ui-v2 textarea,
+body.modudraft-ui-v2 .field,
+body.modudraft-ui-v2 .select-style {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: inset 0 1px 0 rgba(31, 45, 61, 0.02);
+}
+
+body.modudraft-ui-v2 input:focus,
+body.modudraft-ui-v2 select:focus,
+body.modudraft-ui-v2 textarea:focus {
+  border-color: rgba(47, 111, 109, 0.52);
+  box-shadow: 0 0 0 3px rgba(47, 111, 109, 0.10);
+}
+
+/* Home */
+body.modudraft-home.modudraft-ui-v2 {
+  min-height: 100dvh;
+  padding: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(250, 248, 246, 0.92)),
+    radial-gradient(circle at 0 24%, rgba(47, 111, 109, 0.10), transparent 30%),
+    radial-gradient(circle at 96% 12%, rgba(242, 162, 75, 0.12), transparent 28%),
+    #f8f6f2;
+}
+
+body.modudraft-home .app {
+  width: 100%;
+  min-height: calc(100dvh - 20px);
+  border: 1px solid rgba(31, 45, 61, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  box-shadow: 0 22px 58px rgba(31, 45, 61, 0.09);
+  overflow: hidden;
+}
+
+body.modudraft-home .topbar {
+  min-height: 74px;
+  padding: 14px 28px;
+  border-bottom: 1px solid var(--color-divider);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+}
+
+body.modudraft-home .brand b {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 800;
+}
+
+body.modudraft-home .brand span span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+body.modudraft-home .top-actions button {
+  min-height: 42px;
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+body.modudraft-home .top-actions .primary {
+  background: var(--color-accent);
+  color: #fff;
+}
+
+body.modudraft-home .content {
+  background: transparent;
+}
+
+body.modudraft-home .main {
+  padding: 48px 34px 36px;
+}
+
+body.modudraft-home .welcome {
+  align-items: end;
+  margin-bottom: 32px;
+}
+
+body.modudraft-home .welcome .eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+body.modudraft-home .welcome h1 {
+  max-width: 820px;
+  margin-top: 18px;
+  color: var(--color-text-primary);
+  font-size: clamp(38px, 5vw, 72px);
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+body.modudraft-home .welcome p {
+  max-width: 680px;
+  color: var(--color-text-secondary);
+  font-size: 17px;
+}
+
+body.modudraft-home .device-pill {
+  border: 1px solid rgba(47, 111, 109, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+body.modudraft-home .section-head h2 {
+  color: var(--color-text-primary);
+}
+
+body.modudraft-home .section-head span {
+  color: var(--color-text-muted);
+}
+
+body.modudraft-home .mode,
+body.modudraft-home .recent-card,
+body.modudraft-home .side-card {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+body.modudraft-home .mode:hover,
+body.modudraft-home .recent-card:hover,
+body.modudraft-home .side-card:hover {
+  border-color: rgba(47, 111, 109, 0.28);
+  box-shadow: var(--shadow-panel);
+}
+
+body.modudraft-home .mode-media {
+  background: #eef2f1;
+}
+
+body.modudraft-home .mode-label {
+  color: var(--color-primary);
+}
+
+body.modudraft-home .mode h3,
+body.modudraft-home .side-card h2,
+body.modudraft-home .recent-card b {
+  color: var(--color-text-primary);
+}
+
+body.modudraft-home .mode p,
+body.modudraft-home .side-card p,
+body.modudraft-home .recent-card time {
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-home .side {
+  border-left: 1px solid var(--color-divider);
+  background: rgba(245, 246, 247, 0.64);
+}
+
+body.modudraft-home .quick-list a,
+body.modudraft-home .quick-list button {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+}
+
+/* Kitchen workbench */
+body.modudraft-kitchen.modudraft-ui-v2 {
+  --bg: var(--color-background);
+  --bg-2: #f3f5f4;
+  --panel: var(--color-surface);
+  --panel-2: #f5f6f7;
+  --panel-3: var(--color-surface);
+  --line: var(--color-border);
+  --line-soft: var(--color-divider);
+  --text: var(--color-text-primary);
+  --muted: var(--color-text-secondary);
+  --paper: #ffffff;
+  --paper-2: #f6f2ec;
+  --paper-line: #c6d0cf;
+  --ink: var(--color-text-primary);
+  --accent: var(--color-primary);
+  --accent-2: var(--color-accent);
+  --green: var(--color-success);
+  --red: var(--color-danger);
+  --blue: var(--color-info);
+  padding-left: 96px;
+  overflow: hidden;
+  background: var(--color-background);
+  color: var(--color-text-primary);
+}
+
+body.modudraft-kitchen .brand-rail {
+  width: 88px;
+  top: 10px;
+  bottom: 10px;
+  left: 10px;
+  border-color: rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  background:
+    linear-gradient(180deg, rgba(31, 45, 61, 0.98), rgba(18, 32, 44, 0.99));
+  box-shadow: 0 20px 44px rgba(31, 45, 61, 0.22);
+}
+
+body.modudraft-kitchen .brand-rail::before {
+  content: "草圖魔方";
+  display: block;
+  margin: 8px 8px 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 12px;
+  font-weight: 850;
+  line-height: 1.25;
+  text-align: center;
+}
+
+body.modudraft-kitchen .rail-brand,
+body.modudraft-kitchen .rail-bottom {
+  border-radius: 13px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+body.modudraft-kitchen .rail-nav a,
+body.modudraft-kitchen .rail-nav button {
+  min-height: 60px;
+  border-radius: 13px;
+  color: rgba(255, 255, 255, 0.74);
+}
+
+body.modudraft-kitchen .rail-nav a:hover,
+body.modudraft-kitchen .rail-nav button:hover {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(47, 111, 109, 0.36);
+  color: #fff;
+}
+
+body.modudraft-kitchen .rail-nav a:first-child,
+body.modudraft-kitchen .rail-nav button:nth-child(2) {
+  background: rgba(47, 111, 109, 0.30);
+  color: #fff;
+}
+
+body.modudraft-kitchen .rail-symbol {
+  color: inherit;
+}
+
+body.modudraft-kitchen .app {
+  height: 100dvh;
+  padding: 12px 328px 84px 14px;
+  gap: 10px;
+}
+
+body.modudraft-kitchen .toolbar {
+  position: relative;
+  min-height: 78px;
+  display: grid;
+  grid-template-columns: minmax(260px, 360px) minmax(460px, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.90);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(16px);
+}
+
+body.modudraft-kitchen .toolbar::before {
+  content: "專案 / 新成屋廚房規劃";
+  position: absolute;
+  top: 8px;
+  left: 24px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+body.modudraft-kitchen .brand strong {
+  color: var(--color-text-primary);
+  font-size: 19px;
+  font-weight: 850;
+}
+
+body.modudraft-kitchen .brand span {
+  color: var(--color-text-secondary);
+  font-size: 12px;
+}
+
+body.modudraft-kitchen .brand img {
+  border-color: var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-secondary);
+}
+
+body.modudraft-kitchen .project-tools {
+  gap: 10px;
+}
+
+body.modudraft-kitchen .wall-picker {
+  gap: 8px;
+}
+
+body.modudraft-kitchen .wall-align-controls,
+body.modudraft-kitchen .measure-strip {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-secondary);
+}
+
+body.modudraft-kitchen .wall-align-controls span,
+body.modudraft-kitchen .measure-field,
+body.modudraft-kitchen .toggle-control,
+body.modudraft-kitchen .global-style-control {
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-kitchen .segmented {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #edf1f0;
+}
+
+body.modudraft-kitchen .segmented button {
+  min-height: 34px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-kitchen .segmented button.active {
+  background: var(--color-primary);
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+body.modudraft-kitchen [aria-label="視圖顯示"] {
+  background: #fff;
+}
+
+body.modudraft-kitchen [aria-label="視圖顯示"] button {
+  min-width: 78px;
+  border-bottom: 2px solid transparent;
+  border-radius: 10px;
+}
+
+body.modudraft-kitchen [aria-label="視圖顯示"] button.active {
+  border-bottom-color: var(--color-primary);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+body.modudraft-kitchen .actions {
+  position: fixed;
+  z-index: 18;
+  top: 104px;
+  right: 14px;
+  bottom: 92px;
+  width: 298px;
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-panel);
+  overflow-y: auto;
+  backdrop-filter: blur(18px);
+}
+
+body.modudraft-kitchen .actions::before {
+  content: "快捷操作";
+  display: block;
+  order: -10;
+  margin-bottom: 2px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-divider);
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+body.modudraft-kitchen .actions::after {
+  content: "常用工具集中在此；畫布保持最大可視區，平面、立面與 3D 由上方分頁切換。";
+  display: block;
+  order: 99;
+  margin-top: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-surface-secondary);
+  color: var(--color-text-muted);
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+body.modudraft-kitchen .actions button,
+body.modudraft-kitchen .actions .history-actions {
+  width: 100%;
+}
+
+body.modudraft-kitchen .actions .history-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+body.modudraft-kitchen #autoLayoutBtn,
+body.modudraft-kitchen #addCabinetBtn {
+  background: var(--color-accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+body.modudraft-kitchen #autoLayoutBtn {
+  order: -3;
+  min-height: 46px;
+  font-size: 15px;
+}
+
+body.modudraft-kitchen #addCabinetBtn {
+  order: -2;
+}
+
+body.modudraft-kitchen #aiAssistBtn,
+body.modudraft-kitchen #equalizeBtn {
+  border-color: rgba(47, 111, 109, 0.22);
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+}
+
+body.modudraft-kitchen #standardCabinetLibraryBtn,
+body.modudraft-kitchen #cabinetListBtn,
+body.modudraft-kitchen #exportBtn,
+body.modudraft-kitchen #installAppBtn {
+  background: #fff;
+}
+
+body.modudraft-kitchen .layer-context-bar {
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.84);
+  color: var(--color-text-secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+body.modudraft-kitchen .layer-context-copy strong {
+  color: var(--color-primary);
+}
+
+body.modudraft-kitchen .layer-context-switch button.active {
+  border-color: rgba(47, 111, 109, 0.34);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+body.modudraft-kitchen .workspace {
+  padding: 8px 0 132px;
+  gap: 14px;
+}
+
+body.modudraft-kitchen .workspace.single-view,
+body.modudraft-kitchen .workspace.three-only {
+  justify-content: center;
+}
+
+body.modudraft-kitchen .view {
+  position: relative;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(250, 248, 246, 0.92)),
+    #fff;
+  box-shadow: var(--shadow-panel);
+}
+
+body.modudraft-kitchen .view::after {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  pointer-events: none;
+  border-radius: 14px;
+  box-shadow: inset 0 0 0 1px rgba(31, 45, 61, 0.04);
+}
+
+body.modudraft-kitchen .view-label {
+  top: 14px;
+  left: 14px;
+  right: auto;
+  width: auto;
+  max-width: min(82%, 620px);
+  border: 1px solid rgba(47, 111, 109, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+body.modudraft-kitchen #threeCanvasContainer {
+  background:
+    linear-gradient(180deg, #f3f4f1 0%, #e9e6df 100%);
+}
+
+body.modudraft-kitchen .status-bar {
+  left: 112px;
+  right: 328px;
+  bottom: 18px;
+  width: auto;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-md);
+  transform: none;
+}
+
+body.modudraft-kitchen .status-bar::before {
+  content: "設計檢核";
+  padding: 0 10px;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+body.modudraft-kitchen .metric {
+  border-color: var(--color-border);
+  background: var(--color-surface-secondary);
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-kitchen .metric b,
+body.modudraft-kitchen .num {
+  color: var(--color-text-primary);
+}
+
+body.modudraft-kitchen .design-dock {
+  left: 112px;
+  right: 328px;
+  bottom: 78px;
+  width: auto;
+  min-width: 0;
+  max-height: 78px;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  padding: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  box-shadow: var(--shadow-md);
+  transform: none;
+  overflow-x: auto;
+  backdrop-filter: blur(18px);
+}
+
+body.modudraft-kitchen .design-dock button {
+  min-height: 58px;
+  border-radius: 12px;
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-kitchen .design-dock button:hover {
+  color: var(--color-primary);
+}
+
+body.modudraft-kitchen .modal-content,
+body.modudraft-kitchen .start-card,
+body.modudraft-kitchen .kitchen-assist-panel,
+body.modudraft-kitchen .dimension-popover,
+body.modudraft-kitchen .gap-action-panel {
+  border-color: var(--color-border);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-panel);
+}
+
+body.modudraft-kitchen .start-overlay,
+body.modudraft-kitchen .modal {
+  background: rgba(31, 45, 61, 0.38);
+  backdrop-filter: blur(16px);
+}
+
+body.modudraft-kitchen .start-mode-badge,
+body.modudraft-kitchen .md-kw-step-head span,
+body.modudraft-kitchen .mode-label {
+  color: var(--color-primary);
+}
+
+/* System cabinet gets the same brand language without changing its app logic. */
+body.modudraft-system.modudraft-ui-v2 {
+  background: var(--color-background);
+}
+
+body.modudraft-system .brand-rail {
+  background: linear-gradient(180deg, var(--color-sidebar), #142233);
+  border-radius: 16px;
+}
+
+body.modudraft-system .app-header {
+  border-color: var(--color-border);
+  background: rgba(255, 255, 255, 0.90);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-md);
+}
+
+body.modudraft-system .brand-name {
+  color: var(--color-text-primary);
+}
+
+body.modudraft-system .brand-subtitle {
+  color: var(--color-text-secondary);
+}
+
+body.modudraft-system .app-shell {
+  background: #f0f2f1;
+}
+
+body.modudraft-system .cabinet-sidebar,
+body.modudraft-system .property-panel {
+  background: rgba(255, 255, 255, 0.92);
+}
+
+body.modudraft-system .workspace {
+  background: #eef1ef;
+}
+
+body.modudraft-system .drawing-stage {
+  border-color: var(--color-border);
+  background: #fff;
+  box-shadow: var(--shadow-panel);
+}
+
+@media (max-width: 1180px) {
+  body.modudraft-kitchen.modudraft-ui-v2 {
+    padding-left: 78px;
+  }
+
+  body.modudraft-kitchen .app {
+    padding-right: 292px;
+  }
+
+  body.modudraft-kitchen .actions {
+    width: 264px;
+  }
+
+  body.modudraft-kitchen .status-bar,
+  body.modudraft-kitchen .design-dock {
+    left: 92px;
+    right: 292px;
+  }
+}
+
+@media (max-width: 760px) {
+  body.modudraft-ui-v2 {
+    background: #f8f6f2;
+  }
+
+  body.modudraft-kitchen.modudraft-ui-v2 {
+    padding-left: 0;
+    overflow: auto;
+  }
+
+  body.modudraft-kitchen .app {
+    height: auto;
+    min-height: 100dvh;
+    padding: 6px;
+  }
+
+  body.modudraft-kitchen .actions {
+    position: static;
+    width: auto;
+    max-height: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-top: 8px;
+    padding: 10px;
+  }
+
+  body.mobile-workbench.modudraft-kitchen .actions {
+    display: none;
+  }
+
+  body.modudraft-kitchen .toolbar {
+    grid-template-columns: 1fr;
+    border-radius: 14px;
+  }
+
+  body.mobile-workbench.modudraft-kitchen .toolbar,
+  body.mobile-workbench.modudraft-kitchen .brand-rail,
+  body.mobile-workbench.modudraft-kitchen .design-dock,
+  body.mobile-workbench.modudraft-kitchen .status-bar {
+    display: none;
+  }
+
+  body.modudraft-kitchen .workspace,
+  body.modudraft-kitchen .workspace.single-view,
+  body.modudraft-kitchen .workspace.triple-view,
+  body.modudraft-kitchen .workspace.three-only {
+    padding-bottom: 146px;
+  }
+
+  body.modudraft-home.modudraft-ui-v2 {
+    padding: 0;
+  }
+
+  body.modudraft-home .app {
+    min-height: 100dvh;
+    border-radius: 0;
+    border: 0;
+  }
+
+  body.modudraft-home .topbar {
+    padding: 10px 14px;
+  }
+
+  body.modudraft-home .brand b {
+    font-size: 19px;
+  }
+
+  body.modudraft-home .main {
+    padding: 28px 14px;
+  }
+
+  body.modudraft-home .welcome h1 {
+    font-size: 40px;
+  }
+}
+
+@media (min-width: 761px) and (max-width: 931px) and (orientation: landscape),
+       (max-width: 760px) and (orientation: landscape) {
+  body.mobile-workbench.modudraft-kitchen .app {
+    padding: 0;
+  }
+
+  body.mobile-workbench.modudraft-kitchen .workspace,
+  body.mobile-workbench.modudraft-kitchen .workspace.single-view,
+  body.mobile-workbench.modudraft-kitchen .workspace.triple-view,
+  body.mobile-workbench.modudraft-kitchen .workspace.three-only {
+    padding: 0;
+  }
+}

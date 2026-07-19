@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v39-kitchen-sink-fix";
+const CACHE_NAME = "modudraft-pwa-v41-ui-redesign-v1";
 const APP_ASSETS = [
   "./",
   "./index.html",
@@ -26,6 +26,7 @@ const APP_ASSETS = [
   "./shared/estimate.css",
   "./shared/kitchen-workflow.js",
   "./shared/kitchen-workflow.css",
+  "./shared/modudraft-ui-v2.css",
   "./assets/kitchen-workbench.png",
   "./assets/system-workbench.png",
   "./manifest.webmanifest",

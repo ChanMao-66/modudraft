@@ -2,6 +2,7 @@
   "use strict";
 
   const STORAGE_KEY = "modudraft:kitchen-workflow:v1";
+  const CONFIG_VERSION = 2;
   const START_DISMISSED_KEY = "modudraft:kitchen-start-dismissed";
   const START_MODE_KEY = "modudraft:kitchen-start-mode";
   const CORE_RULES = global.MODUDRAFTCore?.KITCHEN_RULES || {};
@@ -72,7 +73,8 @@
     hoodMode: "follow",
     priority: "prep",
     styleId: "modern",
-    layoutVariant: 0
+    layoutVariant: 0,
+    workflowVersion: CONFIG_VERSION
   });
 
   function safeNumber(value, fallback, min, max) {
@@ -83,6 +85,43 @@
 
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
+  }
+
+  function safePosition(value, fallback) {
+    return ["left", "middle", "right"].includes(value) ? value : fallback;
+  }
+
+  function sanitizeConfig(input) {
+    const raw = input || {};
+    const next = Object.assign({}, DEFAULT_CONFIG, raw);
+    const loadedVersion = Number(raw.workflowVersion) || 0;
+
+    next.kitchenType = ["straight", "L"].includes(next.kitchenType) ? next.kitchenType : DEFAULT_CONFIG.kitchenType;
+    next.turnDirection = ["left", "right"].includes(next.turnDirection) ? next.turnDirection : DEFAULT_CONFIG.turnDirection;
+    next.sinkPosition = safePosition(next.sinkPosition, DEFAULT_CONFIG.sinkPosition);
+    next.stovePosition = safePosition(next.stovePosition, DEFAULT_CONFIG.stovePosition);
+    next.fridgePosition = ["none", "left", "right"].includes(next.fridgePosition) ? next.fridgePosition : DEFAULT_CONFIG.fridgePosition;
+    next.upperMode = ["full", "none", "partial"].includes(next.upperMode) ? next.upperMode : DEFAULT_CONFIG.upperMode;
+    next.hoodMode = ["follow", "none"].includes(next.hoodMode) ? next.hoodMode : DEFAULT_CONFIG.hoodMode;
+    next.priority = ["storage", "prep", "symmetry"].includes(next.priority) ? next.priority : DEFAULT_CONFIG.priority;
+    next.styleId = next.styleId || DEFAULT_CONFIG.styleId;
+    next.layoutVariant = Math.max(0, Math.floor(Number(next.layoutVariant) || 0));
+
+    ["mainWallWidth", "sideWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"].forEach((key) => {
+      next[key] = safeNumber(next[key], DEFAULT_CONFIG[key], 1, 30000);
+    });
+
+    if (loadedVersion < CONFIG_VERSION && next.sinkPosition === "middle" && next.stovePosition === "right") {
+      next.sinkPosition = DEFAULT_CONFIG.sinkPosition;
+      next.stovePosition = DEFAULT_CONFIG.stovePosition;
+      next.layoutVariant = 0;
+    }
+
+    const normalized = normalizedPositions(next);
+    next.sinkPosition = normalized.sink;
+    next.stovePosition = normalized.stove;
+    next.workflowVersion = CONFIG_VERSION;
+    return next;
   }
 
   function cabinet(name, width, layer, purpose, frontStyle, extra) {
@@ -232,8 +271,8 @@
       const mirror = (value) => value === "left" ? "right" : value === "right" ? "left" : value;
       return { sink: mirror(base.sink), stove: mirror(base.stove), adjusted: base.adjusted, mirrored: true };
     }
-    if (variant % 3 === 2 && base.sink === "middle") {
-      return { sink: "left", stove: "right", adjusted: base.adjusted, balanced: true };
+    if (variant % 3 === 2) {
+      return { sink: base.sink, stove: base.stove, adjusted: base.adjusted, balanced: true };
     }
     return base;
   }
@@ -247,17 +286,43 @@
   }
 
   function normalizedPositions(config) {
-    const sink = config.sinkPosition || "right";
-    let stove = config.stovePosition || "left";
+    let sink = safePosition(config.sinkPosition, "right");
+    let stove = safePosition(config.stovePosition, "left");
+    const requestedSink = sink;
     const requestedStove = stove;
     let adjusted = false;
-    if (stove === sink) stove = sink === "left" ? "right" : "left";
-    adjusted = stove !== requestedStove;
-    return { sink, stove, adjusted };
+
+    if (sink === stove) {
+      sink = "right";
+      stove = "left";
+      adjusted = true;
+    }
+
+    if (sink === "middle" && stove === "right") {
+      sink = "left";
+      adjusted = true;
+    } else if (sink === "middle" && stove === "left") {
+      sink = "right";
+      adjusted = true;
+    } else if (stove === "middle" && sink === "right") {
+      stove = "left";
+      adjusted = true;
+    } else if (stove === "middle" && sink === "left") {
+      stove = "right";
+      adjusted = true;
+    }
+
+    if (sink === "middle" || stove === "middle") {
+      sink = "right";
+      stove = "left";
+      adjusted = true;
+    }
+
+    return { sink, stove, adjusted, requestedSink, requestedStove };
   }
 
   function buildStraightPlan(input) {
-    const config = Object.assign({}, DEFAULT_CONFIG, input || {});
+    const config = sanitizeConfig(input || {});
     const width = safeNumber(config.mainWallWidth, DEFAULT_CONFIG.mainWallWidth, STRAIGHT_RULES.minWallWidth, 12000);
     const variant = Math.max(0, Math.floor(Number(config.layoutVariant) || 0));
     let leftFiller = edgeFillerWidthFor(config, width);
@@ -359,7 +424,7 @@
     if (!storage.cabinets.length && storage.remainder > 0) warnings.push(`剩餘 ${storage.remainder} mm 不足以形成標準中間櫃，已併入右側補板或收邊。`);
     if (storage.cabinets.length && storage.remainder > 0) warnings.push(`備餐櫃已依 5 mm 模數等分，剩餘 ${storage.remainder} mm 併入右側補板。`);
     if (storageWidth < STRAIGHT_RULES.minimumMiddleWidth) warnings.push("牆面空間不足以加入 500 mm 中間櫃，系統保留水槽與爐台固定尺寸並以補板收尾。");
-    if (positions.adjusted) warnings.push("水槽與爐台位置重複，系統已自動將爐台移到另一側。");
+    if (positions.adjusted) warnings.push("水槽與爐台原本距離過近，系統已自動分到左右兩側，避免水火相鄰。");
     if (positions.mirrored) warnings.push("已切換為鏡像配置：水槽與爐台方向互換，方便比較不同現場條件。");
     if (positions.balanced) warnings.push("已切換為均衡配置：水槽靠左、爐台靠右，中間保留備餐與收納區。");
     const activeMinimum = minimumStraightWidth(Object.assign({}, config, { fridgePosition: fridgeWidth ? config.fridgePosition : "none" }), leftFiller);
@@ -522,8 +587,13 @@
     let step = 1;
     let generated = false;
     let latestPlan = null;
-    let config = Object.assign({}, DEFAULT_CONFIG);
-    try { config = Object.assign(config, JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}")); } catch (_error) {}
+    let config = sanitizeConfig();
+    try {
+      config = sanitizeConfig(JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    } catch (_error) {
+      config = sanitizeConfig();
+    }
 
     const overlay = document.createElement("div");
     overlay.className = "md-kw-overlay";
@@ -572,12 +642,14 @@
     }
 
     function persist() {
+      config = sanitizeConfig(config);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(config)); } catch (_error) {}
     }
 
     function fieldValue(name, value) {
       const numericFields = new Set(["mainWallWidth", "sideWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"]);
       config[name] = numericFields.has(name) ? Number(value) : value;
+      if (name === "sinkPosition" || name === "stovePosition") config.layoutVariant = 0;
       persist();
     }
 
@@ -631,7 +703,7 @@
           ${select("upperMode", "是否需要吊櫃", [["full","需要"],["none","不需要"],["partial","只在部分區域"]])}
           ${select("hoodMode", "抽油煙機", [["follow","跟隨爐台自動配置"],["none","不配置"]])}
           ${select("priority", "優先方向", [["storage","收納優先"],["prep","備餐空間優先"],["symmetry","外觀對稱優先"]])}
-        </div><p class="md-kw-note">若水槽與爐台選到相同位置，系統會自動分開，並在檢查步驟說明。</p>`;
+        </div><p class="md-kw-note">若尚未設定現場水電位置，系統預設爐台靠左、水槽靠右；若選到相鄰位置，也會自動拉開，避免水火貼在一起。</p>`;
     }
 
     function renderSummary(plan) {

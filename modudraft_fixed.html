@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>MODUDRAFT 廚具系統櫃設計工作台</title>
+  <title>草圖魔方 ModuDraft 廚具設計工作台</title>
   <meta name="theme-color" content="#151a22">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1539,8 +1539,9 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-ui-v1">
 </head>
-<body>
+<body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
   <div id="startOverlay" class="start-overlay">
     <section class="start-card" aria-labelledby="startTitle">
@@ -1632,8 +1633,8 @@
         <div class="brand">
           <img src="./icons/modudraft-logo-refined.png" alt="">
           <div class="brand-copy">
-            <strong>MODUDRAFT</strong>
-            <span>廚具系統櫃工程圖工作台</span>
+            <strong>草圖魔方 ModuDraft</strong>
+            <span>廚具配置與工程圖工作台</span>
           </div>
         </div>
         <div class="wall-picker">
@@ -2125,7 +2126,7 @@
     </section>
   </div>
 
-  <script src="./shared/modudraft-core.js?v=20260718-kitchen-flow-v4"></script>
+  <script src="./shared/modudraft-core.js?v=20260718-kitchen-flow-v5"></script>
   <script src="./shared/product-suite.js?v=20260703-v4"></script>
   <script src="./shared/mobile-workbench.js?v=20260705-v1"></script>
   <script src="./shared/help-system.js?v=20260706-blind-corner-v1"></script>
@@ -2133,7 +2134,7 @@
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-mobile.js?v=20260706-blind-corner-v1"></script>
   <script src="./shared/estimate.js?v=20260706-blind-corner-v1"></script>
-  <script src="./shared/kitchen-workflow.js?v=20260718-kitchen-flow-v4"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260718-kitchen-flow-v5"></script>
   <script>
     const state = {
       walls: [],
