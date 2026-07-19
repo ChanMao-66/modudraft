@@ -27,6 +27,7 @@
     minimumUsefulFillerWidth: 20
   };
   const L_RULES = CORE_RULES.lShape || { blindCornerWidth: 1000, minWallWidth: 1200 };
+  const DISH_DRYER_WIDTHS = Object.freeze([800, 600]);
 
   const STANDARD_CABINETS = Object.freeze([
     { id: "base-300", name: "標準下櫃 300", layer: "lower", purpose: "general", width: 300, height: DIMENSIONS.lowerHeight, depth: DIMENSIONS.lowerDepth, hasCountertop: true, hasToeKick: true, priceRuleId: "baseCabinetBasicPerCm" },
@@ -45,6 +46,8 @@
     { id: "wall-600", name: "標準吊櫃 600", layer: "upper", purpose: "general", width: 600, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "wall-800", name: "標準吊櫃 800", layer: "upper", purpose: "general", width: 800, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "hood-700", name: "排油煙機吊櫃 700", layer: "upper", purpose: "hood", width: 700, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "dish-dryer-800", name: "吊掛式烘碗機 800", layer: "upper", purpose: "dish-dryer", width: 800, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
+    { id: "dish-dryer-600", name: "吊掛式烘碗機 600", layer: "upper", purpose: "dish-dryer", width: 600, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "wall-open-600", name: "開放吊櫃 600", layer: "upper", purpose: "open", width: 600, height: DIMENSIONS.upperHeight, depth: DIMENSIONS.upperDepth, priceRuleId: "upperCabinetBasicPerCm" },
     { id: "tall-600", name: "高櫃 600", layer: "tall", purpose: "general", width: 600, height: 2400, depth: 600, priceRuleId: "tallCabinetPerCm" },
     { id: "tall-appliance-600", name: "電器高櫃 600", layer: "tall", purpose: "appliance", width: 600, height: 2400, depth: 600, priceRuleId: "tallCabinetPerCm" },
@@ -152,6 +155,13 @@
     const configured = Number(config.edgeFillerWidth);
     if (Number.isFinite(configured) && configured >= 0) return Math.round(configured);
     return STRAIGHT_RULES.defaultEdgeFillerWidth;
+  }
+
+  function dishDryerWidthForSink(sinkWidth) {
+    const width = Math.round(Number(sinkWidth) || 0);
+    if (width >= DISH_DRYER_WIDTHS[0]) return DISH_DRYER_WIDTHS[0];
+    if (width >= DISH_DRYER_WIDTHS[1]) return DISH_DRYER_WIDTHS[1];
+    return 0;
   }
 
   function modularFloor(value, unit = 5) {
@@ -414,8 +424,19 @@
           if (config.hoodMode === "follow") upper.push(cabinet("排油煙機吊櫃", item.width, "upper", "hood", "double-door"));
           return;
         }
+        if (item.purpose === "sink") {
+          const dishDryerWidth = dishDryerWidthForSink(item.width);
+          if (dishDryerWidth) {
+            upper.push(cabinet(`吊掛式烘碗機 ${dishDryerWidth}`, dishDryerWidth, "upper", "dish-dryer", "double-door", {
+              notes: `依水槽下櫃 ${Math.round(item.width)} mm 自動配置，吊掛式烘碗機只使用 800 或 600 mm。`
+            }));
+          } else if (config.upperMode === "full") {
+            upper.push(cabinet("水槽上方收納吊櫃", item.width, "upper", "general", "double-door"));
+          }
+          return;
+        }
         if (config.upperMode === "partial" && !["sink", "drawer"].includes(item.purpose)) return;
-        upper.push(cabinet(item.purpose === "sink" ? "水槽上方收納吊櫃" : "標準收納吊櫃", item.width, "upper", "general", "double-door"));
+        upper.push(cabinet("標準收納吊櫃", item.width, "upper", "general", "double-door"));
       });
     }
 
@@ -923,19 +944,26 @@
     function bindStartScreen() {
       const start = document.getElementById("startOverlay");
       if (!start) return;
+      const hideStartScreen = () => {
+        start.style.display = "none";
+        start.setAttribute("aria-hidden", "true");
+      };
       start.querySelector("#startBeginnerBtn")?.addEventListener("click", () => {
         const dismiss = start.querySelector("#dismissStartChoice")?.checked;
         try { localStorage.setItem(START_MODE_KEY, "beginner"); if (dismiss) localStorage.setItem(START_DISMISSED_KEY, "true"); } catch (_error) {}
+        hideStartScreen();
         open(1);
       });
       start.querySelector("#startProBtn")?.addEventListener("click", () => {
         const dismiss = start.querySelector("#dismissStartChoice")?.checked;
         try { localStorage.setItem(START_MODE_KEY, "pro"); if (dismiss) localStorage.setItem(START_DISMISSED_KEY, "true"); } catch (_error) {}
+        hideStartScreen();
         adapter.enterProfessional({ blank: true });
       });
       start.querySelector("#startTemplateBtn")?.addEventListener("click", () => {
         const dismiss = start.querySelector("#dismissStartChoice")?.checked;
         try { localStorage.setItem(START_MODE_KEY, "beginner"); if (dismiss) localStorage.setItem(START_DISMISSED_KEY, "true"); } catch (_error) {}
+        hideStartScreen();
         open(1);
       });
       start.querySelector("#startImportBtn")?.addEventListener("click", () => adapter.openImport());
@@ -944,6 +972,7 @@
       let lastMode = "pro";
       try { dismissed = localStorage.getItem(START_DISMISSED_KEY) === "true"; lastMode = localStorage.getItem(START_MODE_KEY) || "pro"; } catch (_error) {}
       if (dismissed && !new URLSearchParams(location.search).get("project") && !location.hash.includes("project=")) {
+        hideStartScreen();
         if (lastMode === "beginner") open(1); else adapter.enterProfessional({ blank: true });
       }
     }

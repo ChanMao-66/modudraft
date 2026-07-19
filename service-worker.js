@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v46-overlay-zfix-v1";
+const CACHE_NAME = "modudraft-pwa-v47-beginner-dish-v1";
 const APP_ASSETS = [
   "./",
   "./index.html",
