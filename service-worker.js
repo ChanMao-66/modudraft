@@ -1,4 +1,4 @@
-const CACHE_NAME = "modudraft-pwa-v52-compact-share-v1";
+const CACHE_NAME = "modudraft-pwa-v53-recent-actions-v1";
 const APP_ASSETS = [
   "./",
   "./index.html",

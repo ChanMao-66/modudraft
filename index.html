@@ -59,11 +59,21 @@
     .mode p { margin: 0; color: #bcb6ae; font-size: 11px; line-height: 1.6; }
     .mode-arrow { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 10px; background: linear-gradient(145deg,#bd936c,#8d6848); color: white; font-size: 22px; }
     .recent-grid { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 10px; }
-    .recent-card { display: grid; min-height: 128px; padding: 14px; border: 1px solid var(--home-line); border-radius: 12px; background: rgba(255,255,255,.035); color: inherit; text-decoration: none; }
+    .recent-card { position: relative; display: grid; min-height: 128px; border: 1px solid var(--home-line); border-radius: 12px; background: rgba(255,255,255,.035); color: inherit; text-decoration: none; overflow: visible; }
     .recent-card:hover { border-color: rgba(202,159,118,.46); background: rgba(255,255,255,.055); }
+    .recent-open { display: grid; min-height: 126px; padding: 14px 48px 14px 14px; color: inherit; text-decoration: none; }
     .recent-card .type { align-self: start; color: var(--home-accent); font-size: 9px; font-weight: 800; }
     .recent-card b { align-self: end; font-size: 13px; }
     .recent-card time { color: var(--home-muted); font-size: 9px; }
+    .recent-menu-btn { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid rgba(255,255,255,.1); border-radius: 10px; background: rgba(255,255,255,.055); color: inherit; cursor: pointer; font-size: 18px; line-height: 1; }
+    .recent-menu-btn:hover,.recent-menu-btn:focus-visible { border-color: rgba(194,154,115,.5); background: rgba(194,154,115,.14); outline: 0; }
+    .recent-menu { position: absolute; z-index: 30; top: 48px; right: 10px; display: none; min-width: 150px; padding: 6px; border: 1px solid var(--home-line); border-radius: 12px; background: rgba(30,31,30,.98); box-shadow: 0 18px 36px rgba(0,0,0,.28); }
+    .recent-card.menu-open .recent-menu { display: grid; gap: 4px; }
+    .recent-menu button { display: flex; align-items: center; justify-content: space-between; min-height: 36px; border: 0; border-radius: 9px; background: transparent; color: #f3eee7; padding: 0 10px; cursor: pointer; font-size: 11px; text-align: left; }
+    .recent-menu button:hover,.recent-menu button:focus-visible { background: rgba(255,255,255,.08); outline: 0; }
+    .recent-menu button.danger { color: #ffb6af; }
+    .home-toast { position: fixed; z-index: 2000; right: 24px; bottom: 24px; max-width: min(360px, calc(100vw - 32px)); padding: 12px 14px; border: 1px solid rgba(255,255,255,.16); border-radius: 12px; background: rgba(30,31,30,.96); color: #f3eee7; box-shadow: 0 18px 42px rgba(0,0,0,.32); font-size: 12px; line-height: 1.45; opacity: 0; transform: translateY(12px); transition: opacity 180ms ease, transform 180ms ease; pointer-events: none; }
+    .home-toast.show { opacity: 1; transform: translateY(0); }
     .recent-empty { grid-column: 1 / -1; padding: 24px; border: 1px dashed rgba(255,255,255,.15); border-radius: 12px; color: var(--home-muted); text-align: center; font-size: 11px; line-height: 1.7; }
     .side-card { margin-bottom: 12px; padding: 16px; border: 1px solid var(--home-line); border-radius: 13px; background: var(--home-panel); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
     .side-card h2 { margin: 0 0 10px; font-size: 14px; }
@@ -118,14 +128,127 @@
       const input = document.getElementById("projectImport");
 
       function escapeHtml(value) { return String(value || "").replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[char])); }
+      function projectHref(project) {
+        const href = project.type === "cabinet" ? "./system-cabinet-prototype/" : "./modudraft_fixed.html";
+        return `${href}?project=${encodeURIComponent(project.id)}`;
+      }
+      function softwareShareUrl() {
+        if ((location.protocol === "http:" || location.protocol === "https:") && !["localhost", "127.0.0.1", "::1"].includes(location.hostname)) {
+          const url = new URL("./", location.href);
+          url.search = "";
+          url.hash = "";
+          return url.href;
+        }
+        return "https://chanmao-66.github.io/modudraft/";
+      }
+      function bytesToBase64Url(bytes) {
+        let binary = "";
+        bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+        return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      }
+      function encodeSharePayload(data) {
+        const json = JSON.stringify(data);
+        return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+      }
+      async function gzipCompressText(text) {
+        if (!("CompressionStream" in window)) return null;
+        const stream = new Blob([text]).stream().pipeThrough(new CompressionStream("gzip"));
+        return new Uint8Array(await new Response(stream).arrayBuffer());
+      }
+      async function kitchenProjectShareUrl(project) {
+        const cleanProject = core.migrateProject(project, "kitchen");
+        const shareProject = {
+          id: cleanProject.id,
+          name: cleanProject.name,
+          type: "kitchen",
+          sourceState: cleanProject.sourceState,
+          estimateDocument: cleanProject.estimateDocument,
+          estimateRates: cleanProject.estimateRates
+        };
+        const shareData = { schema: "modudraft-kitchen-share-v2", compression: "gzip", project: shareProject };
+        const legacyPayload = encodeSharePayload(shareData);
+        const compressed = await gzipCompressText(JSON.stringify(shareData));
+        const payload = compressed ? `g1.${bytesToBase64Url(compressed)}` : legacyPayload;
+        const url = new URL("./modudraft_fixed.html", softwareShareUrl());
+        url.hash = `mdk=${payload.length < legacyPayload.length ? payload : legacyPayload}`;
+        return url.href;
+      }
+      async function copyText(text) {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+      function showHomeToast(message) {
+        let toast = document.querySelector(".home-toast");
+        if (!toast) {
+          toast = document.createElement("div");
+          toast.className = "home-toast";
+          document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add("show");
+        window.clearTimeout(showHomeToast.timer);
+        showHomeToast.timer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+      }
+      function closeRecentMenus() {
+        recent.querySelectorAll(".recent-card.menu-open").forEach((card) => {
+          card.classList.remove("menu-open");
+          card.querySelector(".recent-menu-btn")?.setAttribute("aria-expanded", "false");
+        });
+      }
       function renderRecent() {
         const projects = core.listProjects().slice(0, 6);
         count.textContent = `${projects.length} 個專案`;
         recent.innerHTML = projects.length ? projects.map((project) => {
-          const href = project.type === "cabinet" ? "./system-cabinet-prototype/" : "./modudraft_fixed.html";
           const date = project.updatedAt ? new Date(project.updatedAt).toLocaleDateString("zh-TW") : "";
-          return `<a class="recent-card" href="${href}?project=${encodeURIComponent(project.id)}"><span class="type">${project.type === "cabinet" ? "系統櫃" : "廚具配置"}</span><b>${escapeHtml(project.name)}</b><time>${escapeHtml(date)} 更新</time></a>`;
+          const id = escapeHtml(project.id);
+          return `<article class="recent-card" data-project-id="${id}"><a class="recent-open" href="${projectHref(project)}"><span class="type">${project.type === "cabinet" ? "系統櫃" : "廚具配置"}</span><b>${escapeHtml(project.name)}</b><time>${escapeHtml(date)} 更新</time></a><button class="recent-menu-btn" type="button" aria-haspopup="menu" aria-expanded="false" aria-label="${escapeHtml(project.name)} 專案操作" data-project-menu="${id}">⋯</button><div class="recent-menu" role="menu"><button type="button" role="menuitem" data-recent-action="open" data-project-id="${id}">開啟專案</button><button type="button" role="menuitem" data-recent-action="share" data-project-id="${id}">分享專案</button><button type="button" role="menuitem" data-recent-action="duplicate" data-project-id="${id}">複製一份</button><button type="button" role="menuitem" class="danger" data-recent-action="delete" data-project-id="${id}">刪除專案</button></div></article>`;
         }).join("") : '<div class="recent-empty">尚無最近專案。進入任一工作台後，MODUDRAFT 會自動保存你的配置。</div>';
+      }
+      async function handleRecentAction(action, projectId) {
+        const project = core.loadProject(projectId);
+        if (!project) {
+          showHomeToast("找不到這個專案，可能已被刪除。");
+          renderRecent();
+          return;
+        }
+        if (action === "open") {
+          location.href = projectHref(project);
+          return;
+        }
+        if (action === "share") {
+          if (project.type === "kitchen") {
+            await copyText(await kitchenProjectShareUrl(project));
+            showHomeToast("已複製專案分享連結，對方開啟後可查看並繼續修改。");
+          } else {
+            await copyText(JSON.stringify(project, null, 2));
+            showHomeToast("系統櫃目前已複製 JSON 備份；可請對方在首頁匯入專案。");
+          }
+          return;
+        }
+        if (action === "duplicate") {
+          const duplicated = core.createProject(Object.assign({}, project, { id: undefined, name: `${project.name || "未命名專案"} 複本`, createdAt: undefined, updatedAt: undefined }));
+          core.saveProject(duplicated);
+          renderRecent();
+          showHomeToast("已複製一份專案。");
+          return;
+        }
+        if (action === "delete") {
+          if (!window.confirm(`確定刪除「${project.name || "未命名專案"}」？此動作只會刪除目前瀏覽器中的本機專案。`)) return;
+          core.deleteProject(project.id);
+          renderRecent();
+          showHomeToast("專案已刪除。");
+        }
       }
       async function importProject() {
         input.click();
@@ -142,6 +265,37 @@
       document.getElementById("importTop").onclick = importProject;
       document.getElementById("importSide").onclick = importProject;
       document.getElementById("newTop").onclick = () => document.querySelector(".modes").scrollIntoView({ behavior: "smooth", block: "center" });
+      recent.addEventListener("click", async (event) => {
+        const menuButton = event.target.closest("[data-project-menu]");
+        if (menuButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          const card = menuButton.closest(".recent-card");
+          const open = !card.classList.contains("menu-open");
+          closeRecentMenus();
+          card.classList.toggle("menu-open", open);
+          menuButton.setAttribute("aria-expanded", String(open));
+          return;
+        }
+        const actionButton = event.target.closest("[data-recent-action]");
+        if (actionButton) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeRecentMenus();
+          try {
+            await handleRecentAction(actionButton.dataset.recentAction, actionButton.dataset.projectId);
+          } catch (error) {
+            console.error(error);
+            showHomeToast(error.message || "操作失敗，請稍後再試。");
+          }
+        }
+      });
+      document.addEventListener("click", (event) => {
+        if (!event.target.closest(".recent-card")) closeRecentMenus();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") closeRecentMenus();
+      });
       renderRecent();
       window.MODUDRAFTHelp?.mount({ mode: "home", assetBase: "./", buttonTarget: ".top-actions" });
       if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));

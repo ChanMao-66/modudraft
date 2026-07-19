@@ -2424,6 +2424,7 @@
     const dimensionHitRegions = { floor: [], elevation: [] };
     const kitchenHistory = { undo: [], redo: [], limit: 60 };
     const defaultMobileAccessUrl = "https://chanmao-66.github.io/modudraft/modudraft_fixed.html";
+    const defaultSoftwareShareUrl = "https://chanmao-66.github.io/modudraft/";
 
     function currentMobileAccessUrl() {
       const localHosts = new Set(["", "localhost", "127.0.0.1", "::1"]);
@@ -2434,7 +2435,13 @@
     }
 
     function currentSoftwareShareUrl() {
-      return currentMobileAccessUrl();
+      if ((location.protocol === "http:" || location.protocol === "https:") && !["", "localhost", "127.0.0.1", "::1"].includes(location.hostname)) {
+        const url = new URL("./", location.href);
+        url.search = "";
+        url.hash = "";
+        return url.href;
+      }
+      return defaultSoftwareShareUrl;
     }
 
     function hasShareableProject() {
