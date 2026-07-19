@@ -87,6 +87,26 @@
     return Math.min(max, Math.max(min, safe));
   }
 
+  function unitApi() {
+    return global.MODUDRAFTUnits || null;
+  }
+
+  function currentUnitLabel() {
+    return unitApi()?.getUnit?.()?.label || "mm";
+  }
+
+  function displayLength(mm) {
+    return unitApi()?.toDisplay ? unitApi().toDisplay(mm) : Math.round(Number(mm) || 0);
+  }
+
+  function inputLengthToMm(value) {
+    return unitApi()?.toMm ? unitApi().toMm(value) : Math.round(Number(value) || 0);
+  }
+
+  function formatLength(mm, withHint = true) {
+    return unitApi()?.format ? unitApi().format(mm, { withMmHint: withHint }) : `${Math.round(Number(mm) || 0)} mm`;
+  }
+
   function clone(value) {
     return JSON.parse(JSON.stringify(value));
   }
@@ -162,6 +182,22 @@
     if (width >= DISH_DRYER_WIDTHS[0]) return DISH_DRYER_WIDTHS[0];
     if (width >= DISH_DRYER_WIDTHS[1]) return DISH_DRYER_WIDTHS[1];
     return 0;
+  }
+
+  function dishDryerUpperCabinetsForSink(item) {
+    const sinkWidth = Math.max(0, Math.round(Number(item?.width) || 0));
+    const machineWidth = dishDryerWidthForSink(sinkWidth);
+    if (!machineWidth) return [];
+    const group = [cabinet(`吊掛式烘碗機 ${machineWidth}`, machineWidth, "upper", "dish-dryer", "double-door", {
+      notes: `水槽下櫃 ${sinkWidth} mm；烘碗機本體固定 ${machineWidth} mm，上方同段總寬補齊對齊。`
+    })];
+    const fillWidth = Math.max(0, sinkWidth - machineWidth);
+    if (fillWidth >= STRAIGHT_RULES.minimumUsefulFillerWidth) {
+      group.push(cabinet("烘碗機側收納吊櫃", fillWidth, "upper", "general", fillWidth >= 600 ? "double-door" : "single-door", {
+        notes: `補齊水槽上方 ${sinkWidth} mm 總寬，避免吊櫃留空。`
+      }));
+    }
+    return group;
   }
 
   function modularFloor(value, unit = 5) {
@@ -383,15 +419,19 @@
       };
     }
 
-    const sharedApplianceWidth = Math.min(
-      STRAIGHT_RULES.preferredSinkWidth,
-      STRAIGHT_RULES.preferredCooktopWidth
-    );
-    const sharedUpgrade = Math.max(0, sharedApplianceWidth - STRAIGHT_RULES.minimumSinkWidth);
-    if (storageWidth - STRAIGHT_RULES.minimumMiddleWidth >= sharedUpgrade * 2) {
-      sinkWidth = sharedApplianceWidth;
-      stoveWidth = sharedApplianceWidth;
-      storageWidth -= sharedUpgrade * 2;
+    const sinkUpgrade = Math.max(0, STRAIGHT_RULES.preferredSinkWidth - STRAIGHT_RULES.minimumSinkWidth);
+    const stoveUpgrade = Math.max(0, STRAIGHT_RULES.preferredCooktopWidth - STRAIGHT_RULES.minimumCooktopWidth);
+    const minimumPrepWidth = STRAIGHT_RULES.minimumMiddleWidth;
+    if (storageWidth - minimumPrepWidth >= sinkUpgrade + stoveUpgrade) {
+      sinkWidth = STRAIGHT_RULES.preferredSinkWidth;
+      stoveWidth = STRAIGHT_RULES.preferredCooktopWidth;
+      storageWidth -= sinkUpgrade + stoveUpgrade;
+    } else if (storageWidth - minimumPrepWidth >= sinkUpgrade) {
+      sinkWidth = STRAIGHT_RULES.preferredSinkWidth;
+      storageWidth -= sinkUpgrade;
+    } else if (storageWidth - minimumPrepWidth >= stoveUpgrade) {
+      stoveWidth = STRAIGHT_RULES.preferredCooktopWidth;
+      storageWidth -= stoveUpgrade;
     }
 
     const storage = splitStorageWidth(storageWidth, "備餐抽屜櫃", "lower", variant);
@@ -425,11 +465,9 @@
           return;
         }
         if (item.purpose === "sink") {
-          const dishDryerWidth = dishDryerWidthForSink(item.width);
-          if (dishDryerWidth) {
-            upper.push(cabinet(`吊掛式烘碗機 ${dishDryerWidth}`, dishDryerWidth, "upper", "dish-dryer", "double-door", {
-              notes: `依水槽下櫃 ${Math.round(item.width)} mm 自動配置，吊掛式烘碗機只使用 800 或 600 mm。`
-            }));
+          const dishDryerGroup = dishDryerUpperCabinetsForSink(item);
+          if (dishDryerGroup.length) {
+            upper.push(...dishDryerGroup);
           } else if (config.upperMode === "full") {
             upper.push(cabinet("水槽上方收納吊櫃", item.width, "upper", "general", "double-door"));
           }
@@ -666,7 +704,7 @@
 
     function fieldValue(name, value) {
       const numericFields = new Set(["mainWallWidth", "sideWallWidth", "ceilingHeight", "lowerHeight", "lowerDepth", "upperHeight", "upperDepth", "counterDepth"]);
-      config[name] = numericFields.has(name) ? Number(value) : value;
+      config[name] = numericFields.has(name) ? inputLengthToMm(value) : value;
       if (numericFields.has(name)) config.confirmedDefaultDimensions = false;
       if (name === "sinkPosition" || name === "stovePosition") config.layoutVariant = 0;
       persist();
@@ -760,16 +798,16 @@
     function renderStep2() {
       body.innerHTML = `${stepHeader("STEP 2 / 7", "輸入空間尺寸", "請先輸入現場牆寬與天花高度。欄位內有預設值，下一步會再次確認是否要直接沿用。")}
         <div class="md-kw-form-grid">
-          <label data-help-id="wall-width">${config.kitchenType === "L" ? "主牆寬度" : "牆面寬度"}<span><input data-kw-field="mainWallWidth" type="number" inputmode="numeric" min="1200" max="12000" value="${config.mainWallWidth}"><b>mm</b></span></label>
-          ${config.kitchenType === "L" ? `<label>側牆寬度<span><input data-kw-field="sideWallWidth" type="number" inputmode="numeric" min="1200" max="8000" value="${config.sideWallWidth}"><b>mm</b></span></label><label>轉角位置<select data-kw-field="turnDirection"><option value="left" ${config.turnDirection === "left" ? "selected" : ""}>左轉</option><option value="right" ${config.turnDirection === "right" ? "selected" : ""}>右轉</option></select></label>` : ""}
-          <label>天花高度<span><input data-kw-field="ceilingHeight" type="number" inputmode="numeric" min="2000" max="4200" value="${config.ceilingHeight}"><b>mm</b></span></label>
+          <label data-help-id="wall-width">${config.kitchenType === "L" ? "主牆寬度" : "牆面寬度"}<span><input data-kw-field="mainWallWidth" type="number" inputmode="decimal" min="${displayLength(1200)}" max="${displayLength(12000)}" value="${displayLength(config.mainWallWidth)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.mainWallWidth)}</small></label>
+          ${config.kitchenType === "L" ? `<label>側牆寬度<span><input data-kw-field="sideWallWidth" type="number" inputmode="decimal" min="${displayLength(1200)}" max="${displayLength(8000)}" value="${displayLength(config.sideWallWidth)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.sideWallWidth)}</small></label><label>轉角位置<select data-kw-field="turnDirection"><option value="left" ${config.turnDirection === "left" ? "selected" : ""}>左轉</option><option value="right" ${config.turnDirection === "right" ? "selected" : ""}>右轉</option></select></label>` : ""}
+          <label>天花高度<span><input data-kw-field="ceilingHeight" type="number" inputmode="decimal" min="${displayLength(2000)}" max="${displayLength(4200)}" value="${displayLength(config.ceilingHeight)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.ceilingHeight)}</small></label>
         </div>
         <details class="md-kw-advanced"><summary>進階尺寸</summary><div class="md-kw-form-grid">
-          <label>下櫃高度<span><input data-kw-field="lowerHeight" type="number" value="${config.lowerHeight}"><b>mm</b></span></label>
-          <label>下櫃深度<span><input data-kw-field="lowerDepth" type="number" value="${config.lowerDepth}"><b>mm</b></span></label>
-          <label>吊櫃高度<span><input data-kw-field="upperHeight" type="number" value="${config.upperHeight}"><b>mm</b></span></label>
-          <label>吊櫃深度<span><input data-kw-field="upperDepth" type="number" value="${config.upperDepth}"><b>mm</b></span></label>
-          <label>檯面深度<span><input data-kw-field="counterDepth" type="number" value="${config.counterDepth}"><b>mm</b></span></label>
+          <label>下櫃高度<span><input data-kw-field="lowerHeight" type="number" inputmode="decimal" value="${displayLength(config.lowerHeight)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.lowerHeight)}</small></label>
+          <label>下櫃深度<span><input data-kw-field="lowerDepth" type="number" inputmode="decimal" value="${displayLength(config.lowerDepth)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.lowerDepth)}</small></label>
+          <label>吊櫃高度<span><input data-kw-field="upperHeight" type="number" inputmode="decimal" value="${displayLength(config.upperHeight)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.upperHeight)}</small></label>
+          <label>吊櫃深度<span><input data-kw-field="upperDepth" type="number" inputmode="decimal" value="${displayLength(config.upperDepth)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.upperDepth)}</small></label>
+          <label>檯面深度<span><input data-kw-field="counterDepth" type="number" inputmode="decimal" value="${displayLength(config.counterDepth)}"><b>${currentUnitLabel()}</b></span><small>${formatLength(config.counterDepth)}</small></label>
         </div></details><p class="md-kw-note">預設尺寸只適合快速試用；實際案件請輸入丈量後的牆寬與天花高度。</p><div class="md-kw-errors" aria-live="polite"></div>`;
     }
 
@@ -978,7 +1016,19 @@
     }
 
     bindStartScreen();
-    return { open, close, openLibrary, closeLibrary, buildPlan, getConfig: () => clone(config), cabinetList: () => cabinetList(adapter.getProject()), standardCabinets: STANDARD_CABINETS };
+    return {
+      open,
+      close,
+      openLibrary,
+      closeLibrary,
+      buildPlan,
+      getConfig: () => clone(config),
+      cabinetList: () => cabinetList(adapter.getProject()),
+      standardCabinets: STANDARD_CABINETS,
+      refresh: () => {
+        if (overlay.classList.contains("open")) render();
+      }
+    };
   }
 
   global.MODUDRAFTKitchenWorkflow = Object.freeze({ mount, buildPlan, buildStraightPlan, buildLPlan, summarizePlan, cabinetList, listToText, listToCsv, STANDARD_CABINETS, DEFAULT_CONFIG, KITCHEN_RULES: CORE_RULES });

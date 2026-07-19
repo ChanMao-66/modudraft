@@ -36,6 +36,35 @@
   font-family: Inter, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", system-ui, sans-serif;
 }
 
+body.modudraft-kitchen #aiRenderPrompt {
+  width: 100%;
+  min-height: 156px;
+  resize: vertical;
+  padding: 12px 14px;
+  border: 1px solid var(--md-border, #e6e9ed);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--md-text, #1f2d3d);
+  line-height: 1.6;
+  font: 13px/1.6 var(--md-font, Inter, "Noto Sans TC", system-ui, sans-serif);
+}
+
+body.modudraft-kitchen #copyAiRenderPromptBtn,
+body.modudraft-kitchen #copyProjectJsonBtn {
+  min-height: 38px;
+  border: 1px solid rgba(47, 111, 109, 0.22);
+  border-radius: 10px;
+  background: var(--md-primary-soft, #e8f2f1);
+  color: var(--md-primary, #2f6f6d);
+  font-weight: 800;
+}
+
+body.modudraft-kitchen .mobile-access-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 body.modudraft-ui-v2,
 body.modudraft-ui-v2 button,
 body.modudraft-ui-v2 input,
@@ -444,6 +473,26 @@ body.modudraft-kitchen .measure-field,
 body.modudraft-kitchen .toggle-control,
 body.modudraft-kitchen .global-style-control {
   color: var(--color-text-secondary);
+}
+
+body.modudraft-kitchen .measure-field.unit-field {
+  min-width: 128px;
+}
+
+body.modudraft-kitchen .measure-field.unit-field select {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+body.modudraft-kitchen .measure-field.unit-field select:focus {
+  border-color: rgba(47, 111, 109, 0.5);
+  box-shadow: 0 0 0 3px rgba(47, 111, 109, 0.12);
 }
 
 body.modudraft-kitchen .segmented {

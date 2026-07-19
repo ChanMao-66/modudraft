@@ -1,6 +1,8 @@
 (function kitchenMobileModule(global) {
   "use strict";
 
+  const MOBILE_FIRST_USE_GUIDE_TITLE = "手機版操作提示";
+  const MOBILE_FIRST_USE_GUIDE_STORAGE_KEY = "modudraft:kitchen:mobile-guide:v1";
   const core = global.MODUDRAFTMobileCore;
   const VIEW_LABELS = { floor: "平面圖", elevation: "立面圖", three: "3D" };
 
@@ -20,6 +22,11 @@
 
   function mount(options) {
     const config = options || {};
+    const unitApi = () => global.MODUDRAFTUnits || null;
+    const unitLabel = () => unitApi()?.getUnit?.()?.label || "mm";
+    const formatLength = (value) => unitApi()?.format ? unitApi().format(value, { withMmHint: true }) : `${Math.round(Number(value) || 0)} mm`;
+    const displayLength = (value) => unitApi()?.toDisplay ? unitApi().toDisplay(value) : Math.round(Number(value) || 0);
+    const inputToMm = (value) => unitApi()?.toMm ? unitApi().toMm(value) : Math.round(Number(value) || 0);
     let activeView = "floor";
     let activeSheet = null;
     let sheetSize = "half";
@@ -316,13 +323,13 @@
       nodes.sheetBody.innerHTML = `
         <section class="mobile-sheet-section">
           <h3>目前牆面</h3>
-          <label class="mobile-field">選擇牆面<select id="mobileWallSelect" data-help-id="select-wall">${(context.walls || []).map((wall, index) => `<option value="${index}" ${index === context.activeWallIndex ? "selected" : ""}>牆 ${index + 1} · ${Math.round(wall.width)} mm</option>`).join("")}</select></label>
+          <label class="mobile-field">選擇牆面<select id="mobileWallSelect" data-help-id="select-wall">${(context.walls || []).map((wall, index) => `<option value="${index}" ${index === context.activeWallIndex ? "selected" : ""}>牆 ${index + 1} · ${formatLength(wall.width)}</option>`).join("")}</select></label>
         </section>
         <section class="mobile-sheet-section">
           <h3>尺寸</h3>
           <div class="mobile-inline-fields">
-            <label class="mobile-field">牆寬 mm<input id="mobileWallWidth" type="number" inputmode="numeric" pattern="[0-9]*" value="${Math.round(context.wallWidth || 2300)}" data-help-id="wall-width"></label>
-            <label class="mobile-field">天花高 mm<input id="mobileWallHeight" type="number" inputmode="numeric" pattern="[0-9]*" value="${Math.round(context.wallHeight || 2300)}" data-help-id="wall-height"></label>
+            <label class="mobile-field">牆寬 ${unitLabel()}<input id="mobileWallWidth" type="number" inputmode="decimal" value="${displayLength(context.wallWidth || 2300)}" data-help-id="wall-width"><small>${formatLength(context.wallWidth || 2300)}</small></label>
+            <label class="mobile-field">天花高 ${unitLabel()}<input id="mobileWallHeight" type="number" inputmode="decimal" value="${displayLength(context.wallHeight || 2300)}" data-help-id="wall-height"><small>${formatLength(context.wallHeight || 2300)}</small></label>
           </div>
           <button type="button" class="primary mobile-sheet-primary" data-sheet-action="apply-wall" data-help-id="apply-wall-size">套用牆面尺寸</button>
         </section>
@@ -345,7 +352,7 @@
         <section class="mobile-sheet-section">
           <div class="mobile-inline-fields">
             <label class="mobile-field">櫃體層<select id="mobileAddLayer" data-help-id="cabinet-layer"><option value="lower" ${layer === "lower" ? "selected" : ""}>下櫃</option><option value="upper" ${layer === "upper" ? "selected" : ""}>吊櫃</option></select></label>
-            <label class="mobile-field">寬度 mm<input id="mobileAddWidth" type="number" inputmode="numeric" pattern="[0-9]*" value="600" min="50" data-help-id="cabinet-width"></label>
+            <label class="mobile-field">寬度 ${unitLabel()}<input id="mobileAddWidth" type="number" inputmode="decimal" value="${displayLength(600)}" min="${displayLength(50)}" data-help-id="cabinet-width"><small>${formatLength(600)}</small></label>
           </div>
           <label class="mobile-field" style="margin-top:9px">名稱<input id="mobileAddName" type="text" value="${layer === "upper" ? "新增吊櫃" : "新增下櫃"}" data-help-id="cabinet-name"></label>
           <label class="mobile-field" style="margin-top:9px">用途<select id="mobileAddPurpose" data-help-id="cabinet-purpose"><option value="general">一般收納櫃</option><option value="drawer">抽屜櫃</option><option value="sink">水槽櫃</option><option value="stove">爐台櫃</option><option value="blind-corner">盲角轉角下櫃 1000</option><option value="appliance">嵌入電器櫃</option><option value="open">開放櫃</option><option value="filler">補板／補邊</option></select></label>
@@ -451,7 +458,7 @@
       else if (action === "create-cabinet") {
         const result = config.addCabinet?.({
           layer: nodes.sheetBody.querySelector("#mobileAddLayer")?.value,
-          width: Number(nodes.sheetBody.querySelector("#mobileAddWidth")?.value),
+          width: inputToMm(nodes.sheetBody.querySelector("#mobileAddWidth")?.value),
           name: nodes.sheetBody.querySelector("#mobileAddName")?.value,
           purpose: nodes.sheetBody.querySelector("#mobileAddPurpose")?.value
         });

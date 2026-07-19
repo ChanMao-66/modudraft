@@ -1539,7 +1539,7 @@
       .design-dock { grid-template-columns: repeat(16, minmax(68px, 1fr)); }
     }
   </style>
-  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-split-3d-v1">
+  <link rel="stylesheet" href="./shared/modudraft-ui-v2.css?v=20260719-share-unit-dish-v1">
 </head>
 <body class="modudraft-ui-v2 modudraft-kitchen">
   <a class="floating-home" href="./" aria-label="返回模式選擇" title="返回模式選擇">⌂</a>
@@ -1658,6 +1658,17 @@
           </label>
           <label class="measure-field">天花高
             <input id="wallHeightInput" type="number" min="1600" max="4200" step="10" inputmode="numeric">
+          </label>
+          <label class="measure-field unit-field" data-help-id="unit-switcher">單位
+            <select id="lengthUnitSelect" aria-label="切換尺寸輸入單位">
+              <option value="mm">mm 毫米</option>
+              <option value="cm">cm 公分</option>
+              <option value="m">m 公尺</option>
+              <option value="twFeet">台尺</option>
+              <option value="twInch">台寸</option>
+              <option value="inch">in 英吋</option>
+              <option value="feet">ft 英尺</option>
+            </select>
           </label>
           <button id="applyWallSizeBtn" type="button">套用</button>
         </div>
@@ -2015,27 +2026,28 @@
 
   <div id="installModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="installTitle">
     <section class="modal-content install-content">
-      <h2 id="installTitle">分享 MODUDRAFT</h2>
+      <h2 id="installTitle">分享目前專案</h2>
       <div class="install-mark">
         <img src="./icons/modudraft-192-refined.png" alt="">
         <div>
-          <strong>MODUDRAFT</strong>
-          <span>直接用連結開啟，不需下載 APP 檔案</span>
+          <strong>草圖魔方 ModuDraft</strong>
+          <span>分享目前廚具配置，對方開啟後可繼續編輯</span>
         </div>
       </div>
-      <p id="installStatus" class="install-status">掃描 QR Code、複製網址，或使用手機的系統分享功能。</p>
+      <p id="installStatus" class="install-status">複製連結後，對方會載入目前配置的一份可編輯副本。</p>
       <div class="mobile-access">
         <img src="./icons/mobile-access-qr.png" alt="分享 MODUDRAFT 的 QR Code">
         <div class="mobile-access-copy">
-          <strong>掃描後直接使用</strong>
-          <p>對方使用手機相機掃描後，會從永久 HTTPS 網址直接開啟這套軟體。</p>
+          <strong>分享可編輯配置</strong>
+          <p>連結會包含目前牆面、櫃體、材質與視圖資料。這是連結協作副本，不是即時雲端同步。</p>
           <code id="mobileAccessUrl" class="mobile-url">https://chanmao-66.github.io/modudraft/</code>
           <div class="mobile-access-actions">
-            <button type="button" id="copyMobileUrlBtn">複製分享網址</button>
+            <button type="button" id="copyMobileUrlBtn">複製專案連結</button>
+            <button type="button" id="copyProjectJsonBtn">複製 JSON 備份</button>
           </div>
         </div>
       </div>
-      <p class="install-note">分享的是同一個公開版本；每支裝置的草圖資料會各自保留在該裝置瀏覽器中。</p>
+      <p class="install-note">若專案很大導致連結過長，請改用 JSON 備份；未來接後端後可升級為真正多人即時協作。</p>
       <div class="modal-actions">
         <button type="button" class="muted-button" id="closeInstallBtn">關閉</button>
         <button type="button" class="primary" id="installNowBtn">系統分享</button>
@@ -2112,6 +2124,11 @@
           <option value="material">普通材質（保留目前配色）</option>
         </select>
       </label>
+      <label class="ai-source-field">
+        可直接複製的提示詞
+        <textarea id="aiRenderPrompt" rows="8" readonly></textarea>
+      </label>
+      <button type="button" id="copyAiRenderPromptBtn">複製真實感提示詞</button>
       <img id="aiScreenshotPreview" class="preview-frame" alt="設計視圖截圖預覽">
       <p id="aiRenderStatus" class="install-status">第一步：下載目前設計截圖。</p>
       <button type="button" class="primary" id="captureAiScreenshotBtn">先截圖並下載</button>
@@ -2132,9 +2149,9 @@
   <script src="./shared/help-system.js?v=20260719-overlay-zfix-v1"></script>
   <script src="./shared/render-workflow.js?v=20260704-v1"></script>
   <script src="./shared/kitchen-assist.js?v=20260704-v1"></script>
-  <script src="./shared/kitchen-mobile.js?v=20260706-blind-corner-v1"></script>
+  <script src="./shared/kitchen-mobile.js?v=20260719-share-unit-dish-v1"></script>
   <script src="./shared/estimate.js?v=20260719-ui-polish-v2"></script>
-  <script src="./shared/kitchen-workflow.js?v=20260719-beginner-dish-v1"></script>
+  <script src="./shared/kitchen-workflow.js?v=20260719-share-unit-dish-v1"></script>
   <script>
     const state = {
       walls: [],
@@ -2144,6 +2161,7 @@
       showWalls: true,
       showTopFiller: true,
       globalHandleStyle: "none",
+      displayUnit: "mm",
       renderMode: "white",
       renderStyle: "nordic",
       view: {
@@ -2169,6 +2187,24 @@
     const kitchenStraightRules = kitchenRules.straight || {};
     const kitchenSinkRules = kitchenRules.sink || {};
     const suggestedSinkStoveDistance = kitchenRules.sinkStove?.suggestedMinimumDistance || 300;
+    const LENGTH_UNIT_STORAGE_KEY = "modudraft:length-unit:v1";
+    const LENGTH_UNITS = Object.freeze({
+      mm: { label: "mm", name: "毫米", factor: 1, decimals: 0, step: 10 },
+      cm: { label: "cm", name: "公分", factor: 10, decimals: 1, step: 1 },
+      m: { label: "m", name: "公尺", factor: 1000, decimals: 2, step: 0.01 },
+      twFeet: { label: "台尺", name: "台尺", factor: 303.03, decimals: 2, step: 0.1 },
+      twInch: { label: "台寸", name: "台寸", factor: 30.303, decimals: 1, step: 1 },
+      inch: { label: "in", name: "英吋", factor: 25.4, decimals: 2, step: 0.25 },
+      feet: { label: "ft", name: "英尺", factor: 304.8, decimals: 2, step: 0.1 }
+    });
+    function normalizeLengthUnitKey(key) {
+      return LENGTH_UNITS[key] ? key : "mm";
+    }
+    try {
+      state.displayUnit = normalizeLengthUnitKey(localStorage.getItem(LENGTH_UNIT_STORAGE_KEY));
+    } catch (_error) {
+      state.displayUnit = "mm";
+    }
 
     const sizes = {
       lowerHeight: kitchenDimensions.lowerHeight || 860,
@@ -2196,6 +2232,7 @@
       deleteWallBtn: document.getElementById("deleteWallBtn"),
       wallWidthInput: document.getElementById("wallWidthInput"),
       wallHeightInput: document.getElementById("wallHeightInput"),
+      lengthUnitSelect: document.getElementById("lengthUnitSelect"),
       wallVisibilityToggle: document.getElementById("wallVisibilityToggle"),
       topFillerVisibilityToggle: document.getElementById("topFillerVisibilityToggle"),
       globalHandleStyle: document.getElementById("globalHandleStyle"),
@@ -2267,6 +2304,7 @@
       installNowBtn: document.getElementById("installNowBtn"),
       mobileAccessUrl: document.getElementById("mobileAccessUrl"),
       copyMobileUrlBtn: document.getElementById("copyMobileUrlBtn"),
+      copyProjectJsonBtn: document.getElementById("copyProjectJsonBtn"),
       exportModal: document.getElementById("exportModal"),
       exportFormat: document.getElementById("exportFormat"),
       exportView: document.getElementById("exportView"),
@@ -2275,6 +2313,8 @@
       aiRenderModal: document.getElementById("aiRenderModal"),
       aiRenderView: document.getElementById("aiRenderView"),
       aiRenderSource: document.getElementById("aiRenderSource"),
+      aiRenderPrompt: document.getElementById("aiRenderPrompt"),
+      copyAiRenderPromptBtn: document.getElementById("copyAiRenderPromptBtn"),
       aiScreenshotPreview: document.getElementById("aiScreenshotPreview"),
       aiRenderStatus: document.getElementById("aiRenderStatus"),
       openGeminiBtn: document.getElementById("openGeminiBtn"),
@@ -2351,7 +2391,7 @@
     let focusedAssistSpaceId = null;
     const dimensionHitRegions = { floor: [], elevation: [] };
     const kitchenHistory = { undo: [], redo: [], limit: 60 };
-    const defaultMobileAccessUrl = "https://chanmao-66.github.io/modudraft/";
+    const defaultMobileAccessUrl = "https://chanmao-66.github.io/modudraft/modudraft_fixed.html";
 
     function currentMobileAccessUrl() {
       const localHosts = new Set(["", "localhost", "127.0.0.1", "::1"]);
@@ -2359,6 +2399,58 @@
         return `${location.origin}${location.pathname}`;
       }
       return defaultMobileAccessUrl;
+    }
+
+    function encodeSharePayload(value) {
+      const json = JSON.stringify(value);
+      const bytes = new TextEncoder().encode(json);
+      let binary = "";
+      bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+      return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+    }
+
+    function decodeSharePayload(payload) {
+      const normalized = String(payload || "").replace(/-/g, "+").replace(/_/g, "/");
+      const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+      const binary = atob(padded);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      return JSON.parse(new TextDecoder().decode(bytes));
+    }
+
+    function currentProjectShareUrl() {
+      const project = kitchenProjectSnapshot();
+      const cleanProject = window.MODUDRAFTCore?.cleanData ? window.MODUDRAFTCore.cleanData(project) : project;
+      const payload = encodeSharePayload({ schema: "modudraft-kitchen-share-v1", project: cleanProject });
+      return `${currentMobileAccessUrl()}#mdk=${payload}`;
+    }
+
+    function sharedProjectFromLocationHash() {
+      if (!location.hash || !location.hash.includes("mdk=")) return null;
+      try {
+        const params = new URLSearchParams(location.hash.slice(1));
+        const payload = params.get("mdk");
+        if (!payload) return null;
+        const decoded = decodeSharePayload(payload);
+        return decoded?.project || decoded;
+      } catch (error) {
+        console.warn("Unable to load shared project", error);
+        return null;
+      }
+    }
+
+    async function copyTextToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const input = document.createElement("textarea");
+        input.value = text;
+        input.style.position = "fixed";
+        input.style.opacity = "0";
+        document.body.appendChild(input);
+        input.select();
+        document.execCommand("copy");
+        input.remove();
+      }
     }
 
     function uid(prefix) {
@@ -2372,6 +2464,85 @@
     function formatNumber(value) {
       return new Intl.NumberFormat("zh-Hant").format(Math.round(value));
     }
+
+    function activeLengthUnit() {
+      return LENGTH_UNITS[normalizeLengthUnitKey(state.displayUnit)] || LENGTH_UNITS.mm;
+    }
+
+    function roundDisplayValue(value, decimals) {
+      const scale = 10 ** Math.max(0, Number(decimals) || 0);
+      return Math.round(value * scale) / scale;
+    }
+
+    function mmToDisplay(value, unitKey = state.displayUnit) {
+      const unit = LENGTH_UNITS[normalizeLengthUnitKey(unitKey)] || LENGTH_UNITS.mm;
+      const numeric = Number(value);
+      if (!Number.isFinite(numeric)) return 0;
+      return roundDisplayValue(numeric / unit.factor, unit.decimals);
+    }
+
+    function displayToMm(value, unitKey = state.displayUnit) {
+      const unit = LENGTH_UNITS[normalizeLengthUnitKey(unitKey)] || LENGTH_UNITS.mm;
+      const numeric = Number(String(value ?? "").trim());
+      if (!Number.isFinite(numeric)) return NaN;
+      return Math.round(numeric * unit.factor);
+    }
+
+    function formatDisplayNumber(value, decimals = activeLengthUnit().decimals) {
+      return new Intl.NumberFormat("zh-Hant", {
+        maximumFractionDigits: Math.max(0, decimals),
+        minimumFractionDigits: 0
+      }).format(Number(value) || 0);
+    }
+
+    function formatLength(value, options = {}) {
+      const unit = LENGTH_UNITS[normalizeLengthUnitKey(options.unitKey || state.displayUnit)] || LENGTH_UNITS.mm;
+      const converted = mmToDisplay(value, options.unitKey || state.displayUnit);
+      const suffix = options.withMmHint && unit.label !== "mm" ? `（${formatNumber(value)} mm）` : "";
+      return `${formatDisplayNumber(converted, unit.decimals)} ${unit.label}${suffix}`;
+    }
+
+    function syncLengthUnitUi() {
+      const unit = activeLengthUnit();
+      if (el.lengthUnitSelect) el.lengthUnitSelect.value = normalizeLengthUnitKey(state.displayUnit);
+      [el.wallWidthInput, el.wallHeightInput].forEach((input) => {
+        if (!input) return;
+        input.step = String(unit.step || 1);
+        input.inputMode = unit.decimals > 0 ? "decimal" : "numeric";
+      });
+      document.querySelectorAll("[data-current-length-unit]").forEach((node) => {
+        node.textContent = unit.label;
+      });
+      document.querySelectorAll(".dimension-unit").forEach((node) => {
+        node.textContent = unit.label;
+      });
+    }
+
+    function setDisplayUnit(unitKey) {
+      const previous = activeLengthUnit();
+      state.displayUnit = normalizeLengthUnitKey(unitKey);
+      try { localStorage.setItem(LENGTH_UNIT_STORAGE_KEY, state.displayUnit); } catch (_error) {}
+      syncLengthUnitUi();
+      syncWallInputs();
+      rebuildWallSelect();
+      updateMetrics();
+      kitchenMobileController?.update?.();
+      kitchenWorkflowController?.refresh?.();
+      window.MODUDRAFTKitchenWorkflow?.refresh?.();
+      if (previous.label !== activeLengthUnit().label) {
+        showKitchenToast(`尺寸輸入單位已切換為 ${activeLengthUnit().name}`);
+      }
+    }
+
+    window.MODUDRAFTUnits = {
+      units: LENGTH_UNITS,
+      getUnitKey: () => normalizeLengthUnitKey(state.displayUnit),
+      getUnit: () => activeLengthUnit(),
+      toDisplay: (mm) => mmToDisplay(mm),
+      toMm: (value) => displayToMm(value),
+      format: (mm, options) => formatLength(mm, options),
+      setUnit: setDisplayUnit
+    };
 
     function clampNumber(value, min, max, fallback) {
       const numeric = Math.round(Number(value));
@@ -2610,9 +2781,9 @@
       const used = layerTotal(wall, layer);
       const remaining = wall.width - used;
       const spaces = assistSpaces(layer);
-      el.assistWallWidth.textContent = `${formatNumber(wall.width)} mm`;
-      el.assistUsedWidth.textContent = `${formatNumber(used)} mm`;
-      el.assistRemainingWidth.textContent = `${formatNumber(remaining)} mm`;
+      el.assistWallWidth.textContent = formatLength(wall.width, { withMmHint: true });
+      el.assistUsedWidth.textContent = formatLength(used, { withMmHint: true });
+      el.assistRemainingWidth.textContent = formatLength(remaining, { withMmHint: true });
       el.aiAssistWall.innerHTML = `<option>牆 ${state.activeWallIndex + 1}</option>`;
 
       if (remaining < 0) {
@@ -2716,7 +2887,7 @@
       else if (validation.valid && average > 900) warning = "單櫃過寬，建議增加等分數量。";
 
       el.equalizeSelectedCount.textContent = `${selectedCount} 個`;
-      el.equalizeTotalWidth.textContent = `${formatNumber(total)} mm`;
+      el.equalizeTotalWidth.textContent = formatLength(total, { withMmHint: true });
       el.equalizeLayerLabel.textContent = validation.valid ? (validation.layer === "upper" ? "吊櫃" : "下櫃") : "待確認";
       el.equalizePreview.textContent = widths.length ? widths.join(" + ") : "請先點選櫃體";
       el.equalizeWarning.textContent = warning;
@@ -3080,7 +3251,7 @@
       state.walls.forEach((wall, index) => {
         const option = document.createElement("option");
         option.value = String(index);
-        option.textContent = `牆 ${index + 1} - 寬 ${formatNumber(wall.width)} mm`;
+        option.textContent = `牆 ${index + 1} - 寬 ${formatLength(wall.width, { withMmHint: true })}`;
         el.wallSelect.appendChild(option);
       });
       el.wallSelect.value = String(state.activeWallIndex);
@@ -3091,8 +3262,9 @@
       const wall = activeWall();
       if (!wall) return;
       wall.alignment = wall.alignment === "right" ? "right" : "left";
-      el.wallWidthInput.value = String(wall.width);
-      el.wallHeightInput.value = String(sharedWallHeight());
+      syncLengthUnitUi();
+      el.wallWidthInput.value = String(mmToDisplay(wall.width));
+      el.wallHeightInput.value = String(mmToDisplay(sharedWallHeight()));
       el.alignWallLeftBtn.classList.toggle("active", wall.alignment === "left");
       el.alignWallRightBtn.classList.toggle("active", wall.alignment === "right");
       el.deleteWallBtn.disabled = state.walls.length <= 1;
@@ -3101,8 +3273,10 @@
     function applyWallSize() {
       const wall = activeWall();
       if (!wall) return;
-      wall.width = clampNumber(el.wallWidthInput.value, 300, 12000, wall.width);
-      const sharedHeight = clampNumber(el.wallHeightInput.value, 1600, 4200, sharedWallHeight());
+      const widthMm = displayToMm(el.wallWidthInput.value);
+      const heightMm = displayToMm(el.wallHeightInput.value);
+      wall.width = clampNumber(widthMm, 300, 12000, wall.width);
+      const sharedHeight = clampNumber(heightMm, 1600, 4200, sharedWallHeight());
       state.walls.forEach((item) => {
         item.height = sharedHeight;
       });
@@ -3223,11 +3397,11 @@
       const upper = layerTotal(wall, "upper");
       const remain = wall.width - Math.max(lower, upper);
 
-      el.metricWallWidth.innerHTML = `牆寬：<b>${formatNumber(wall.width)} mm</b>`;
-      el.metricWallHeight.innerHTML = `天花高：<b>${formatNumber(sharedWallHeight())} mm</b>`;
-      el.metricLower.innerHTML = `下櫃：<b>${formatNumber(lower)} mm</b>`;
-      el.metricUpper.innerHTML = `吊櫃：<b>${formatNumber(upper)} mm</b>`;
-      el.metricUpperHeight.innerHTML = `吊櫃高：<b>${formatNumber(wallUpperHeight(wall))} mm</b>`;
+      el.metricWallWidth.innerHTML = `牆寬：<b>${formatLength(wall.width, { withMmHint: true })}</b>`;
+      el.metricWallHeight.innerHTML = `天花高：<b>${formatLength(sharedWallHeight(), { withMmHint: true })}</b>`;
+      el.metricLower.innerHTML = `下櫃：<b>${formatLength(lower, { withMmHint: true })}</b>`;
+      el.metricUpper.innerHTML = `吊櫃：<b>${formatLength(upper, { withMmHint: true })}</b>`;
+      el.metricUpperHeight.innerHTML = `吊櫃高：<b>${formatLength(wallUpperHeight(wall), { withMmHint: true })}</b>`;
       el.metricUpperHeight.style.borderColor = wallUpperHeight(wall) < 350 ? "#d75b51" : "#303a46";
       el.metricLower.style.borderColor = remain < 0 ? "#d75b51" : "#303a46";
     }
@@ -3417,7 +3591,8 @@
       aiScreenshotDataUrl = null;
       el.aiScreenshotPreview.removeAttribute("src");
       el.aiScreenshotPreview.classList.remove("visible");
-      el.aiRenderStatus.textContent = "第一步：下載目前設計截圖。";
+      syncAiRenderPrompt();
+      el.aiRenderStatus.textContent = "第一步：複製提示詞，再下載目前設計截圖。";
       el.openGeminiBtn.disabled = true;
       el.openChatGptBtn.disabled = true;
       el.aiRenderModal.classList.add("open");
@@ -3425,6 +3600,52 @@
 
     function closeAiRenderModal() {
       el.aiRenderModal.classList.remove("open");
+    }
+
+    function buildRealisticAiRenderPrompt() {
+      const project = kitchenProjectSnapshot();
+      const kitchenType = project.kitchenType === "L" ? "L 型廚房" : "一字型廚房";
+      const wallSummary = (project.walls || [])
+        .map((wall, index) => `${wall.name || `牆 ${index + 1}`}：寬 ${Math.round(wall.width || 0)} mm，高 ${Math.round(wall.height || sharedWallHeight())} mm`)
+        .join("；");
+      const lower = (project.cabinets || []).filter((item) => item.category === "baseCabinet");
+      const upper = (project.cabinets || []).filter((item) => item.category === "wallCabinet");
+      const sinks = (project.cabinets || []).filter((item) => item.isSinkCabinet);
+      const stoves = (project.cabinets || []).filter((item) => item.isCooktopCabinet);
+      const styleName = window.MODUDRAFTCore?.STYLE_PRESETS?.find((item) => item.id === (state.renderStyle || state.projectStyle))?.name || "現代簡約";
+      const sourceMode = el.aiRenderSource?.value === "material" ? "普通材質圖" : "白模截圖";
+      const purpose = el.aiRenderPurpose?.value === "presentation"
+        ? "客戶簡報效果圖"
+        : el.aiRenderPurpose?.value === "material"
+          ? "材質與配色提案"
+          : "真實感廚具渲染";
+      const basePrompt = window.MODUDRAFTCore?.generateAiPrompt?.(project) || "";
+      return [
+        `請將我上傳的「${sourceMode}」渲染成高品質、寫實、可用於客戶溝通的台灣住宅廚具提案圖。`,
+        `用途：${purpose}。`,
+        `廚房型態：${kitchenType}。`,
+        `牆面尺寸：${wallSummary || "依截圖中的配置比例"}。`,
+        `配置內容：下櫃 ${lower.length} 組、吊櫃 ${upper.length} 組、水槽櫃 ${sinks.length} 組、爐台櫃 ${stoves.length} 組。`,
+        `設計風格：${styleName}。`,
+        "請保留原本櫃體數量、櫃體比例、門片分割、設備位置、水槽與爐台相對位置、檯面高度、相機角度與整體構圖。",
+        "請補上真實牆面、地板、柔和自然光、細緻陰影、霧面門片、石材或人造石檯面、金屬五金與合理廚具材質細節。",
+        "不得任意新增或刪除櫃體，不得改變水槽、爐台、烘碗機、冰箱或高櫃位置，不得把工程尺寸線畫進最終擬真圖。",
+        basePrompt ? `目前 MODUDRAFT 配置摘要：${basePrompt}` : ""
+      ].filter(Boolean).join("\n");
+    }
+
+    function syncAiRenderPrompt() {
+      if (el.aiRenderPrompt) el.aiRenderPrompt.value = buildRealisticAiRenderPrompt();
+    }
+
+    async function copyAiRenderPrompt() {
+      syncAiRenderPrompt();
+      await copyTextToClipboard(el.aiRenderPrompt.value);
+      el.copyAiRenderPromptBtn.textContent = "提示詞已複製";
+      el.aiRenderStatus.textContent = "提示詞已複製。請搭配下載的截圖一起上傳到 ChatGPT 或 Gemini。";
+      window.setTimeout(() => {
+        el.copyAiRenderPromptBtn.textContent = "複製真實感提示詞";
+      }, 1600);
     }
 
     function applyViewState(nextView) {
@@ -3974,6 +4195,7 @@
       button.disabled = true;
       el.openGeminiBtn.disabled = true;
       el.openChatGptBtn.disabled = true;
+      syncAiRenderPrompt();
       el.aiRenderStatus.textContent = "正在產生設計截圖...";
 
       try {
@@ -3988,7 +4210,7 @@
         el.aiScreenshotPreview.classList.add("visible");
         el.openGeminiBtn.disabled = false;
         el.openChatGptBtn.disabled = false;
-        el.aiRenderStatus.textContent = "截圖已下載。第二步：選擇 Gemini 或 ChatGPT，上傳剛下載的 JPG。";
+        el.aiRenderStatus.textContent = "截圖已下載。第二步：把截圖與提示詞一起上傳到 Gemini 或 ChatGPT。";
       } catch (error) {
         el.aiRenderStatus.textContent = `截圖失敗：${error.message}`;
       } finally {
@@ -4001,6 +4223,7 @@
         el.aiRenderStatus.textContent = "請先按「先截圖並下載」。";
         return;
       }
+      void copyAiRenderPrompt();
       const target = provider === "gemini"
         ? "https://gemini.google.com/app"
         : "https://chatgpt.com/";
@@ -6538,8 +6761,9 @@
 
     function openInstallModal() {
       el.installModal.classList.add("open");
-      el.mobileAccessUrl.textContent = currentMobileAccessUrl();
-      el.installStatus.textContent = "掃描 QR Code、複製網址，或使用手機的系統分享功能。";
+      const url = currentProjectShareUrl();
+      el.mobileAccessUrl.textContent = url.length > 260 ? `${url.slice(0, 260)}...` : url;
+      el.installStatus.textContent = "此連結會載入目前配置的一份可編輯副本。對方修改後會儲存在對方裝置。";
       el.installNowBtn.disabled = false;
     }
 
@@ -6548,32 +6772,35 @@
     }
 
     async function copyMobileAccessUrl() {
-      const url = currentMobileAccessUrl();
-      try {
-        await navigator.clipboard.writeText(url);
-      } catch {
-        const input = document.createElement("textarea");
-        input.value = url;
-        input.style.position = "fixed";
-        input.style.opacity = "0";
-        document.body.appendChild(input);
-        input.select();
-        document.execCommand("copy");
-        input.remove();
-      }
-      el.copyMobileUrlBtn.textContent = "已複製";
+      const url = currentProjectShareUrl();
+      await copyTextToClipboard(url);
+      el.copyMobileUrlBtn.textContent = "已複製專案連結";
+      el.installStatus.textContent = url.length > 7000
+        ? "專案連結已複製；若通訊軟體截斷網址，請改用 JSON 備份。"
+        : "專案連結已複製，對方開啟後可查看並繼續修改。";
       window.setTimeout(() => {
-        el.copyMobileUrlBtn.textContent = "複製分享網址";
+        el.copyMobileUrlBtn.textContent = "複製專案連結";
+      }, 1600);
+    }
+
+    async function copyProjectJsonBackup() {
+      const project = kitchenProjectSnapshot();
+      const text = JSON.stringify(project, null, 2);
+      await copyTextToClipboard(text);
+      el.copyProjectJsonBtn.textContent = "JSON 已複製";
+      el.installStatus.textContent = "JSON 備份已複製；對方可用專案中心的匯入功能載入。";
+      window.setTimeout(() => {
+        el.copyProjectJsonBtn.textContent = "複製 JSON 備份";
       }, 1600);
     }
 
     async function shareApp() {
-      const url = currentMobileAccessUrl();
+      const url = currentProjectShareUrl();
       if (navigator.share) {
         try {
           await navigator.share({
-            title: "MODUDRAFT 廚具設計工作台",
-            text: "開啟 MODUDRAFT，直接在手機或電腦設計廚具。",
+            title: "草圖魔方廚具配置",
+            text: "開啟這份草圖魔方廚具配置，可查看目前方案並繼續修改。",
             url
           });
           el.installStatus.textContent = "分享面板已開啟。";
@@ -6843,6 +7070,9 @@
       el.wallHeightInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") applyWallSize();
       });
+      el.lengthUnitSelect?.addEventListener("change", () => {
+        setDisplayUnit(el.lengthUnitSelect.value);
+      });
 
       Object.entries(el.viewButtons).forEach(([name, button]) => {
         button.addEventListener("click", () => {
@@ -6970,6 +7200,7 @@
       document.getElementById("closeInstallBtn").addEventListener("click", closeInstallModal);
       el.installNowBtn.addEventListener("click", shareApp);
       el.copyMobileUrlBtn.addEventListener("click", copyMobileAccessUrl);
+      el.copyProjectJsonBtn.addEventListener("click", copyProjectJsonBackup);
       document.getElementById("closeExportBtn").addEventListener("click", closeExportModal);
       document.getElementById("confirmExportBtn").addEventListener("click", exportSelected);
       el.exportFormat.addEventListener("change", updateExportOptions);
@@ -6979,6 +7210,10 @@
       document.getElementById("recaptureAiBtn").addEventListener("click", captureAiScreenshot);
       el.openGeminiBtn.addEventListener("click", () => openAiProvider("gemini"));
       el.openChatGptBtn.addEventListener("click", () => openAiProvider("chatgpt"));
+      el.copyAiRenderPromptBtn.addEventListener("click", copyAiRenderPrompt);
+      el.aiRenderSource.addEventListener("change", syncAiRenderPrompt);
+      el.aiRenderPurpose.addEventListener("change", syncAiRenderPrompt);
+      el.aiRenderView.addEventListener("change", syncAiRenderPrompt);
 
       el.wallVisibilityToggle.addEventListener("change", () => {
         state.showWalls = el.wallVisibilityToggle.checked;
@@ -7407,8 +7642,8 @@
       }
       closeGapActionPanel();
       dimensionEditorTarget = { ...target };
-      el.dimensionTargetLabel.textContent = `${target.label || "尺寸"} · 目前 ${formatNumber(target.dimensionValue)} mm`;
-      el.dimensionValueInput.value = String(Math.round(Number(target.dimensionValue) || 0));
+      el.dimensionTargetLabel.textContent = `${target.label || "尺寸"} · 目前 ${formatLength(target.dimensionValue, { withMmHint: true })}`;
+      el.dimensionValueInput.value = String(mmToDisplay(Number(target.dimensionValue) || 0));
       el.dimensionNote.textContent = dimensionNoteForTarget(target);
       el.dimensionError.textContent = "請輸入有效尺寸";
       el.dimensionError.classList.remove("visible");
@@ -7432,7 +7667,7 @@
     function dimensionInputValue() {
       const raw = el.dimensionValueInput.value.trim();
       if (!/^\d+(?:\.\d+)?$/.test(raw)) return null;
-      const numeric = Math.round(Number(raw));
+      const numeric = displayToMm(raw);
       return Number.isFinite(numeric) && numeric > 0 ? numeric : null;
     }
 
@@ -7697,7 +7932,11 @@
     function initializeKitchenProductSuite() {
       if (!window.MODUDRAFTCore || !window.MODUDRAFTSuite) return;
       const requestedId = new URLSearchParams(location.search).get("project");
-      if (requestedId) {
+      const sharedProject = sharedProjectFromLocationHash();
+      if (sharedProject?.type === "kitchen" || sharedProject?.sourceState?.kitchen) {
+        importKitchenProject(sharedProject);
+        showKitchenToast("已載入分享專案，可查看並繼續修改。");
+      } else if (requestedId) {
         const stored = window.MODUDRAFTCore.loadProject(requestedId);
         if (stored?.type === "kitchen") importKitchenProject(stored);
       }
