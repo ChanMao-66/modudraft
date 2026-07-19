@@ -2313,6 +2313,7 @@
       aiRenderModal: document.getElementById("aiRenderModal"),
       aiRenderView: document.getElementById("aiRenderView"),
       aiRenderSource: document.getElementById("aiRenderSource"),
+      aiRenderPurpose: document.getElementById("aiRenderPurpose"),
       aiRenderPrompt: document.getElementById("aiRenderPrompt"),
       copyAiRenderPromptBtn: document.getElementById("copyAiRenderPromptBtn"),
       aiScreenshotPreview: document.getElementById("aiScreenshotPreview"),
@@ -7208,12 +7209,12 @@
       document.getElementById("closeAiRenderBtn").addEventListener("click", closeAiRenderModal);
       document.getElementById("captureAiScreenshotBtn").addEventListener("click", captureAiScreenshot);
       document.getElementById("recaptureAiBtn").addEventListener("click", captureAiScreenshot);
-      el.openGeminiBtn.addEventListener("click", () => openAiProvider("gemini"));
-      el.openChatGptBtn.addEventListener("click", () => openAiProvider("chatgpt"));
-      el.copyAiRenderPromptBtn.addEventListener("click", copyAiRenderPrompt);
-      el.aiRenderSource.addEventListener("change", syncAiRenderPrompt);
-      el.aiRenderPurpose.addEventListener("change", syncAiRenderPrompt);
-      el.aiRenderView.addEventListener("change", syncAiRenderPrompt);
+      el.openGeminiBtn?.addEventListener("click", () => openAiProvider("gemini"));
+      el.openChatGptBtn?.addEventListener("click", () => openAiProvider("chatgpt"));
+      el.copyAiRenderPromptBtn?.addEventListener("click", copyAiRenderPrompt);
+      el.aiRenderSource?.addEventListener("change", syncAiRenderPrompt);
+      el.aiRenderPurpose?.addEventListener("change", syncAiRenderPrompt);
+      el.aiRenderView?.addEventListener("change", syncAiRenderPrompt);
 
       el.wallVisibilityToggle.addEventListener("change", () => {
         state.showWalls = el.wallVisibilityToggle.checked;
